@@ -83,7 +83,7 @@ public class World
 
     private Camera camera;
 
-    private HeliGLRenderer renderer;
+    private HeliGLSurfaceView glSurface;
 
     private double maxTime = 10000.0;
 
@@ -240,9 +240,9 @@ public class World
      * @param rend
      * @throws Exception
      */
-    public World(HeliGLRenderer rend) throws Exception
+    public World(HeliGLSurfaceView surf) throws Exception
     {
-        renderer = rend;
+        glSurface = surf;
         sizeX = 1000;
         sizeY = 1000;
         sizeZ = 200;
@@ -507,6 +507,7 @@ public class World
                  }
              }
          }
+		 glSurface.requestRender();
          curTimeStamp += TICK_TIME;
     }
 

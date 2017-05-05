@@ -2,10 +2,10 @@ package heli.org.helidroid;
 
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
+//import android.support.design.widget.FloatingActionButton;
+//import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+//import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -30,11 +30,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        setContentView(R.layout.content_main);
+        //Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        //setSupportActionBar(toolbar);
         timer = new Timer();
-        // TODO: Add intents to replace argument parsing from java
+        // TODO: Add intents to replace argument parsing from java main
 
         RelativeLayout layout = (RelativeLayout) findViewById(R.id.mainLayout);
         mGLView = new HeliGLSurfaceView(this);
@@ -42,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
                 ViewGroup.LayoutParams.WRAP_CONTENT));
         layout.addView(mGLView);
 
+		/*
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -49,10 +50,10 @@ public class MainActivity extends AppCompatActivity {
                 Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
             }
-        });
-        HeliGLRenderer rend = mGLView.getRenderer();
+        }); */
         try {
-            mWorld = new World(rend);
+            mWorld = new World(mGLView);
+			Toast.makeText(this,"World Created...",Toast.LENGTH_SHORT);
         } catch(Exception e)
         {
             Toast.makeText(this, "Exception when creating world...", Toast.LENGTH_SHORT);
@@ -127,6 +128,6 @@ public class MainActivity extends AppCompatActivity {
     public void onPause()
     {
         super.onPause();
-        timer.cancel();
+        //timer.cancel();
     }
 }
