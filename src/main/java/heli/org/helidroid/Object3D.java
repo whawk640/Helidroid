@@ -50,16 +50,17 @@ public class Object3D {
     static final int COORDS_PER_VERTEX = 3;
     static float cubeCoords[] = {
             // Top
-            -0.49f,  0.49f, 0.49f,  // left back
+            -0.49f, 0.49f, 0.49f,  // left back
             -0.49f, -0.49f, 0.49f,  // left front
             0.49f, -0.49f, 0.49f,   // right front
-            0.49f,  0.49f, 0.49f,   // right back
+            0.49f, 0.49f, 0.49f,   // right back
 
             // Bottom
-            -0.49f,  0.49f, -0.49f,  // left back
+            -0.49f, 0.49f, -0.49f,  // left back
             -0.49f, -0.49f, -0.49f,  // left front
             0.49f, -0.49f, -0.49f,   // right front
-            0.49f,  0.49f, -0.49f,   // right back
+            0.49f, 0.49f, -0.49f,   // right back
+    // }; NOTE: This is really all you need
 
             // Back (Exchange X & Z from Top)
             0.49f,  0.49f, -0.49f,  // top left back
@@ -86,14 +87,25 @@ public class Object3D {
             0.49f,  -0.49f, 0.49f    // right back
     };
 
+    // Old vector that used 24 vertices
     private static short drawOrder[] = {
-            0,  1,  2 ,  0,  2,  3, // Top
-            6,  5,  4 ,  6,  4,  7, // Bottom
+            0,  1,  2,   0,  2,  3,     // Top
+            6,  5,  4,   6,  4,  7, // Bottom
             8,  9,  10,  8, 10, 11, // Back
             14, 13, 12, 14, 12, 15, // Front
             16, 17, 18, 16, 18, 19, // Left
             22, 21, 20, 22, 20, 23
-    }; // order to draw vertices
+    };
+
+    /* New vector that uses only 8 vertices
+    private short drawOrder[] = {
+		3,2,1,3,1,0, // Bottom Quad (Backwards)
+        4,5,6,4,6,7, // Top Quad
+        0,1,5,0,5,4, // Left Quad (Backwards)
+		6,2,3,6,3,7, // Right Quad
+		5,1,2,5,2,6, // Back Quad (Backwards)
+        4,0,3,4,3,7  // Front Quad
+    }; */
 
     private int mPositionHandle;
     private int mColorHandle;
@@ -103,7 +115,27 @@ public class Object3D {
     private int mTextureUniformHandle;
 
     private final float uvs[] = {
-            0.0f, 1.0f,
+            0.0f, 1.0f, // First Face
+            0.0f, 0.0f,
+            1.0f, 0.0f,
+            1.0f, 1.0f,
+            0.0f, 1.0f, // Second Face
+            0.0f, 0.0f,
+            1.0f, 0.0f,
+            1.0f, 1.0f,
+            0.0f, 1.0f, // Third Face
+            0.0f, 0.0f,
+            1.0f, 0.0f,
+            1.0f, 1.0f,
+            0.0f, 1.0f, // Fourth Face
+            0.0f, 0.0f,
+            1.0f, 0.0f,
+            1.0f, 1.0f,
+            0.0f, 1.0f, // Fifth Face
+            0.0f, 0.0f,
+            1.0f, 0.0f,
+            1.0f, 1.0f,
+            0.0f, 1.0f, // Sixth Face
             0.0f, 0.0f,
             1.0f, 0.0f,
             1.0f, 1.0f
@@ -118,35 +150,32 @@ public class Object3D {
         // TODO: Add textures for each side
         position = thePos;
         size = theSize;
-        // Transform the coordinates for this object -- needs work if we are going
-        // to move them constantly!
+        System.out.println("Creating object... at position: " + position.xyzInfo() +
+            ", size: " + size.xyzInfo());
+        // NOTE: Scaling could probably be done at draw time just like translation
+        float[] myCoords = cubeCoords.clone();
         for (int i = 0; i < cubeCoords.length; ++i)
         {
             if (i%3 == 0) // X coordinate
             {
-                cubeCoords[i] *= (float)theSize.m_x;
-                cubeCoords[i] += (float)position.m_x;
+                myCoords[i] *= (float)theSize.m_x;
             }
             else if (i%3 == 1) // Y coordinate
             {
-                cubeCoords[i] *= (float)theSize.m_y;
-                cubeCoords[i] += (float)position.m_y;
+                myCoords[i] *= (float)theSize.m_y;
             }
             else // Z coordinate
             {
-                cubeCoords[i] *= (float)theSize.m_z;
-                cubeCoords[i] += (float)position.m_z;
+                myCoords[i] *= (float)theSize.m_z;
             }
         }
-        /* TODO: Make the following buffer setup a method so it can be done
-          whenever an object moves. */
         // initialize vertex byte buffer for shape coordinates
         ByteBuffer bb = ByteBuffer.allocateDirect(
                 // (# of coordinate values * 4 bytes per float)
-                cubeCoords.length * 4);
+                myCoords.length * 4);
         bb.order(ByteOrder.nativeOrder());
         vertexBuffer = bb.asFloatBuffer();
-        vertexBuffer.put(cubeCoords);
+        vertexBuffer.put(myCoords);
         vertexBuffer.position(0);
 
         // Initialize byte buffer for the uvs.
@@ -255,7 +284,7 @@ public class Object3D {
         float[] rotationMatrix = new float[16];
         Matrix.setRotateM(rotationMatrix, 0, angDeg, x, y, z);
 
-        // Move origin back to actual origin
+        // Move origin to center of object
         Matrix.translateM(transMatrix, 0, (float) position.m_x, (float) position.m_y, (float) position.m_z);
 
         float[] midMatrix = new float[16];
@@ -289,7 +318,7 @@ public class Object3D {
             System.out.println("Failed to get vColor");
         }
 
-        // Set color for drawing the triangle
+        // Set color for drawing the triangles
         GLES20.glUniform4fv(mColorHandle, 1, color, 0);
 
         // get handle to shape's transformation matrix

@@ -122,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
         // Fastest we hope for is 60 frames per second
         // We wait 1.5 seconds for world to be created etc.
         //timer.schedule(timerTask, 1500, 16);
-        timer.schedule(timerTask, 1500, 200);
+        timer.schedule(timerTask, 1500, 2000);
     }
 
     @Override

@@ -43,6 +43,7 @@ public class HeliGLSurfaceView extends GLSurfaceView {
         float x = e.getX();
         float y = e.getY();
 
+        /*
         switch (e.getAction()) {
             case MotionEvent.ACTION_MOVE: {
 
@@ -64,7 +65,7 @@ public class HeliGLSurfaceView extends GLSurfaceView {
                                 ((dx + dy) * TOUCH_SCALE_FACTOR));
                 requestRender();
             }
-        }
+        } */
 
         mPreviousX = x;
         mPreviousY = y;

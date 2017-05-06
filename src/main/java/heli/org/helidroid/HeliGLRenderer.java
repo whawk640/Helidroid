@@ -36,6 +36,8 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
 
     private static final double FULL_BLOCK_SIZE = 100.0;
 
+    private static final double HALF_BLOCK_OFFSET = 50.0;
+
     private static final double STREET_OFFSET = 3.0;
 
     private static final double SIDEWALK_OFFSET = 2.0;
@@ -66,28 +68,34 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
         }
         // TODO: Prevent double creation
         // Generate the world... TODO: Move to city blocks
-        for (int row = 4; row < 7; ++row) // was 0 - 10, shrinking it
+        for (int row = 0; row < 1; ++row)
         {
-            for (int col = 4; col < 7; ++col) // was 0 - 10, shrinking it for now
+            for (int col = 0; col < 1; ++col)
             {
                 // Generate a city block
                 // TODO: Move to CityBlock class
                 // For now, streets are 6.0 m wide
                 // and Sidewalks are 3.0 m wide
-                double startX = FULL_BLOCK_SIZE * col + STREET_OFFSET;
-                double endX = startX + BLOCK_SIZE;
-                double startY = FULL_BLOCK_SIZE * row + STREET_OFFSET;
-                double endY = startY + BLOCK_SIZE;
+                double startX = FULL_BLOCK_SIZE * col + STREET_OFFSET + HALF_BLOCK_OFFSET;
+                double startY = FULL_BLOCK_SIZE * row + STREET_OFFSET + HALF_BLOCK_OFFSET;
                 // Sidewalks are 0.1 m above street
-                Point3D sidewalkPos = new Point3D(startX, startY, 0.0);
-                Point3D sidewalkSize = new Point3D(BLOCK_SIZE, BLOCK_SIZE, 0.1);
+                /*  GET OBJECT RIGHT AND RETURN THIS CODE
+                 * Point3D sidewalkPos = new Point3D(startX, startY, 0.0);
+                 * Point3D sidewalkSize = new Point3D(BLOCK_SIZE, BLOCK_SIZE, 0.1);
+                 * Object3D sidewalk = new Object3D(sidewalkPos, sidewalkSize);
+                 *
+                 */
+                Point3D sidewalkPos = new Point3D(50.0, 50.0, 5.0);
+                Point3D sidewalkSize = new Point3D(100.0, 100.0, 10.0);
                 Object3D sidewalk = new Object3D(sidewalkPos, sidewalkSize);
-                double startZ = 0.1;
                 sidewalk.setColor(0.8f, 0.8f, 0.8f, 1.0f);
                 worldState.add(sidewalk);
+                double startZ = 0.1;
+                /*
                 startX += 0.05 * BUILDING_SPACE + SIDEWALK_OFFSET;
                 startY += 0.05 * BUILDING_SPACE + SIDEWALK_OFFSET;
-                for (int houseIndex = 0; houseIndex < Math.round(HOUSES_PER_BLOCK); ++houseIndex)
+                //for (int houseIndex = 0; houseIndex < Math.round(HOUSES_PER_BLOCK); ++houseIndex)
+                for (int houseIndex = 0; houseIndex < Math.round(HOUSES_PER_BLOCK); houseIndex += (HOUSES_PER_BLOCK - 1.0))
                 {
                     Object3D leftHouse = makeHouse(startX, startY + houseIndex * BUILDING_SPACE, startZ);
                     worldState.add(leftHouse);
@@ -101,7 +109,7 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
                     worldState.add(topHouse);
                     Object3D bottomHouse = makeHouse(startX  + houseIndex * BUILDING_SPACE, startY + 9 * BUILDING_SPACE, startZ);
                     worldState.add(bottomHouse);
-                }
+                } */
             }
         }
         /*
@@ -167,8 +175,11 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
         mContext = context;
         surfaceCreated = false;
         camDistance = 50.0;
+        mAngle = 0.0f;
     }
 
+    // For now, I'm rotating the camera about the Z axis
+    // by the specified amount.
     public void setAngle(float angle) {
         mAngle = angle;
     }
@@ -198,7 +209,7 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
                     GL10.GL_TEXTURE_ENV,
                     GL10.GL_TEXTURE_ENV_MODE,
                     GL10.GL_REPLACE);
-            int resID = R.drawable.helipad_256;
+            int resID = R.drawable.helipad_256_a;
             InputStream in = context.getResources().openRawResource(resID);
             Bitmap image;
             try {
@@ -279,11 +290,12 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         // Set the background frame color
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        //GLES20.glEnable(GLES20.GL_DEPTH_TEST);
         mCamera = new Camera();
         // TODO: adjust eye position based on world size
-        mCamera.setSource(450.0, 450.0, 0.5 * camDistance);
-        mCamera.setTarget(500.0, 500.0, 0.0);
-        mCamera.setUp(0.0, 1.0, 0.0);
+        mCamera.setSource(25.0, 50.0, 300);
+        mCamera.setTarget(50.0, 50.0, 0.0);
+        mCamera.setUp(0.0, 0.0, 1.0);
         // NOTE: OpenGL Related objects must be created here after the context is created
         int cell = 0;
         // Number of textures below
