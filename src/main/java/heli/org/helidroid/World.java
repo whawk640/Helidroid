@@ -63,22 +63,6 @@ public class World
     private double curTimeStamp = 0.0;
     private static final double TICK_TIME = 1.0 / 50.0;
 
-    private static final double FULL_BLOCK_SIZE = 100.0;
-
-    private static final double STREET_OFFSET = 3.0;
-
-    private static final double SIDEWALK_OFFSET = 2.0;
-
-    private static final double BLOCK_SIZE = FULL_BLOCK_SIZE - 2.0 * STREET_OFFSET;
-
-    private static final double SQUARE_SIZE = BLOCK_SIZE - 2.0 * SIDEWALK_OFFSET;
-
-    private static final double BUILDING_SPACE = (SQUARE_SIZE / 10.0);
-
-    private static final double BUILDING_SIZE = 0.9 * BUILDING_SPACE;
-
-    private static final double HOUSES_PER_BLOCK = 10.0;
-
     public static final double MAX_PACKAGE_DISTANCE = 2.0;
 
     private Camera camera;
@@ -237,12 +221,13 @@ public class World
 
     // TODO: Replace args functionality
     /**
-     * @param rend
+     * @param surf
      * @throws Exception
      */
     public World(HeliGLSurfaceView surf) throws Exception
     {
         glSurface = surf;
+        HeliGLRenderer theRenderer = glSurface.getRenderer();
         sizeX = 1000;
         sizeY = 1000;
         sizeZ = 200;
@@ -326,61 +311,20 @@ public class World
         Danook myChopper = new Danook(requestNextChopperID(), this);
         insertChopper(myChopper);
 
-        worldState = new ArrayList<Object3D>();
 
-        // Generate the world... TODO: Move to city blocks
-        for (int row = 0; row < 10; ++row)
-        {
-            for (int col = 0; col < 10; ++col)
-            {
-                // Generate a city block
-                // TODO: Move to CityBlock class
-                // For now, streets are 6.0 m wide
-                // and Sidewalks are 3.0 m wide
-                double startX = FULL_BLOCK_SIZE * col + STREET_OFFSET;
-                double endX = startX + BLOCK_SIZE;
-                double startY = FULL_BLOCK_SIZE * row + STREET_OFFSET;
-                double endY = startY + BLOCK_SIZE;
-                // Sidewalks are 0.1 m above street
-                Point3D sidewalkPos = new Point3D(startX, startY, 0.0);
-                Point3D sidewalkSize = new Point3D(BLOCK_SIZE, BLOCK_SIZE, 0.1);
-                Object3D sidewalk = new Object3D(sidewalkPos, sidewalkSize);
-                double startZ = 0.1;
-                sidewalk.setColor(0.8, 0.8, 0.8, 1.0);
-                worldState.add(sidewalk);
-                startX += 0.05 * BUILDING_SPACE + SIDEWALK_OFFSET;
-                startY += 0.05 * BUILDING_SPACE + SIDEWALK_OFFSET;
-                for (int houseIndex = 0; houseIndex < Math.round(HOUSES_PER_BLOCK); ++houseIndex)
-                {
-                    Object3D leftHouse = makeHouse(startX, startY + houseIndex * BUILDING_SPACE, startZ);
-                    worldState.add(leftHouse);
-                    Object3D rightHouse = makeHouse(startX + 9 * BUILDING_SPACE, startY + houseIndex * BUILDING_SPACE, startZ);
-                    worldState.add(rightHouse);
-                    if (houseIndex == 0 || houseIndex == 9)
-                    {
-                        continue;
-                    }
-                    Object3D topHouse = makeHouse(startX + houseIndex * BUILDING_SPACE, startY, startZ);
-                    worldState.add(topHouse);
-                    Object3D bottomHouse = makeHouse(startX  + houseIndex * BUILDING_SPACE, startY + 9 * BUILDING_SPACE, startZ);
-                    worldState.add(bottomHouse);
-                }
-            }
-        }
-        Point3D locPos = new Point3D(30.0, 30.0, 0.0);
-        Point3D locSize = new Point3D(40.0, 40.0, Math.random() * 20.0 + 5.0);
-        double r = Math.random() * 0.5;
-        double g = Math.random() * 0.5 + 0.25;
-        double b = Math.random() * 0.5 + 0.5;
-        double a = Math.random() * 0.25 + 0.75;
-        Object3D newObject = new Object3D(locPos, locSize);
-        newObject.setColor(r, g, b, a);
-        worldState.add(newObject);
+        //worldState = new ArrayList<Object3D>();
 
         camera = new Camera(sizeX/2, sizeY/2,0);
         allPackageLocs = new ArrayList<Point3D>();
         // Give the choppers somewhere to go
         setChopperWaypoints();
+
+        theRenderer.setWorld(this);
+    }
+
+    public ArrayList<Object3D> getObjects()
+    {
+        return worldState;
     }
 
     /** This method returns the number of seconds that have passed since
@@ -460,31 +404,6 @@ public class World
 
     public int requestNextChopperID() { return nextChopperID++; }
 
-    public Object3D makeHouse(double posX, double posY, double posZ)
-    {
-        double buildingHeight = computeBuildingHeight();
-        Point3D buildingPos = new Point3D(posX, posY, posZ);
-        Point3D buildingSize = new Point3D(BUILDING_SIZE, BUILDING_SIZE, buildingHeight);
-        Object3D worldObj = new Object3D(buildingPos, buildingSize);
-        worldObj.setColor(0.6, 0.6 + 0.4 * Math.random(), 0.6 + 0.4 * Math.random(), 1.0);
-        return worldObj;
-    }
-
-    public double computeBuildingHeight()
-    {
-        double buildingHeight = 10.0 + Math.random() * 10.0;
-        double exceptChance = Math.random();
-        if (exceptChance >= 0.98)
-        {
-            buildingHeight *= 5.0;
-        }
-        else if (exceptChance >= 0.9)
-        {
-            buildingHeight *= 2.0;
-        }
-        return buildingHeight;
-    }
-
     public void tick() throws Exception
     {
          synchronized(this)
@@ -507,6 +426,7 @@ public class World
                  }
              }
          }
+         System.out.println("World time: " + curTimeStamp + ", Requesting render...");
 		 glSurface.requestRender();
          curTimeStamp += TICK_TIME;
     }
