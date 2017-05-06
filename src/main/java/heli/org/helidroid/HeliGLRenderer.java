@@ -218,6 +218,7 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
                 }
             }
             GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, image, 0);
+            GLES20.glGenerateMipmap(GLES20.GL_TEXTURE_2D);
             image.recycle();
         }
 
@@ -307,8 +308,7 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
     @Override
     public void onDrawFrame(GL10 gl) {
         // TODO: Remove hardcoding etc.
-        mCamera.source.m_x += 0.5;
-        mCamera.source.m_y += 0.25;
+        mCamera.source.m_x += 0.333333;
         // Redraw background color
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
         // Set the camera position (View matrix)
