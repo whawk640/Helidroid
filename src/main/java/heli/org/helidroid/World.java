@@ -65,8 +65,6 @@ public class World
 
     public static final double MAX_PACKAGE_DISTANCE = 2.0;
 
-    private Camera camera;
-
     private HeliGLSurfaceView glSurface;
 
     private double maxTime = 10000.0;
@@ -314,7 +312,6 @@ public class World
 
         //worldState = new ArrayList<Object3D>();
 
-        camera = new Camera(sizeX/2, sizeY/2,0);
         allPackageLocs = new ArrayList<Point3D>();
         // Give the choppers somewhere to go
         setChopperWaypoints();
@@ -396,12 +393,6 @@ public class World
         }
     }
 
-    public void updateCamera(GL10 gl, int width, int height)
-    {
-        //camera.tellGL(gl, width, height);
-        dbg(TAG,"Updated camera with vp size (" + width + ", " + height + ")", WORLD_DBG);
-    }
-
     public int requestNextChopperID() { return nextChopperID++; }
 
     public void tick() throws Exception
@@ -426,7 +417,9 @@ public class World
                  }
              }
          }
-         System.out.println("World time: " + curTimeStamp + ", Requesting render...");
+         HeliGLRenderer renderer = glSurface.getRenderer();
+         // TODO: Remove hard-coding etc.
+         //renderer.orbitCamera(5.0);
 		 glSurface.requestRender();
          curTimeStamp += TICK_TIME;
     }
@@ -518,210 +511,6 @@ public class World
         }
         return resultVector;
     }
-
-    /*
-    public void render(GLAutoDrawable drawable, Texture texture)
-    {
-        // different transformations
-        GL2 gl = drawable.getGL().getGL2();
-        camera.tellGL(gl);
-        Point3D chopperPos = gps(m_camToFollow);
-        camera.chase(chopperPos, 20.0);
-        gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
-
-        for (Object3D object : worldState)
-        {
-            double objColor[] = object.getColor();
-            Point3D objectLoc = object.getPosition();
-            Point3D objectSize = object.getSize();
-            float[] bufferArray = makeVertexArray(objectLoc, objectSize);
-            if (bufferArray == null)
-            {
-                continue;
-            }
-            gl.glColor4dv(objColor, 0);
-            drawRectangles(gl,bufferArray, true, texture);
-            Point3D helipadCenter = new Point3D(objectLoc.m_x + (objectSize.m_x / 2.0), objectLoc.m_y + (objectSize.m_y / 2.0), objectLoc.m_z + objectSize.m_z);
-            //drawHelipad(gl, helipadCenter.m_x, helipadCenter.m_y, helipadCenter.m_z +0.05, objectSize.m_x, texture);
-        }
-        gl.glBegin(gl.GL_QUADS);
-        gl.glColor3d(1.0, 0.8, 0.8);
-        gl.glVertex3d(497.0, 503.0,  0.0);
-        gl.glVertex3d(497.0, 497.0, 0.0);
-        gl.glVertex3d(503.0, 497.0, 0.0);
-        gl.glVertex3d(503.0, 503.0, 0.0);
-        gl.glEnd();
-        drawHelipad(gl, 500.0, 495.0, 0.05, 6.0, texture);
-        drawHelipad(gl, 500.0, 505.0, 0.05, 6.0, texture);
-        Iterator it = myChoppers.entrySet().iterator();
-        while (it.hasNext())
-        {
-            Map.Entry<Integer, ChopperAggregator> pairs = (Map.Entry)it.next();
-            int id = (int) pairs.getKey();
-            ChopperAggregator locData = (ChopperAggregator) pairs.getValue();
-            if (locData != null)
-            {
-                StigChopper theChopper = locData.getChopper();
-                ChopperInfo theInfo = locData.getInfo();
-                double curHeading = theInfo.getHeading();
-                double curTilt = theInfo.getTilt();
-                double rotorPos = theInfo.getMainRotorPosition();
-                double tailRotorPos = theInfo.getTailRotorPosition();
-                theChopper.render(drawable, curHeading, curTilt, rotorPos, tailRotorPos);
-            }
-        }
-    }
-
-    public void drawHelipad(GL2 gl, double xCenter, double yCenter, double zHeight, double size, Texture texture)
-    {
-        if (texture != null)
-        {
-            double halfSize = size / 2.0;
-            gl.glEnable(gl.GL_TEXTURE_2D);
-            texture.enable(gl);
-            texture.bind(gl);
-            gl.glBegin(gl.GL_QUADS);
-            gl.glColor3d(1.0, 1.0, 1.0);
-            gl.glTexCoord2d(0.0, 1.0);
-            gl.glVertex3d(xCenter - halfSize, yCenter + halfSize, zHeight);
-            gl.glTexCoord2d(0.0, 0.0);
-            gl.glVertex3d(xCenter - halfSize, yCenter - halfSize, zHeight);
-            gl.glTexCoord2d(1.0, 0.0);
-            gl.glVertex3d(xCenter + halfSize, yCenter - halfSize, zHeight);
-            gl.glTexCoord2d(1.0, 1.0);
-            gl.glVertex3d(xCenter + halfSize, yCenter + halfSize, zHeight);
-            gl.glEnd();
-            gl.glDisable(gl.GL_TEXTURE_2D);
-        }
-        else
-        {
-            double sizeIncrement = size / 6.0;
-            // Do it the old way
-            gl.glBegin(gl.GL_QUADS);
-            // Background Square
-            gl.glColor3d(1.0, 1.0, 1.0);
-            gl.glVertex3d(xCenter - 3.0 * sizeIncrement, yCenter + 3.0 * sizeIncrement, zHeight);
-            gl.glVertex3d(xCenter - 3.0 * sizeIncrement, yCenter - 3.0 * sizeIncrement, zHeight);
-            gl.glVertex3d(xCenter + 3.0 * sizeIncrement, yCenter - 3.0 * sizeIncrement, zHeight);
-            gl.glVertex3d(xCenter + 3.0 * sizeIncrement, yCenter + 3.0 * sizeIncrement, zHeight);
-            // Left Side H
-            gl.glColor3d(0.0, 0.0, 1.0);
-            gl.glVertex3d(xCenter - 2.0 * sizeIncrement, yCenter + 2.0 * sizeIncrement, zHeight);
-            gl.glVertex3d(xCenter - 2.0 * sizeIncrement, yCenter - 2.0 * sizeIncrement, zHeight);
-            gl.glVertex3d(xCenter - 1.0 * sizeIncrement, yCenter - 2.0 * sizeIncrement, zHeight);
-            gl.glVertex3d(xCenter - 1.0 * sizeIncrement, yCenter + 2.0 * sizeIncrement, zHeight);
-            // Right Side H
-            gl.glVertex3d(xCenter + 1.0 * sizeIncrement, yCenter + 2.0 * sizeIncrement, zHeight);
-            gl.glVertex3d(xCenter + 1.0 * sizeIncrement, yCenter - 2.0 * sizeIncrement, zHeight);
-            gl.glVertex3d(xCenter + 2.0 * sizeIncrement, yCenter - 2.0 * sizeIncrement, zHeight);
-            gl.glVertex3d(xCenter + 2.0 * sizeIncrement, yCenter + 2.0 * sizeIncrement, zHeight);
-            // Middle H
-            gl.glVertex3d(xCenter - 1.0 * sizeIncrement, yCenter + 0.5 * sizeIncrement, zHeight);
-            gl.glVertex3d(xCenter - 1.0 * sizeIncrement, yCenter - 0.5 * sizeIncrement, zHeight);
-            gl.glVertex3d(xCenter + 1.0 * sizeIncrement, yCenter - 0.5 * sizeIncrement, zHeight);
-            gl.glVertex3d(xCenter + 1.0 * sizeIncrement, yCenter + 0.5 * sizeIncrement, zHeight);
-            gl.glEnd();
-        }
-    }
-
-    public static void drawRectangles(GL2 gl, float[] bufferArray, boolean doLines, Texture roofTexture)
-    {
-        if (roofTexture != null)
-        {
-            gl.glEnable(gl.GL_TEXTURE_2D);
-            roofTexture.enable(gl);
-            roofTexture.bind(gl);
-        }
-        gl.glBegin(GL2.GL_QUADS);
-        // Top face
-        gl.glTexCoord2d(0.0, 1.0);
-        gl.glVertex3fv(bufferArray,0);
-        gl.glTexCoord2d(0.0, 0.0);
-        gl.glVertex3fv(bufferArray,3);
-        gl.glTexCoord2d(1.0, 0.0);
-        gl.glVertex3fv(bufferArray,6);
-        gl.glTexCoord2d(1.0, 1.0);
-        gl.glVertex3fv(bufferArray,9);
-        gl.glEnd();
-        if (roofTexture != null)
-        {
-            gl.glDisable(gl.GL_TEXTURE_2D);
-        }
-
-        gl.glBegin(GL2.GL_QUADS);
-        // Bottom face
-        gl.glVertex3fv(bufferArray,12);
-        gl.glVertex3fv(bufferArray,21);
-        gl.glVertex3fv(bufferArray,18);
-        gl.glVertex3fv(bufferArray,15);
-        // Left face
-        gl.glVertex3fv(bufferArray,0);
-        gl.glVertex3fv(bufferArray,3);
-        gl.glVertex3fv(bufferArray,21);
-        gl.glVertex3fv(bufferArray,12);
-        // Right face
-        gl.glVertex3fv(bufferArray,15);
-        gl.glVertex3fv(bufferArray,18);
-        gl.glVertex3fv(bufferArray,6);
-        gl.glVertex3fv(bufferArray,9);
-        // Front face
-        gl.glVertex3fv(bufferArray,0);
-        gl.glVertex3fv(bufferArray,12);
-        gl.glVertex3fv(bufferArray,15);
-        gl.glVertex3fv(bufferArray,9);
-        // Back face
-        gl.glVertex3fv(bufferArray,3);
-        gl.glVertex3fv(bufferArray,6);
-        gl.glVertex3fv(bufferArray,18);
-        gl.glVertex3fv(bufferArray,21);
-        gl.glEnd();
-        if (doLines)
-        {
-            gl.glColor3d(0.25, 0.25, 0.25);
-            // Top face
-            gl.glBegin(GL.GL_LINE_LOOP);
-            gl.glVertex3fv(bufferArray,0);
-            gl.glVertex3fv(bufferArray,3);
-            gl.glVertex3fv(bufferArray,6);
-            gl.glVertex3fv(bufferArray,9);
-            gl.glEnd();
-            // Bottom face
-            gl.glBegin(GL.GL_LINE_LOOP);
-            gl.glVertex3fv(bufferArray,12);
-            gl.glVertex3fv(bufferArray,21);
-            gl.glVertex3fv(bufferArray,18);
-            gl.glVertex3fv(bufferArray,15);
-            gl.glEnd();
-            // Left face
-            gl.glBegin(GL.GL_LINE_LOOP);
-            gl.glVertex3fv(bufferArray,0);
-            gl.glVertex3fv(bufferArray,3);
-            gl.glVertex3fv(bufferArray,21);
-            gl.glVertex3fv(bufferArray,12);
-            gl.glEnd();
-            // Right face
-            gl.glBegin(GL.GL_LINE_LOOP);
-            gl.glVertex3fv(bufferArray,15);
-            gl.glVertex3fv(bufferArray,18);
-            gl.glVertex3fv(bufferArray,6);
-            gl.glVertex3fv(bufferArray,9);
-            gl.glEnd();
-            // Front face
-            gl.glBegin(GL.GL_LINE_LOOP);
-            gl.glVertex3fv(bufferArray,0);
-            gl.glVertex3fv(bufferArray,12);
-            gl.glVertex3fv(bufferArray,15);
-            gl.glVertex3fv(bufferArray,9);
-            gl.glEnd();
-            // Back face
-            gl.glBegin(GL.GL_LINE_LOOP);
-            gl.glVertex3fv(bufferArray,3);
-            gl.glVertex3fv(bufferArray,6);
-            gl.glVertex3fv(bufferArray,18);
-            gl.glVertex3fv(bufferArray,21);
-            gl.glEnd();
-        }
-    } */
 
     public void addPanels()
     {

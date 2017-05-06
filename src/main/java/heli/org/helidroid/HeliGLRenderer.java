@@ -48,6 +48,8 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
 
     private static final double BUILDING_SPACE = (SQUARE_SIZE / 10.0);
 
+    private static final double HALF_BUILDING_OFFSET = BUILDING_SPACE * 0.5;
+
     private static final double BUILDING_SIZE = 0.9 * BUILDING_SPACE;
 
     private static final double HOUSES_PER_BLOCK = 10.0;
@@ -68,34 +70,26 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
         }
         // TODO: Prevent double creation
         // Generate the world... TODO: Move to city blocks
-        for (int row = 0; row < 1; ++row)
+        for (int row = 3; row < 7; ++row)
         {
-            for (int col = 0; col < 1; ++col)
+            for (int col = 3; col < 7; ++col)
             {
                 // Generate a city block
                 // TODO: Move to CityBlock class
                 // For now, streets are 6.0 m wide
                 // and Sidewalks are 3.0 m wide
-                double startX = FULL_BLOCK_SIZE * col + STREET_OFFSET + HALF_BLOCK_OFFSET;
-                double startY = FULL_BLOCK_SIZE * row + STREET_OFFSET + HALF_BLOCK_OFFSET;
+                double startX = FULL_BLOCK_SIZE * col + STREET_OFFSET;
+                double startY = FULL_BLOCK_SIZE * row + STREET_OFFSET;
                 // Sidewalks are 0.1 m above street
-                /*  GET OBJECT RIGHT AND RETURN THIS CODE
-                 * Point3D sidewalkPos = new Point3D(startX, startY, 0.0);
-                 * Point3D sidewalkSize = new Point3D(BLOCK_SIZE, BLOCK_SIZE, 0.1);
-                 * Object3D sidewalk = new Object3D(sidewalkPos, sidewalkSize);
-                 *
-                 */
-                Point3D sidewalkPos = new Point3D(50.0, 50.0, 5.0);
-                Point3D sidewalkSize = new Point3D(100.0, 100.0, 10.0);
+                Point3D sidewalkPos = new Point3D(startX + HALF_BLOCK_OFFSET, startY + HALF_BLOCK_OFFSET, 0.0);
+                Point3D sidewalkSize = new Point3D(BLOCK_SIZE, BLOCK_SIZE, 0.1);
                 Object3D sidewalk = new Object3D(sidewalkPos, sidewalkSize);
                 sidewalk.setColor(0.8f, 0.8f, 0.8f, 1.0f);
                 worldState.add(sidewalk);
                 double startZ = 0.1;
-                /*
                 startX += 0.05 * BUILDING_SPACE + SIDEWALK_OFFSET;
                 startY += 0.05 * BUILDING_SPACE + SIDEWALK_OFFSET;
-                //for (int houseIndex = 0; houseIndex < Math.round(HOUSES_PER_BLOCK); ++houseIndex)
-                for (int houseIndex = 0; houseIndex < Math.round(HOUSES_PER_BLOCK); houseIndex += (HOUSES_PER_BLOCK - 1.0))
+                for (int houseIndex = 0; houseIndex < Math.round(HOUSES_PER_BLOCK); ++houseIndex)
                 {
                     Object3D leftHouse = makeHouse(startX, startY + houseIndex * BUILDING_SPACE, startZ);
                     worldState.add(leftHouse);
@@ -109,7 +103,7 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
                     worldState.add(topHouse);
                     Object3D bottomHouse = makeHouse(startX  + houseIndex * BUILDING_SPACE, startY + 9 * BUILDING_SPACE, startZ);
                     worldState.add(bottomHouse);
-                } */
+                }
             }
         }
         /*
@@ -127,7 +121,9 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
     public Object3D makeHouse(double posX, double posY, double posZ)
     {
         double buildingHeight = computeBuildingHeight();
-        Point3D buildingPos = new Point3D(posX, posY, posZ);
+        posZ += buildingHeight / 2.0;
+        // The offset is to ensure the position is at the center
+        Point3D buildingPos = new Point3D(posX + HALF_BUILDING_OFFSET, posY + HALF_BUILDING_OFFSET, posZ);
         Point3D buildingSize = new Point3D(BUILDING_SIZE, BUILDING_SIZE, buildingHeight);
         Object3D worldObj = new Object3D(buildingPos, buildingSize);
         worldObj.setColor(0.6f, 0.6f + 0.4f * (float)Math.random(), 0.6f + 0.4f * (float)Math.random(), 1.0f);
@@ -291,10 +287,11 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
         // Set the background frame color
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         GLES20.glEnable(GLES20.GL_CULL_FACE);
+        GLES20.glEnable(GLES20.GL_DEPTH_TEST);
         mCamera = new Camera();
         // TODO: adjust eye position based on world size
-        mCamera.setSource(50, 250.0, -80);
-        mCamera.setTarget(50.0, 50.0, 0.0);
+        mCamera.setSource(0, 500.0, 80);
+        mCamera.setTarget(500.0, 500.0, 0.0);
         mCamera.setUp(0.0, 0.0, 1.0);
         // NOTE: OpenGL Related objects must be created here after the context is created
         int cell = 0;
@@ -309,8 +306,11 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
 
     @Override
     public void onDrawFrame(GL10 gl) {
+        // TODO: Remove hardcoding etc.
+        mCamera.source.m_x += 0.5;
+        mCamera.source.m_y += 0.25;
         // Redraw background color
-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
         // Set the camera position (View matrix)
         Matrix.setLookAtM(mViewMatrix, 0,
                 (float) mCamera.source.x(), (float) mCamera.source.y(), (float) mCamera.source.z(),
@@ -325,6 +325,11 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
             int locTexture = thisObject.getTexture();
             thisObject.draw(mTextureDataHandle[locTexture], scratch);
         }
+    }
+
+    public void orbitCamera(double ticks)
+    {
+        mCamera.orbit(ticks);
     }
 
     @Override
