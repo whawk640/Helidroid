@@ -66,9 +66,9 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
         }
         // TODO: Prevent double creation
         // Generate the world... TODO: Move to city blocks
-        for (int row = 0; row < 10; ++row)
+        for (int row = 4; row < 7; ++row) // was 0 - 10, shrinking it
         {
-            for (int col = 0; col < 10; ++col)
+            for (int col = 4; col < 7; ++col) // was 0 - 10, shrinking it for now
             {
                 // Generate a city block
                 // TODO: Move to CityBlock class
@@ -104,6 +104,7 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
                 }
             }
         }
+        /*
         Point3D locPos = new Point3D(30.0, 30.0, 0.0);
         Point3D locSize = new Point3D(40.0, 40.0, Math.random() * 20.0 + 5.0);
         double r = Math.random() * 0.5;
@@ -112,7 +113,7 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
         double a = Math.random() * 0.25 + 0.75;
         Object3D newObject = new Object3D(locPos, locSize);
         newObject.setColor((float)r, (float)g, (float)b, (float)a);
-        worldState.add(newObject);
+        worldState.add(newObject); */
     }
 
     public Object3D makeHouse(double posX, double posY, double posZ)
@@ -165,7 +166,7 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
         super();
         mContext = context;
         surfaceCreated = false;
-        camDistance = 100.0;
+        camDistance = 50.0;
     }
 
     public void setAngle(float angle) {
@@ -279,14 +280,16 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
         // Set the background frame color
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         mCamera = new Camera();
-        // TODO: adjust eye position based on puzzle size
-        mCamera.setSource(0.0, -500.0, 1.0 * camDistance);
-        mCamera.setTarget(500.0, 500.0, 5.0);
-        mCamera.setUp(0.0, 0.0, 1.0);
+        // TODO: adjust eye position based on world size
+        mCamera.setSource(450.0, 450.0, 0.5 * camDistance);
+        mCamera.setTarget(500.0, 500.0, 0.0);
+        mCamera.setUp(0.0, 1.0, 0.0);
         // NOTE: OpenGL Related objects must be created here after the context is created
         int cell = 0;
         // Number of textures below
         mTextureDataHandle = initImage(mContext, gl, 1);
+        // TODO: Get this back into the world... Perhaps we create the world first
+        // Then this class.
         createObjects();
 
         surfaceCreated = true;
@@ -323,7 +326,7 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
         // in the onDrawFrame() method
 
         // Reminder -- matrix, offset, low x, high x, low y, high y, near, far
-        Matrix.frustumM(mProjectionMatrix, 0, -ratio, ratio, -1.0f, 1.0f, 2.0f, 2000.0f);
+        Matrix.frustumM(mProjectionMatrix, 0, -ratio, ratio, -1.0f, 1.0f, 5.0f, 1000.0f);
     }
 
     static int loadShader(int type, String shaderCode) {
