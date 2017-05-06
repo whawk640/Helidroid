@@ -290,10 +290,10 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         // Set the background frame color
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        //GLES20.glEnable(GLES20.GL_DEPTH_TEST);
+        GLES20.glEnable(GLES20.GL_CULL_FACE);
         mCamera = new Camera();
         // TODO: adjust eye position based on world size
-        mCamera.setSource(25.0, 50.0, 300);
+        mCamera.setSource(50, 250.0, -80);
         mCamera.setTarget(50.0, 50.0, 0.0);
         mCamera.setUp(0.0, 0.0, 1.0);
         // NOTE: OpenGL Related objects must be created here after the context is created

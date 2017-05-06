@@ -56,56 +56,44 @@ public class Object3D {
             0.49f, 0.49f, 0.49f,   // right back
 
             // Bottom
-            -0.49f, 0.49f, -0.49f,  // left back
-            -0.49f, -0.49f, -0.49f,  // left front
-            0.49f, -0.49f, -0.49f,   // right front
-            0.49f, 0.49f, -0.49f,   // right back
-    // }; NOTE: This is really all you need
+            0.49f, 0.49f, -0.49f,  // left back
+            0.49f, -0.49f, -0.49f,  // left front
+            -0.49f, -0.49f, -0.49f,   // right front
+            -0.49f, 0.49f, -0.49f,   // right back
 
-            // Back (Exchange X & Z from Top)
-            0.49f,  0.49f, -0.49f,  // top left back
-            0.49f, -0.49f, -0.49f,  // top left front
-            0.49f, -0.49f, 0.49f,   // top right front
-            0.49f,  0.49f, 0.49f,   // top right back
+            // Back
+            -0.49f,  0.49f, -0.49f,  // left back
+            -0.49f,  0.49f, 0.49f,  // left front
+            0.49f,  0.49f, 0.49f,   // right front
+            0.49f,  0.49f, -0.49f,   // right back
 
-            // Front (Exchange X & Z from Bottom)
-            -0.49f,  0.49f, -0.49f,  // bottom left back
-            -0.49f, -0.49f, -0.49f,  // bottom left front
-            -0.49f, -0.49f, 0.49f,   // bottom right front
-            -0.49f,  0.49f, 0.49f,   // bottom right back
-
-            // Left (Exchange Y & Z from Top
-            -0.49f,  0.49f, 0.49f,  // left back
-            -0.49f, 0.49f, -0.49f,  // left front
-            0.49f, 0.49f, -0.49f,   // right front
-            0.49f,  0.49f, 0.49f,   // right back
-
-            // Right (Exchange Y & Z from Bottom
+            // Front
             -0.49f,  -0.49f, 0.49f,  // left back
             -0.49f, -0.49f, -0.49f,  // left front
             0.49f, -0.49f, -0.49f,   // right front
-            0.49f,  -0.49f, 0.49f    // right back
+            0.49f,  -0.49f, 0.49f,   // right back
+
+            // Left
+            -0.49f, 0.49f, -0.49f,  // left back
+            -0.49f, -0.49f, -0.49f,  // left front
+            -0.49f, -0.49f, 0.49f,   // right front
+            -0.49f,  0.49f, 0.49f,   // right back
+
+            // Right
+            0.49f,  0.49f, 0.49f,  // left back
+            0.49f, -0.49f, 0.49f,  // left front
+            0.49f, -0.49f, -0.49f,   // right front
+            0.49f,  0.49f, -0.49f    // right back
     };
 
-    // Old vector that used 24 vertices
     private static short drawOrder[] = {
-            0,  1,  2,   0,  2,  3,     // Top
-            6,  5,  4,   6,  4,  7, // Bottom
+            0,  1,  2,   0,  2,  3, // Top
+            4,  5,  6,   4,  6,  7, // Bottom
             8,  9,  10,  8, 10, 11, // Back
-            14, 13, 12, 14, 12, 15, // Front
+            12, 13, 14, 12, 14, 15, // Front
             16, 17, 18, 16, 18, 19, // Left
-            22, 21, 20, 22, 20, 23
+            20, 21, 22, 20, 22, 23  // Right
     };
-
-    /* New vector that uses only 8 vertices
-    private short drawOrder[] = {
-		3,2,1,3,1,0, // Bottom Quad (Backwards)
-        4,5,6,4,6,7, // Top Quad
-        0,1,5,0,5,4, // Left Quad (Backwards)
-		6,2,3,6,3,7, // Right Quad
-		5,1,2,5,2,6, // Back Quad (Backwards)
-        4,0,3,4,3,7  // Front Quad
-    }; */
 
     private int mPositionHandle;
     private int mColorHandle;
@@ -115,30 +103,30 @@ public class Object3D {
     private int mTextureUniformHandle;
 
     private final float uvs[] = {
-            0.0f, 1.0f, // First Face
-            0.0f, 0.0f,
-            1.0f, 0.0f,
+            0.0f, 0.0f, // First Face
+            0.0f, 1.0f,
             1.0f, 1.0f,
-            0.0f, 1.0f, // Second Face
-            0.0f, 0.0f,
             1.0f, 0.0f,
+            0.0f, 0.0f, // Second Face
+            0.0f, 1.0f,
             1.0f, 1.0f,
-            0.0f, 1.0f, // Third Face
-            0.0f, 0.0f,
             1.0f, 0.0f,
+            0.0f, 0.0f, // Third Face
+            0.0f, 1.0f,
             1.0f, 1.0f,
-            0.0f, 1.0f, // Fourth Face
-            0.0f, 0.0f,
             1.0f, 0.0f,
+            0.0f, 0.0f, // Fourth Face
+            0.0f, 1.0f,
             1.0f, 1.0f,
-            0.0f, 1.0f, // Fifth Face
-            0.0f, 0.0f,
             1.0f, 0.0f,
+            0.0f, 0.0f, // Fifth Face
+            0.0f, 1.0f,
             1.0f, 1.0f,
-            0.0f, 1.0f, // Sixth Face
-            0.0f, 0.0f,
             1.0f, 0.0f,
-            1.0f, 1.0f
+            0.0f, 0.0f, // Sixth Face
+            0.0f, 1.0f,
+            1.0f, 1.0f,
+            1.0f, 0.0f
     };
 
     private final int vertexCount = cubeCoords.length / COORDS_PER_VERTEX;
