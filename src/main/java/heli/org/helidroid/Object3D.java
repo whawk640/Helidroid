@@ -40,7 +40,8 @@ public class Object3D {
                     "uniform sampler2D u_texture;" +
                     "varying vec2 v_texCoordinate;" +
                     "void main() {" +
-                    "  gl_FragColor = vColor * texture2D( u_texture, v_texCoordinate);" +
+                    //"  gl_FragColor = vColor * texture2D( u_texture, v_texCoordinate);" +
+					"  gl_FragColor = vColor;" +
                     "}";
 
     // Use to access and set the view transformation

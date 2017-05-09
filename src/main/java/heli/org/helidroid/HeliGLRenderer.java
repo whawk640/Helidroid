@@ -70,9 +70,9 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
         }
         // TODO: Prevent double creation
         // Generate the world... TODO: Move to city blocks
-        for (int row = 3; row < 7; ++row)
+        for (int row = 0; row < 10; ++row)
         {
-            for (int col = 3; col < 7; ++col)
+            for (int col = 0; col < 10; ++col)
             {
                 // Generate a city block
                 // TODO: Move to CityBlock class
@@ -308,7 +308,7 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
     @Override
     public void onDrawFrame(GL10 gl) {
         // TODO: Remove hardcoding etc.
-        mCamera.source.m_x += 0.333333;
+        mCamera.source.m_x += 1.0;
         // Redraw background color
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
         // Set the camera position (View matrix)
