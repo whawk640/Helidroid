@@ -234,9 +234,10 @@ public class Object3D {
                 vxs[iv++] = (float) (cubeCoords[i] * size.m_z + position.m_z);
             }
         }
+		short objOffset = (short)io;
 		for(int i = 0; i<drawOrder.length; ++i)
 		{
-			ors[io++] = drawOrder[i];
+			ors[io++] = (short)(drawOrder[i] + objOffset);
 		}
 		/*
 		for(int i = 0; i<cubeCoords.length/3; ++i)
@@ -383,7 +384,7 @@ public class Object3D {
         GLES20.glUniform1i(mTextureUniformHandle, 0);
 
         GLES20.glDrawElements(GLES20.GL_TRIANGLES, drawListBuffer.capacity(),
-                GLES20.GL_UNSIGNED_INT, drawListBuffer);
+                GLES20.GL_UNSIGNED_SHORT, drawListBuffer);
 
         // Disable texture array
         GLES20.glDisableVertexAttribArray(mTextureCoordinateHandle);
