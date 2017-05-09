@@ -27,20 +27,20 @@ public class Object3D {
             "uniform mat4 uMVPMatrix;" +
                     "attribute vec4 vPosition;" +
                     "attribute vec2 a_texCoordinate;" + // Texture coordinates
-	                //"attribute vec4 vColor;" +
+	                "attribute vec4 vColor;" +
 	                "varying vec2 v_texCoordinate;" + // Texture coordinates
-	                //"varying vec4 fColor;" +
+	                "varying vec4 fColor;" +
                     "void main() {" +
                     "  gl_Position = uMVPMatrix * vPosition;" +
                     "  v_texCoordinate = a_texCoordinate;" +
-					//"  fColor = vColor;" +
+					"  fColor = vColor;" +
                     "}";
 
     private final String fragmentShaderCode =
             "precision mediump float;" +
                     "uniform sampler2D u_texture;" +
                     "varying vec2 v_texCoordinate;" +
-					//"varying vec4 fColor;" +
+					"varying vec4 fColor;" +
                     "void main() {" +
 					"  vec4 foo;" +
 					"  foo.x = 0.7;" +
@@ -48,7 +48,7 @@ public class Object3D {
 	                "  foo.z = 0.7;" +
 	                "  foo.w = 1.0;" +
 	                //"  gl_FragColor = fColor * texture2D( u_texture, v_texCoordinate);" +
-	                "  gl_FragColor = foo;" +
+	                "  gl_FragColor = fColor;" +
                    	"}";
 
     // Use to access and set the view transformation
@@ -110,7 +110,7 @@ public class Object3D {
     };
 
     static private int mPositionHandle = -1;
-    //static private int mColorHandle = -1;
+    static private int mColorHandle = -1;
     static private int mTextureCoordinateHandle = -1;
     /** Size of the texture coordinate data in elements. */
     private final int mTextureCoordinateDataSize = 2;
@@ -146,7 +146,7 @@ public class Object3D {
 
     private final int vertexCount = cubeCoords.length / COORDS_PER_VERTEX;
     static private final int vertexStride = COORDS_PER_VERTEX * 4; // 4 bytes per vertex
-	//static private final int colorStride = COLORS_PER_VERTEX * 4; // 4 bytes per vertex
+	static private final int colorStride = COLORS_PER_VERTEX * 4; // 4 bytes per vertex
 	
     public Object3D(Point3D thePos, Point3D theSize) {
         // TODO: Add textures for each side
@@ -239,14 +239,14 @@ public class Object3D {
 		{
 			ors[io++] = (short)(drawOrder[i] + objOffset);
 		}
-		/*
+		
 		for(int i = 0; i<cubeCoords.length/3; ++i)
 		{
 			cls[ic++] = color[0];
 			cls[ic++] = color[1];
 			cls[ic++] = color[2];
 			cls[ic++] = color[3];
-		} */
+		}
 		for(int i = 0; i < uvs.length; ++i)
 		{
 			texs[it++] = uvs[i];
@@ -292,27 +292,6 @@ public class Object3D {
         return size;
     }
 
-    public float[] buildTransformation(float[] inMatrix, float angDeg, float x, float y, float z, float scaleX, float scaleY, float scaleZ)
-    {
-        float[] transMatrix = new float[16];
-
-        Matrix.setIdentityM(transMatrix,0);
-
-        float[] rotationMatrix = new float[16];
-        Matrix.setRotateM(rotationMatrix, 0, angDeg, x, y, z);
-
-        // Move origin to center of object
-        Matrix.translateM(transMatrix, 0, (float) position.m_x, (float) position.m_y, (float) position.m_z);
-
-        float[] midMatrix = new float[16];
-        Matrix.multiplyMM(midMatrix,0,inMatrix,0, transMatrix,0);
-
-        float[] scratchMatrix = new float[16];
-        Matrix.multiplyMM(scratchMatrix,0,midMatrix,0,rotationMatrix,0);
-        Matrix.scaleM(scratchMatrix,0,scaleX, scaleY, scaleZ);
-        return scratchMatrix;
-    }
-
     static public void draw(int textDataHandle, float[] mvpMatrix) { // pass in the calculated transformation matrix
         // Add program to OpenGL ES environment
         GLES20.glUseProgram(mProgram);
@@ -338,18 +317,18 @@ public class Object3D {
                 vertexStride, vertexBuffer);
 
         // get handle to vertex shader's vColor member
-		//mColorHandle = GLES20.glGetAttribLocation(mProgram, "vColor");
+		mColorHandle = GLES20.glGetAttribLocation(mProgram, "vColor");
 
-		//if (mColorHandle < 0)
-        //{
-        //    System.out.println("Failed to get vColor");
-        //}
-		//GLES20.glEnableVertexAttribArray(mColorHandle);
+		if (mColorHandle < 0)
+        {
+            System.out.println("Failed to get vColor");
+        }
+		GLES20.glEnableVertexAttribArray(mColorHandle);
 
         // Set color for drawing the triangles
-		//GLES20.glVertexAttribPointer(mColorHandle, COLORS_PER_VERTEX,
-		//							 GLES20.GL_FLOAT, false,
-		//							 colorStride, colBuffer);
+		GLES20.glVertexAttribPointer(mColorHandle, COLORS_PER_VERTEX,
+									 GLES20.GL_FLOAT, false,
+									 colorStride, colBuffer);
 
         // get handle to shape's transformation matrix
 		mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
@@ -391,7 +370,7 @@ public class Object3D {
 
         // Disable vertex array
         GLES20.glDisableVertexAttribArray(mPositionHandle);
-        //GLES20.glDisableVertexAttribArray(mColorHandle);
+        GLES20.glDisableVertexAttribArray(mColorHandle);
     }
 
 }
