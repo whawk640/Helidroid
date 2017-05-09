@@ -29,7 +29,7 @@ public class Object3D {
                     "attribute vec2 a_texCoordinate;" + // Texture coordinates
 	                //"attribute vec4 vColor;" +
 	                "varying vec2 v_texCoordinate;" + // Texture coordinates
-	                "varying vec4 fColor;" +
+	                //"varying vec4 fColor;" +
                     "void main() {" +
                     "  gl_Position = uMVPMatrix * vPosition;" +
                     "  v_texCoordinate = a_texCoordinate;" +
@@ -40,7 +40,7 @@ public class Object3D {
             "precision mediump float;" +
                     "uniform sampler2D u_texture;" +
                     "varying vec2 v_texCoordinate;" +
-					"varying vec4 fColor;" +
+					//"varying vec4 fColor;" +
                     "void main() {" +
 					"  vec4 foo;" +
 					"  foo.x = 0.7;" +
@@ -110,7 +110,7 @@ public class Object3D {
     };
 
     static private int mPositionHandle = -1;
-    static private int mColorHandle = -1;
+    //static private int mColorHandle = -1;
     static private int mTextureCoordinateHandle = -1;
     /** Size of the texture coordinate data in elements. */
     private final int mTextureCoordinateDataSize = 2;
@@ -146,7 +146,7 @@ public class Object3D {
 
     private final int vertexCount = cubeCoords.length / COORDS_PER_VERTEX;
     static private final int vertexStride = COORDS_PER_VERTEX * 4; // 4 bytes per vertex
-	static private final int colorStride = COLORS_PER_VERTEX * 4; // 4 bytes per vertex
+	//static private final int colorStride = COLORS_PER_VERTEX * 4; // 4 bytes per vertex
 	
     public Object3D(Point3D thePos, Point3D theSize) {
         // TODO: Add textures for each side
@@ -208,11 +208,11 @@ public class Object3D {
 	
 	/**
 	 vxs - array of vertices 
-	 or - array of orders
+	 ors - array of orders
 	 cls - array of colors
 	 idx - index into the vxs and cols of where to put this object's coord
 	 */
-    public void createObject(float[] vxs, int[] or, float[] cls ,float[] texs
+    public void createObject(float[] vxs, int[] ors, float[] cls ,float[] texs
 	                        ,int iv, int io, int ic, int it) 
 	{
 		// NOTE: Scaling could probably be done at draw time just like translation
@@ -233,15 +233,16 @@ public class Object3D {
         }
 		for(int i = 0; i<drawOrder.length; ++i)
 		{
-			or[io++] = drawOrder[i];
+			ors[io++] = drawOrder[i];
 		}
+		/*
 		for(int i = 0; i<cubeCoords.length/3; ++i)
 		{
 			cls[ic++] = color[0];
 			cls[ic++] = color[1];
 			cls[ic++] = color[2];
 			cls[ic++] = color[3];
-		}
+		} */
 		for(int i = 0; i < uvs.length; ++i)
 		{
 			texs[it++] = uvs[i];

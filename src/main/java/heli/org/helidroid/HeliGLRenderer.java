@@ -324,7 +324,6 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
         mCamera.setTarget(500.0, 500.0, 0.0);
         mCamera.setUp(0.0, 0.0, 1.0);
         // NOTE: OpenGL Related objects must be created here after the context is created
-        int cell = 0;
         // Number of textures below
         mTextureDataHandle = initImage(mContext, gl, 1);
         // TODO: Get this back into the world... Perhaps we create the world first
