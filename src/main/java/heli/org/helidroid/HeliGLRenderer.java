@@ -349,7 +349,7 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
 
         Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mViewMatrix, 0);
 
-		Object3D.draw(0,mMVPMatrix);
+		Object3D.draw(mTextureDataHandle[0],mMVPMatrix);
 		/*
         for (Object3D thisObject : worldState)
         {
