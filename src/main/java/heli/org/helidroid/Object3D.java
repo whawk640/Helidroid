@@ -42,13 +42,7 @@ public class Object3D {
                     "varying vec2 v_texCoordinate;" +
 					"varying vec4 fColor;" +
                     "void main() {" +
-					"  vec4 foo;" +
-					"  foo.x = 0.7;" +
-	                "  foo.y = 0.7;" +
-	                "  foo.z = 0.7;" +
-	                "  foo.w = 1.0;" +
-	                //"  gl_FragColor = fColor * texture2D( u_texture, v_texCoordinate);" +
-	                "  gl_FragColor = fColor;" +
+	                "  gl_FragColor = fColor * texture2D( u_texture, v_texCoordinate);" +
                    	"}";
 
     // Use to access and set the view transformation
