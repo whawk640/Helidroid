@@ -55,7 +55,7 @@ public class Object3D {
     static private int mMVPMatrixHandle = -1;
 	
 	static public FloatBuffer vertexBuffer;
-    static public IntBuffer drawListBuffer;
+    static public ShortBuffer drawListBuffer;
     static public FloatBuffer uvBuffer;
 	static public FloatBuffer colBuffer;
 
@@ -210,9 +210,12 @@ public class Object3D {
 	 vxs - array of vertices 
 	 ors - array of orders
 	 cls - array of colors
-	 idx - index into the vxs and cols of where to put this object's coord
+	 iv - Position in master vertex array
+	 io - Position in master draw order array
+	 ic - Position in master color array
+	 it - Position in master texture array
 	 */
-    public void createObject(float[] vxs, int[] ors, float[] cls ,float[] texs
+    public void createObject(float[] vxs, short[] ors, float[] cls ,float[] texs
 	                        ,int iv, int io, int ic, int it) 
 	{
 		// NOTE: Scaling could probably be done at draw time just like translation

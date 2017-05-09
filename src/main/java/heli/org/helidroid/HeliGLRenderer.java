@@ -71,7 +71,7 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
     
 	float[] vxs = new float[BLOCK_ROWS * BLOCK_COLS * OBJECTS_PER_BLOCK * Object3D.cubeCoords.length];
 	float[] cls = new float[BLOCK_ROWS * BLOCK_COLS * OBJECTS_PER_BLOCK * (Object3D.cubeCoords.length / Object3D.COORDS_PER_VERTEX) * Object3D.COLORS_PER_VERTEX];
-	int[] drawOrder = new int[BLOCK_ROWS * BLOCK_COLS * OBJECTS_PER_BLOCK * Object3D.drawOrder.length];
+	short[] drawOrder = new short[BLOCK_ROWS * BLOCK_COLS * OBJECTS_PER_BLOCK * Object3D.drawOrder.length];
 	float[] texs = new float[BLOCK_ROWS * BLOCK_COLS * OBJECTS_PER_BLOCK * Object3D.uvs.length];
 	
 	public void createObjects() 
@@ -117,8 +117,10 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
                     worldState.add(leftHouse);
                     Object3D rightHouse = makeHouse(startX + 9 * BUILDING_SPACE, startY + houseIndex * BUILDING_SPACE, startZ);
                     rightHouse.createObject(vxs,drawOrder,cls,texs,
-											idx * Object3D.cubeCoords.length, idx * Object3D.drawOrder.length,
-											idx * 4 * Object3D.cubeCoords.length / 3, idx * Object3D.uvs.length); 
+											idx * Object3D.cubeCoords.length,
+											idx * Object3D.drawOrder.length,
+											idx * 4 * Object3D.cubeCoords.length / 3,
+											idx * Object3D.uvs.length); 
 					++idx;
 					
 					worldState.add(rightHouse);
@@ -144,7 +146,7 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
 		Object3D.vertexBuffer = getFB(vxs);
 		Object3D.colBuffer = getFB(cls);
 		Object3D.uvBuffer = getFB(texs);
-		Object3D.drawListBuffer = getIB(drawOrder);
+		Object3D.drawListBuffer = getSB(drawOrder);
     }
 
     public Object3D makeHouse(double posX, double posY, double posZ)
@@ -412,14 +414,14 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
 		return fb;
 	}
 
-	public static IntBuffer getIB(int[] src)
+	public static ShortBuffer getSB(short[] src)
 	{
-		ByteBuffer idxs = ByteBuffer.allocateDirect(src.length * 4);
+		ByteBuffer idxs = ByteBuffer.allocateDirect(src.length * 2);
 		idxs.order(ByteOrder.nativeOrder());
-		IntBuffer fb = idxs.asIntBuffer();
-		fb.put(src);
-		fb.position(0);
-		return fb;
+		ShortBuffer sb = idxs.asShortBuffer();
+		sb.put(src);
+		sb.position(0);
+		return sb;
 	}
 	
 }
