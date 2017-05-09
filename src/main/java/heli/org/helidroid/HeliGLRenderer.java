@@ -321,9 +321,9 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
 
         for (Object3D thisObject : worldState)
         {
-            float[] scratch = thisObject.buildTransformation(mMVPMatrix, mAngle, 0, -1.0f, 0.0f, 1.0f, 1.0f, 1.0f);
+            //float[] scratch = thisObject.buildTransformation(mMVPMatrix, mAngle, 0, -1.0f, 0.0f, 1.0f, 1.0f, 1.0f);
             int locTexture = thisObject.getTexture();
-            thisObject.draw(mTextureDataHandle[locTexture], scratch);
+            thisObject.draw(mTextureDataHandle[locTexture], mMVPMatrix);
         }
     }
 

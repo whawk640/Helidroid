@@ -147,15 +147,15 @@ public class Object3D {
         {
             if (i%3 == 0) // X coordinate
             {
-                myCoords[i] *= (float)theSize.m_x;
+                myCoords[i] = myCoords[i] * (float)theSize.m_x + (float)position.m_x;
             }
             else if (i%3 == 1) // Y coordinate
             {
-                myCoords[i] *= (float)theSize.m_y;
+                myCoords[i] = myCoords[i] * (float)theSize.m_y + (float)position.m_y;
             }
             else // Z coordinate
             {
-                myCoords[i] *= (float)theSize.m_z;
+                myCoords[i] = myCoords[i] * (float)theSize.m_z + (float)position.m_z;
             }
         }
         // initialize vertex byte buffer for shape coordinates
