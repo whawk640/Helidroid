@@ -338,7 +338,7 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
     @Override
     public void onDrawFrame(GL10 gl) {
         // TODO: Remove hardcoding etc.
-        mCamera.source.m_x += 2.0;
+        mCamera.source.m_x += 1.0;
         // Redraw background color
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
         // Set the camera position (View matrix)
