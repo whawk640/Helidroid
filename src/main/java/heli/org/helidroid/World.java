@@ -316,7 +316,7 @@ public class World
         // Give the choppers somewhere to go
         setChopperWaypoints();
 
-        theRenderer.setWorld(this);
+        //theRenderer.setWorld(this);
     }
 
     public ArrayList<Object3D> getObjects()

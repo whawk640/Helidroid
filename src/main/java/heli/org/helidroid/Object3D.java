@@ -6,8 +6,9 @@ import android.opengl.Matrix;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
-import java.nio.ShortBuffer;
+import java.nio.IntBuffer;
 import java.nio.*;
+import android.sax.*;
 
 /** For now, an object3D is a cube-like object, though each individual dimension
  * can be varied by passing in size.
@@ -49,7 +50,7 @@ public class Object3D {
     static private int mMVPMatrixHandle = -1;
 	
 	static public FloatBuffer vertexBuffer;
-    static public ShortBuffer drawListBuffer;
+    static public IntBuffer drawListBuffer;
     static public FloatBuffer uvBuffer;
 	static public FloatBuffer colBuffer;
 
@@ -94,7 +95,7 @@ public class Object3D {
             0.49f,  0.49f, -0.49f    // right back
     };
 
-    public static short drawOrder[] = {
+    public static int drawOrder[] = {
             0,  1,  2,   0,  2,  3, // Top
             4,  5,  6,   4,  6,  7, // Bottom
             8,  9,  10,  8, 10, 11, // Back
@@ -209,7 +210,7 @@ public class Object3D {
 	 ic - Position in master color array
 	 it - Position in master texture array
 	 */
-    public void createObject(float[] vxs, short[] ors, float[] cls ,float[] texs
+    public void createObject(float[] vxs, int[] ors, float[] cls ,float[] texs
 	                        ,int iv, int io, int ic, int it) 
 	{
 		// NOTE: Scaling could probably be done at draw time just like translation
@@ -228,10 +229,10 @@ public class Object3D {
                 vxs[iv++] = (float) (cubeCoords[i] * size.m_z + position.m_z);
             }
         }
-		short objOffset = (short)io;
+		int objOffset = io/ drawOrder.length * 24;
 		for(int i = 0; i<drawOrder.length; ++i)
 		{
-			ors[io++] = (short)(drawOrder[i] + objOffset);
+			ors[io++] = drawOrder[i] + objOffset;
 		}
 		
 		for(int i = 0; i<cubeCoords.length/3; ++i)
@@ -286,7 +287,7 @@ public class Object3D {
         return size;
     }
 
-    static public void draw(int textDataHandle, float[] mvpMatrix) { // pass in the calculated transformation matrix
+    static public void draw(int textDataHandle, float[] mvpMatrix, int elements) { // pass in the calculated transformation matrix
         // Add program to OpenGL ES environment
         GLES20.glUseProgram(mProgram);
 		int error = GLES20.glGetError();
@@ -356,10 +357,9 @@ public class Object3D {
         // Tell the texture uniform sampler to use this texture in the shader by binding to texture unit 0.
         GLES20.glUniform1i(mTextureUniformHandle, 0);
 
-        GLES20.glDrawElements(GLES20.GL_TRIANGLES, drawListBuffer.capacity(),
-                GLES20.GL_UNSIGNED_SHORT, drawListBuffer);
-
-        // Disable texture array
+        GLES20.glDrawElements(GLES20.GL_TRIANGLES, elements,
+                GLES20.GL_UNSIGNED_INT, drawListBuffer);
+        // Disable texture arrayß  "
         GLES20.glDisableVertexAttribArray(mTextureCoordinateHandle);
 
         // Disable vertex array

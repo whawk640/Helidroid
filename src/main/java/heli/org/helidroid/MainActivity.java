@@ -16,6 +16,7 @@ import android.widget.Toast;
 
 import java.util.Timer;
 import java.util.TimerTask;
+import android.content.*;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -37,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
         // TODO: Add intents to replace argument parsing from java main
 
         RelativeLayout layout = (RelativeLayout) findViewById(R.id.mainLayout);
-        mGLView = new HeliGLSurfaceView(this);
+        mGLView = new HeliGLSurfaceView((Context)this);
         mGLView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT));
         layout.addView(mGLView);
@@ -52,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }); */
         try {
-            mWorld = new World(mGLView);
+            //mWorld = new World(mGLView);
 			Toast.makeText(this,"World Created...",Toast.LENGTH_SHORT);
         } catch(Exception e)
         {
@@ -122,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
         // Fastest we hope for is 60 frames per second
         // We wait 1.5 seconds for world to be created etc.
         //timer.schedule(timerTask, 1500, 16);
-        timer.schedule(timerTask, 1500, 16);
+        timer.schedule(timerTask, 1500, 50);
     }
 
     @Override
