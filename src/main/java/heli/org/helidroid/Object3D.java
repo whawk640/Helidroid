@@ -7,7 +7,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
-import java.nio.ShortBuffer;
 
 /** For now, an object3D is a cube-like object, though each individual dimension
  * can be varied by passing in size.
@@ -17,10 +16,14 @@ public class Object3D {
     private static int mProgram = -1;
     private Point3D position;
     private Point3D size;
-    float color[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-    private FloatBuffer vertexBuffer;
-    private IntBuffer drawListBuffer;
+    static float color[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+    static public FloatBuffer vertexBuffer;
+    static public IntBuffer drawListBuffer;
+    static public FloatBuffer uvBuffer;
+    static public FloatBuffer colBuffer;
+
     // TODO: Add textures for each side
     // private int[] whichTexture = {0, 0, 0, 0, 0, 0};
     private int whichTexture;
@@ -29,27 +32,30 @@ public class Object3D {
             "uniform mat4 uMVPMatrix;" +
                     "attribute vec4 vPosition;" +
                     "attribute vec2 a_texCoordinate;" + // Texture coordinates
+                    "attribute vec4 vColor;" +
                     "varying vec2 v_texCoordinate;" + // Texture coordinates
+                    "varying vec4 fColor;" +
                     "void main() {" +
                     "  gl_Position = uMVPMatrix * vPosition;" +
                     "  v_texCoordinate = a_texCoordinate;" +
+                    "  fColor = vColor;" +
                     "}";
 
     private final String fragmentShaderCode =
             "precision mediump float;" +
-                    "uniform vec4 vColor;" +
                     "uniform sampler2D u_texture;" +
                     "varying vec2 v_texCoordinate;" +
+                    "varying vec4 fColor;" +
                     "void main() {" +
-                    "  gl_FragColor = vColor * texture2D( u_texture, v_texCoordinate);" +
+                    "  gl_FragColor = fColor * texture2D( u_texture, v_texCoordinate);" +
                     "}";
 
     // Use to access and set the view transformation
-    private int mMVPMatrixHandle;
+    static private int mMVPMatrixHandle;
 
     // number of coordinates per vertex in this array
-    static final int COORDS_PER_VERTEX = 3;
-    static float cubeCoords[] = {
+
+    public static float cubeCoords[] = {
             // Top
             -0.49f, 0.49f, 0.49f,  // left back
             -0.49f, -0.49f, 0.49f,  // left front
@@ -87,7 +93,7 @@ public class Object3D {
             0.49f,  0.49f, -0.49f    // right back
     };
 
-    private static int drawOrder[] = {
+    public static int drawOrder[] = {
             0,  1,  2,   0,  2,  3, // Top
             4,  5,  6,   4,  6,  7, // Bottom
             8,  9,  10,  8, 10, 11, // Back
@@ -96,14 +102,14 @@ public class Object3D {
             20, 21, 22, 20, 22, 23  // Right
     };
 
-    private int mPositionHandle;
-    private int mColorHandle;
-    private int mTextureCoordinateHandle;
+    static private int mPositionHandle;
+    static private int mColorHandle;
+    static private int mTextureCoordinateHandle;
     /** Size of the texture coordinate data in elements. */
     private final int mTextureCoordinateDataSize = 2;
-    private int mTextureUniformHandle;
+    static private int mTextureUniformHandle;
 
-    private final float uvs[] = {
+    public static final float uvs[] = {
             0.0f, 0.0f, // First Face
             0.0f, 1.0f,
             1.0f, 1.0f,
@@ -130,62 +136,16 @@ public class Object3D {
             1.0f, 0.0f
     };
 
-    private final int vertexCount = cubeCoords.length / COORDS_PER_VERTEX;
-    private final int vertexStride = COORDS_PER_VERTEX * 4; // 4 bytes per vertex
-
-    private FloatBuffer uvBuffer;
+    static final int COORDS_PER_VERTEX = 3;
+    static final int COLORS_PER_VERTEX = 4;
+    public static final int vertexCount = cubeCoords.length / COORDS_PER_VERTEX;
+    static private final int vertexStride = COORDS_PER_VERTEX * 4; // 4 bytes per coordinate
+    static private final int colorStride = COLORS_PER_VERTEX * 4; // 4 bytes per RGBA
 
     public Object3D(Point3D thePos, Point3D theSize) {
         // TODO: Add textures for each side
         position = thePos;
         size = theSize;
-        System.out.println("Creating object... at position: " + position.xyzInfo() +
-            ", size: " + size.xyzInfo());
-        // NOTE: Scaling could probably be done at draw time just like translation
-        float[] myCoords = cubeCoords.clone();
-        for (int i = 0; i < cubeCoords.length; ++i)
-        {
-            if (i%3 == 0) // X coordinate
-            {
-                myCoords[i] *= (float)theSize.m_x;
-            }
-            else if (i%3 == 1) // Y coordinate
-            {
-                myCoords[i] *= (float)theSize.m_y;
-            }
-            else // Z coordinate
-            {
-                myCoords[i] *= (float)theSize.m_z;
-            }
-        }
-        // initialize vertex byte buffer for shape coordinates
-        ByteBuffer bb = ByteBuffer.allocateDirect(
-                // (# of coordinate values * 4 bytes per float)
-                myCoords.length * 4);
-        bb.order(ByteOrder.nativeOrder());
-        vertexBuffer = bb.asFloatBuffer();
-        vertexBuffer.put(myCoords);
-        vertexBuffer.position(0);
-
-        // Initialize byte buffer for the uvs.
-        ByteBuffer ub = ByteBuffer.allocateDirect(
-                // Number of uv values * 4 bytes per float.
-                uvs.length * 4
-        );
-
-        ub.order(ByteOrder.nativeOrder());
-        uvBuffer = ub.asFloatBuffer();
-        uvBuffer.put(uvs);
-        uvBuffer.position(0);    // initialize byte buffer for the draw list
-
-        ByteBuffer dlb = ByteBuffer.allocateDirect(
-                // (# of coordinate values * 4 bytes per int)
-                drawOrder.length * 4);
-        dlb.order(ByteOrder.nativeOrder());
-        drawListBuffer = dlb.asIntBuffer();
-        drawListBuffer.put(drawOrder);
-        drawListBuffer.position(0);
-
         if (mProgram < 0)
         {
             int vertexShader = HeliGLRenderer.loadShader(GLES20.GL_VERTEX_SHADER,
@@ -249,6 +209,58 @@ public class Object3D {
         return doesItCollide;
     }
 
+    /**
+     vxs - array of vertices
+     ors - array of orders
+     cls - array of colors
+     iv - Position in master vertex array
+     io - Position in master draw order array
+     ic - Position in master color array
+     it - Position in master texture array
+     */
+    public void createObject(float[] vxs, int[] ors, float[] cls, float[] texs
+            ,int iv, int io, int ic, int it)
+    {
+        // NOTE: Scaling could probably be done at draw time just like translation
+        for (int i = 0; i < cubeCoords.length; ++i)
+        {
+            if (i%3 == 0) // X coordinate
+            {
+                vxs[iv] = (float) (cubeCoords[i] * size.m_x + position.m_x);
+            }
+            else if (i%3 == 1) // Y coordinate
+            {
+                vxs[iv] = (float) (cubeCoords[i] * size.m_y + position.m_y);
+            }
+            else // Z coordinate
+            {
+                vxs[iv] = (float) (cubeCoords[i] * size.m_z + position.m_z);
+            }
+            ++iv;
+        }
+        // Found the bug!  Draw order has 36 elements, but only need to increment by 24!
+        int objOffset = io / drawOrder.length * 24;
+        for(int i = 0; i<drawOrder.length; ++i)
+        {
+            ors[io] = drawOrder[i] + objOffset;
+            ++io;
+        }
+
+        for(int i = 0; i<vertexCount; ++i)
+        {
+            cls[ic++] = color[0];
+            cls[ic++] = color[1];
+            cls[ic++] = color[2];
+            cls[ic++] = color[3];
+        }
+
+        for(int i = 0; i < uvs.length; ++i)
+        {
+            texs[it++] = uvs[i];
+        }
+    }
+
+
     // TODO: Update textures for each side
     public int getTexture() { return whichTexture; }
 
@@ -309,12 +321,21 @@ public class Object3D {
         return scratchMatrix;
     }
 
-    public void draw(int textDataHandle, float[] mvpMatrix) { // pass in the calculated transformation matrix
+    static public void draw(int textDataHandle, float[] mvpMatrix) { // pass in the calculated transformation matrix
         // Add program to OpenGL ES environment
         GLES20.glUseProgram(mProgram);
+        int error = GLES20.glGetError();
+        if (error != GLES20.GL_NO_ERROR)
+        {
+            System.out.println("Use Program Error: " + error);
+        }
 
         // get handle to vertex shader's vPosition member
         mPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
+        if (mPositionHandle < 0)
+        {
+            System.out.println("Failed to get mPositionHandle");
+        }
 
         // Enable a handle to the cube vertices
         GLES20.glEnableVertexAttribArray(mPositionHandle);
@@ -324,15 +345,16 @@ public class Object3D {
                 GLES20.GL_FLOAT, false,
                 vertexStride, vertexBuffer);
 
-        // get handle to fragment shader's vColor member
-        mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor");
+        // get handle to vertex shader's vColor member
+        mColorHandle = GLES20.glGetAttribLocation(mProgram, "vColor");
         if (mColorHandle < 0)
         {
             System.out.println("Failed to get vColor");
         }
+        GLES20.glEnableVertexAttribArray(mColorHandle);
 
-        // Set color for drawing the triangles
-        GLES20.glUniform4fv(mColorHandle, 1, color, 0);
+        GLES20.glVertexAttribPointer(mColorHandle, COLORS_PER_VERTEX,
+                GLES20.GL_FLOAT, false, colorStride, colBuffer);
 
         // get handle to shape's transformation matrix
         mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
@@ -366,14 +388,21 @@ public class Object3D {
         // Tell the texture uniform sampler to use this texture in the shader by binding to texture unit 0.
         GLES20.glUniform1i(mTextureUniformHandle, 0);
 
-        GLES20.glDrawElements(GLES20.GL_TRIANGLES, drawOrder.length,
+        GLES20.glDrawElements(GLES20.GL_TRIANGLES, drawListBuffer.capacity(),
                 GLES20.GL_UNSIGNED_INT, drawListBuffer);
+        int drawError = GLES20.glGetError();
+        if (drawError != GLES20.GL_NO_ERROR)
+        {
+            System.out.println("Draw Elements Error: " + drawError);
+        }
+
 
         // Disable texture array
         GLES20.glDisableVertexAttribArray(mTextureCoordinateHandle);
 
         // Disable vertex array
         GLES20.glDisableVertexAttribArray(mPositionHandle);
+        GLES20.glDisableVertexAttribArray(mColorHandle);
     }
 
 }

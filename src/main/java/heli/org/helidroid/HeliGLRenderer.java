@@ -13,6 +13,10 @@ import android.os.SystemClock;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -63,16 +67,31 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
     private Context mContext;
 
     private ArrayList<Object3D> worldState = null;
+
+    static protected final int ROW_START = 0;
+    static protected final int BLOCK_ROWS = 16;
+    static protected final int COL_START = 0;
+    static protected final int BLOCK_COLS = 16;
+    static protected final int OBJECTS_PER_BLOCK = 37;
+
+    static protected final int OBJECT_COUNT = (BLOCK_ROWS - ROW_START) * (BLOCK_COLS - COL_START) * OBJECTS_PER_BLOCK;
+
+    float[] vxs = new float[OBJECT_COUNT * Object3D.cubeCoords.length];
+    float[] cls = new float[OBJECT_COUNT * (Object3D.vertexCount) * Object3D.COLORS_PER_VERTEX];
+    float[] texs = new float[OBJECT_COUNT * Object3D.uvs.length];
+    int[] dos = new int[OBJECT_COUNT * Object3D.drawOrder.length];
+
     public void createObjects() {
         if (worldState == null)
         {
             worldState = new ArrayList<Object3D>();
         }
+        int idx = 0;
         // TODO: Prevent double creation
         // Generate the world... TODO: Move to city blocks
-        for (int row = 3; row < 7; ++row)
+        for (int row = ROW_START; row < BLOCK_ROWS; ++row)
         {
-            for (int col = 3; col < 7; ++col)
+            for (int col = COL_START; col < BLOCK_COLS; ++col)
             {
                 // Generate a city block
                 // TODO: Move to CityBlock class
@@ -85,6 +104,12 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
                 Point3D sidewalkSize = new Point3D(BLOCK_SIZE, BLOCK_SIZE, 0.1);
                 Object3D sidewalk = new Object3D(sidewalkPos, sidewalkSize);
                 sidewalk.setColor(0.8f, 0.8f, 0.8f, 1.0f);
+                sidewalk.createObject(vxs,dos,cls, texs,
+                        idx * Object3D.cubeCoords.length,
+                        idx * Object3D.drawOrder.length,
+                        idx * Object3D.vertexCount * Object3D.COLORS_PER_VERTEX,
+                        idx * Object3D.uvs.length);
+                ++idx;
                 worldState.add(sidewalk);
                 double startZ = 0.1;
                 startX += SIDEWALK_OFFSET;
@@ -92,30 +117,48 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
                 for (int houseIndex = 0; houseIndex < Math.round(HOUSES_PER_BLOCK); ++houseIndex)
                 {
                     Object3D leftHouse = makeHouse(startX, startY + houseIndex * BUILDING_SPACE, startZ);
+                    leftHouse.createObject(vxs,dos,cls, texs,
+                            idx * Object3D.cubeCoords.length,
+                            idx * Object3D.drawOrder.length,
+                            idx * Object3D.vertexCount * Object3D.COLORS_PER_VERTEX,
+                            idx * Object3D.uvs.length);
+                    ++idx;
                     worldState.add(leftHouse);
                     Object3D rightHouse = makeHouse(startX + 9 * BUILDING_SPACE, startY + houseIndex * BUILDING_SPACE, startZ);
+                    rightHouse.createObject(vxs,dos,cls, texs,
+                            idx * Object3D.cubeCoords.length,
+                            idx * Object3D.drawOrder.length,
+                            idx * Object3D.vertexCount * Object3D.COLORS_PER_VERTEX,
+                            idx * Object3D.uvs.length);
+                    ++idx;
                     worldState.add(rightHouse);
                     if (houseIndex == 0 || houseIndex == 9)
                     {
                         continue;
                     }
                     Object3D topHouse = makeHouse(startX + houseIndex * BUILDING_SPACE, startY, startZ);
+                    topHouse.createObject(vxs,dos,cls, texs,
+                            idx * Object3D.cubeCoords.length,
+                            idx * Object3D.drawOrder.length,
+                            idx * Object3D.vertexCount * Object3D.COLORS_PER_VERTEX,
+                            idx * Object3D.uvs.length);
+                    ++idx;
                     worldState.add(topHouse);
                     Object3D bottomHouse = makeHouse(startX  + houseIndex * BUILDING_SPACE, startY + 9 * BUILDING_SPACE, startZ);
+                    bottomHouse.createObject(vxs,dos,cls,texs,
+                            idx * Object3D.cubeCoords.length,
+                            idx * Object3D.drawOrder.length,
+                            idx * Object3D.vertexCount * Object3D.COLORS_PER_VERTEX,
+                            idx * Object3D.uvs.length);
+                    ++idx;
                     worldState.add(bottomHouse);
                 }
             }
         }
-        /*
-        Point3D locPos = new Point3D(30.0, 30.0, 0.0);
-        Point3D locSize = new Point3D(40.0, 40.0, Math.random() * 20.0 + 5.0);
-        double r = Math.random() * 0.5;
-        double g = Math.random() * 0.5 + 0.25;
-        double b = Math.random() * 0.5 + 0.5;
-        double a = Math.random() * 0.25 + 0.75;
-        Object3D newObject = new Object3D(locPos, locSize);
-        newObject.setColor((float)r, (float)g, (float)b, (float)a);
-        worldState.add(newObject); */
+        Object3D.vertexBuffer = getFB(vxs);
+        Object3D.colBuffer = getFB(cls);
+        Object3D.uvBuffer = getFB(texs);
+        Object3D.drawListBuffer = getIB(dos);
     }
 
     public Object3D makeHouse(double posX, double posY, double posZ)
@@ -126,7 +169,10 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
         Point3D buildingPos = new Point3D(posX + HALF_BUILDING_OFFSET, posY + HALF_BUILDING_OFFSET, posZ);
         Point3D buildingSize = new Point3D(BUILDING_SIZE, BUILDING_SIZE, buildingHeight);
         Object3D worldObj = new Object3D(buildingPos, buildingSize);
-        worldObj.setColor(0.5f + 0.05f * (float)buildingHeight, 0.6f + 0.4f * (float)Math.random(), 0.6f + 0.4f * (float)Math.random(), 1.0f);
+        worldObj.setColor(0.5f + 0.005f * (float)buildingHeight,
+                0.4f + 0.4f * (float)Math.random() - 0.005f * (float)buildingHeight,
+                0.4f + 0.4f * (float)Math.random() - 0.005f * (float)buildingHeight,
+                1.0f - 0.01f * (float)buildingHeight);
         return worldObj;
     }
 
@@ -291,7 +337,7 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);
         mCamera = new Camera();
         // TODO: adjust eye position based on world size
-        mCamera.setSource(200, 500.0, 80);
+        mCamera.setSource(0.0, 320.0, 125.0);
         mCamera.setTarget(500.0, 500.0, 0.0);
         mCamera.setUp(0.0, 0.0, 1.0);
         // NOTE: OpenGL Related objects must be created here after the context is created
@@ -308,7 +354,7 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
     @Override
     public void onDrawFrame(GL10 gl) {
         // TODO: Remove hardcoding etc.
-        mCamera.source.m_x += 0.5;
+        mCamera.source.m_x += 1.0;
         // Redraw background color
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
         // Set the camera position (View matrix)
@@ -317,14 +363,11 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
                 (float) mCamera.target.x(), (float) mCamera.target.y(), (float) mCamera.target.z(),
                 (float) mCamera.upUnit.x(), (float) mCamera.upUnit.y(), (float) mCamera.upUnit.z());
 
-        Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mViewMatrix, 0);
+        float[] newProjectMatrix = new float[16];
+        Matrix.rotateM(newProjectMatrix,0, mProjectionMatrix,0,mAngle,0.0f,0.0f,1.0f);
+        Matrix.multiplyMM(mMVPMatrix, 0, newProjectMatrix, 0, mViewMatrix, 0);
 
-        for (Object3D thisObject : worldState)
-        {
-            float[] scratch = thisObject.buildTransformation(mMVPMatrix, mAngle, 0, -1.0f, 0.0f, 1.0f, 1.0f, 1.0f);
-            int locTexture = thisObject.getTexture();
-            thisObject.draw(mTextureDataHandle[locTexture], scratch);
-        }
+        Object3D.draw(mTextureDataHandle[0],mMVPMatrix);
     }
 
     public void orbitCamera(double ticks)
@@ -343,7 +386,7 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
         // in the onDrawFrame() method
 
         // Reminder -- matrix, offset, low x, high x, low y, high y, near, far
-        Matrix.frustumM(mProjectionMatrix, 0, -ratio, ratio, -1.0f, 1.0f, 5.0f, 1000.0f);
+        Matrix.frustumM(mProjectionMatrix, 0, -ratio, ratio, -1.0f, 1.0f, 5.0f, 2000.0f);
     }
 
     static int loadShader(int type, String shaderCode) {
@@ -357,5 +400,34 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
         GLES20.glCompileShader(shader);
 
         return shader;
+    }
+
+    public static ByteBuffer getBB(byte[] src)
+    {
+        ByteBuffer idxs = ByteBuffer.allocateDirect(src.length);
+        idxs.order(ByteOrder.nativeOrder());
+        idxs.put(src);
+        idxs.position(0);
+        return idxs;
+    }
+
+    public static FloatBuffer getFB(float[] src)
+    {
+        ByteBuffer idxs = ByteBuffer.allocateDirect(src.length * 4);
+        idxs.order(ByteOrder.nativeOrder());
+        FloatBuffer fb = idxs.asFloatBuffer();
+        fb.put(src);
+        fb.position(0);
+        return fb;
+    }
+
+    public static IntBuffer getIB(int[] src)
+    {
+        ByteBuffer idxs = ByteBuffer.allocateDirect(src.length * 4);
+        idxs.order(ByteOrder.nativeOrder());
+        IntBuffer sb = idxs.asIntBuffer();
+        sb.put(src);
+        sb.position(0);
+        return sb;
     }
 }
