@@ -6,6 +6,7 @@ import android.opengl.Matrix;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 
 /** For now, an object3D is a cube-like object, though each individual dimension
@@ -19,7 +20,7 @@ public class Object3D {
     float color[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 
     private FloatBuffer vertexBuffer;
-    private ShortBuffer drawListBuffer;
+    private IntBuffer drawListBuffer;
     // TODO: Add textures for each side
     // private int[] whichTexture = {0, 0, 0, 0, 0, 0};
     private int whichTexture;
@@ -86,7 +87,7 @@ public class Object3D {
             0.49f,  0.49f, -0.49f    // right back
     };
 
-    private static short drawOrder[] = {
+    private static int drawOrder[] = {
             0,  1,  2,   0,  2,  3, // Top
             4,  5,  6,   4,  6,  7, // Bottom
             8,  9,  10,  8, 10, 11, // Back
@@ -178,10 +179,10 @@ public class Object3D {
         uvBuffer.position(0);    // initialize byte buffer for the draw list
 
         ByteBuffer dlb = ByteBuffer.allocateDirect(
-                // (# of coordinate values * 2 bytes per short)
-                drawOrder.length * 2);
+                // (# of coordinate values * 4 bytes per int)
+                drawOrder.length * 4);
         dlb.order(ByteOrder.nativeOrder());
-        drawListBuffer = dlb.asShortBuffer();
+        drawListBuffer = dlb.asIntBuffer();
         drawListBuffer.put(drawOrder);
         drawListBuffer.position(0);
 
@@ -215,12 +216,36 @@ public class Object3D {
         }
     }
 
+    boolean testValues(int thisMin, int thisMax, int otherMin, int otherMax)
+    {
+        boolean overlaps = false;
+        if (((thisMin > otherMin) && (thisMin < otherMax)) ||
+            ((thisMax > otherMin) && (thisMax < otherMax)) ||
+            ((otherMin > thisMin) && (otherMin < thisMax)) ||
+            ((otherMax > thisMin) && (otherMax < thisMax)))
+        {
+            overlaps = true;
+        }
+        return overlaps;
+    }
+
     public boolean collidesWith(Object3D other)
     {
         boolean doesItCollide = false;
         Point3D otherPos = other.getPosition();
         Point3D otherSize = other.getSize();
-        // TODO: Implement basic bounds checking
+        boolean zOverlaps = testValues(position.Z() - size.Z(), position.Z() + size.Z(),
+                                       otherPos.Z() - otherSize.Z(), otherPos.Z() + otherSize.Z());
+        if (zOverlaps)
+        {
+            boolean yOverlaps = testValues(position.Y() - size.Y(), position.Y() + size.Y(),
+                    otherPos.Y() - otherSize.Y(), otherPos.Y() + otherSize.Y());
+            if (yOverlaps)
+            {
+                doesItCollide = testValues(position.X() - size.X(), position.X() + size.X(),
+                        otherPos.X() - otherSize.X(), otherPos.X() + otherSize.X());
+            }
+        }
         return doesItCollide;
     }
 
@@ -342,7 +367,7 @@ public class Object3D {
         GLES20.glUniform1i(mTextureUniformHandle, 0);
 
         GLES20.glDrawElements(GLES20.GL_TRIANGLES, drawOrder.length,
-                GLES20.GL_UNSIGNED_SHORT, drawListBuffer);
+                GLES20.GL_UNSIGNED_INT, drawListBuffer);
 
         // Disable texture array
         GLES20.glDisableVertexAttribArray(mTextureCoordinateHandle);

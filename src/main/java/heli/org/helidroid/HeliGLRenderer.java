@@ -36,13 +36,13 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
 
     private static final double FULL_BLOCK_SIZE = 100.0;
 
-    private static final double HALF_BLOCK_OFFSET = 50.0;
-
     private static final double STREET_OFFSET = 3.0;
 
     private static final double SIDEWALK_OFFSET = 2.0;
 
     private static final double BLOCK_SIZE = FULL_BLOCK_SIZE - 2.0 * STREET_OFFSET;
+
+    private static final double HALF_BLOCK_OFFSET = 47.0;
 
     private static final double SQUARE_SIZE = BLOCK_SIZE - 2.0 * SIDEWALK_OFFSET;
 
@@ -87,8 +87,8 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
                 sidewalk.setColor(0.8f, 0.8f, 0.8f, 1.0f);
                 worldState.add(sidewalk);
                 double startZ = 0.1;
-                startX += 0.05 * BUILDING_SPACE + SIDEWALK_OFFSET;
-                startY += 0.05 * BUILDING_SPACE + SIDEWALK_OFFSET;
+                startX += SIDEWALK_OFFSET;
+                startY += SIDEWALK_OFFSET;
                 for (int houseIndex = 0; houseIndex < Math.round(HOUSES_PER_BLOCK); ++houseIndex)
                 {
                     Object3D leftHouse = makeHouse(startX, startY + houseIndex * BUILDING_SPACE, startZ);
@@ -126,7 +126,7 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
         Point3D buildingPos = new Point3D(posX + HALF_BUILDING_OFFSET, posY + HALF_BUILDING_OFFSET, posZ);
         Point3D buildingSize = new Point3D(BUILDING_SIZE, BUILDING_SIZE, buildingHeight);
         Object3D worldObj = new Object3D(buildingPos, buildingSize);
-        worldObj.setColor(0.6f, 0.6f + 0.4f * (float)Math.random(), 0.6f + 0.4f * (float)Math.random(), 1.0f);
+        worldObj.setColor(0.5f + 0.05f * (float)buildingHeight, 0.6f + 0.4f * (float)Math.random(), 0.6f + 0.4f * (float)Math.random(), 1.0f);
         return worldObj;
     }
 
@@ -291,7 +291,7 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);
         mCamera = new Camera();
         // TODO: adjust eye position based on world size
-        mCamera.setSource(0, 500.0, 80);
+        mCamera.setSource(200, 500.0, 80);
         mCamera.setTarget(500.0, 500.0, 0.0);
         mCamera.setUp(0.0, 0.0, 1.0);
         // NOTE: OpenGL Related objects must be created here after the context is created
@@ -308,7 +308,7 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer {
     @Override
     public void onDrawFrame(GL10 gl) {
         // TODO: Remove hardcoding etc.
-        mCamera.source.m_x += 0.333333;
+        mCamera.source.m_x += 0.5;
         // Redraw background color
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
         // Set the camera position (View matrix)
