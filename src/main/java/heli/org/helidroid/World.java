@@ -41,6 +41,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import javax.microedition.khronos.opengles.GL10;
+import java.nio.*;
 
 /** World Class, for StigChoppers.  Defines the world.
  * Copyright 2015, Daniel A. LaFuze
@@ -63,9 +64,42 @@ public class World
     private double curTimeStamp = 0.0;
     private static final double TICK_TIME = 1.0 / 50.0;
 
+    static protected final int ROW_START = 0;
+    static protected final int BLOCK_ROWS = 16;
+    static protected final int COL_START = 0;
+    static protected final int BLOCK_COLS = 16;
+    static protected final int OBJECTS_PER_BLOCK = 37;
+
+    static protected final int OBJECT_COUNT = (BLOCK_ROWS - ROW_START) * (BLOCK_COLS - COL_START) * OBJECTS_PER_BLOCK;
+
+    float[] vxs = new float[OBJECT_COUNT * Object3D.cubeCoords.length];
+    float[] cls = new float[OBJECT_COUNT * (Object3D.vertexCount) * Object3D.COLORS_PER_VERTEX];
+    float[] texs = new float[OBJECT_COUNT * Object3D.uvs.length];
+    int[] dos = new int[OBJECT_COUNT * Object3D.drawOrder.length];
+
+    private static final double FULL_BLOCK_SIZE = 100.0;
+
+    private static final double STREET_OFFSET = 3.0;
+
+    private static final double SIDEWALK_OFFSET = 2.0;
+
+    private static final double BLOCK_SIZE = FULL_BLOCK_SIZE - 2.0 * STREET_OFFSET;
+
+    private static final double HALF_BLOCK_OFFSET = 47.0;
+
+    private static final double SQUARE_SIZE = BLOCK_SIZE - 2.0 * SIDEWALK_OFFSET;
+
+    private static final double BUILDING_SPACE = (SQUARE_SIZE / 10.0);
+
+    private static final double HALF_BUILDING_OFFSET = BUILDING_SPACE * 0.5;
+
+    private static final double BUILDING_SIZE = 0.9 * BUILDING_SPACE;
+
+    private static final double HOUSES_PER_BLOCK = 10.0;
+
     public static final double MAX_PACKAGE_DISTANCE = 2.0;
 
-    private HeliGLSurfaceView glSurface;
+    private HeliGLSurfaceView glSurface = null;
 
     private double maxTime = 10000.0;
 
@@ -108,6 +142,163 @@ public class World
         {
             System.out.println(tag + ":" + mName(3) + msg);
         }
+    }
+
+    public void createObjects() {
+        if (worldState == null)
+        {
+            worldState = new ArrayList<Object3D>();
+        }
+        int idx = 0;
+        // TODO: Prevent double creation
+        // Generate the world... TODO: Move to city blocks
+        for (int row = ROW_START; row < BLOCK_ROWS; ++row)
+        {
+            for (int col = COL_START; col < BLOCK_COLS; ++col)
+            {
+                // Generate a city block
+                // TODO: Move to CityBlock class
+                // For now, streets are 6.0 m wide
+                // and Sidewalks are 3.0 m wide
+                double startX = FULL_BLOCK_SIZE * col + STREET_OFFSET;
+                double startY = FULL_BLOCK_SIZE * row + STREET_OFFSET;
+                // Sidewalks are 0.1 m above street
+                Point3D sidewalkPos = new Point3D(startX + HALF_BLOCK_OFFSET, startY + HALF_BLOCK_OFFSET, 0.0);
+                Point3D sidewalkSize = new Point3D(BLOCK_SIZE, BLOCK_SIZE, 0.1);
+                Object3D sidewalk = new Object3D(sidewalkPos, sidewalkSize);
+                sidewalk.setColor(0.8f, 0.8f, 0.8f, 1.0f);
+                sidewalk.createObject(vxs,dos,cls, texs,
+									  idx * Object3D.cubeCoords.length,
+									  idx * Object3D.drawOrder.length,
+									  idx * Object3D.vertexCount * Object3D.COLORS_PER_VERTEX,
+									  idx * Object3D.uvs.length);
+                ++idx;
+                worldState.add(sidewalk);
+                double startZ = 0.1;
+                startX += SIDEWALK_OFFSET;
+                startY += SIDEWALK_OFFSET;
+                for (int houseIndex = 0; houseIndex < Math.round(HOUSES_PER_BLOCK); ++houseIndex)
+                {
+                    Object3D leftHouse = makeHouse(startX, startY + houseIndex * BUILDING_SPACE, startZ);
+                    leftHouse.createObject(vxs,dos,cls, texs,
+										   idx * Object3D.cubeCoords.length,
+										   idx * Object3D.drawOrder.length,
+										   idx * Object3D.vertexCount * Object3D.COLORS_PER_VERTEX,
+										   idx * Object3D.uvs.length);
+                    ++idx;
+                    worldState.add(leftHouse);
+                    Object3D rightHouse = makeHouse(startX + 9 * BUILDING_SPACE, startY + houseIndex * BUILDING_SPACE, startZ);
+                    rightHouse.createObject(vxs,dos,cls, texs,
+											idx * Object3D.cubeCoords.length,
+											idx * Object3D.drawOrder.length,
+											idx * Object3D.vertexCount * Object3D.COLORS_PER_VERTEX,
+											idx * Object3D.uvs.length);
+                    ++idx;
+                    worldState.add(rightHouse);
+                    if (houseIndex == 0 || houseIndex == 9)
+                    {
+                        continue;
+                    }
+                    Object3D topHouse = makeHouse(startX + houseIndex * BUILDING_SPACE, startY, startZ);
+                    topHouse.createObject(vxs,dos,cls, texs,
+										  idx * Object3D.cubeCoords.length,
+										  idx * Object3D.drawOrder.length,
+										  idx * Object3D.vertexCount * Object3D.COLORS_PER_VERTEX,
+										  idx * Object3D.uvs.length);
+                    ++idx;
+                    worldState.add(topHouse);
+                    Object3D bottomHouse = makeHouse(startX  + houseIndex * BUILDING_SPACE, startY + 9 * BUILDING_SPACE, startZ);
+                    bottomHouse.createObject(vxs,dos,cls,texs,
+											 idx * Object3D.cubeCoords.length,
+											 idx * Object3D.drawOrder.length,
+											 idx * Object3D.vertexCount * Object3D.COLORS_PER_VERTEX,
+											 idx * Object3D.uvs.length);
+                    ++idx;
+                    worldState.add(bottomHouse);
+                }
+            }
+        }
+        Object3D.vertexBuffer = getFB(vxs);
+        Object3D.colBuffer = getFB(cls);
+        Object3D.uvBuffer = getFB(texs);
+        Object3D.drawListBuffer = getIB(dos);
+		createChoppers();
+    }
+
+	public void createChoppers()
+	{
+		// NOTE: Objects already constructed, but this is when we have to set them up for drawing
+		Iterator it = myChoppers.entrySet().iterator();
+        while (it.hasNext())
+        {
+            Map.Entry<Integer, ChopperAggregator> pairs = (Map.Entry)it.next();
+            int id = pairs.getKey();
+            ChopperAggregator locData = pairs.getValue();
+            if (locData != null)
+            {
+                StigChopper theChopper = locData.getChopper();
+			}
+		}			
+				
+	}
+	
+    public static ByteBuffer getBB(byte[] src)
+    {
+        ByteBuffer idxs = ByteBuffer.allocateDirect(src.length);
+        idxs.order(ByteOrder.nativeOrder());
+        idxs.put(src);
+        idxs.position(0);
+        return idxs;
+    }
+
+    public static FloatBuffer getFB(float[] src)
+    {
+        ByteBuffer idxs = ByteBuffer.allocateDirect(src.length * 4);
+        idxs.order(ByteOrder.nativeOrder());
+        FloatBuffer fb = idxs.asFloatBuffer();
+        fb.put(src);
+        fb.position(0);
+        return fb;
+    }
+
+    public static IntBuffer getIB(int[] src)
+    {
+        ByteBuffer idxs = ByteBuffer.allocateDirect(src.length * 4);
+        idxs.order(ByteOrder.nativeOrder());
+        IntBuffer sb = idxs.asIntBuffer();
+        sb.put(src);
+        sb.position(0);
+        return sb;
+    }
+
+    public Object3D makeHouse(double posX, double posY, double posZ)
+    {
+        double buildingHeight = computeBuildingHeight();
+        posZ += buildingHeight / 2.0;
+        // The offset is to ensure the position is at the center
+        Point3D buildingPos = new Point3D(posX + HALF_BUILDING_OFFSET, posY + HALF_BUILDING_OFFSET, posZ);
+        Point3D buildingSize = new Point3D(BUILDING_SIZE, BUILDING_SIZE, buildingHeight);
+        Object3D worldObj = new Object3D(buildingPos, buildingSize);
+        worldObj.setColor(0.5f + 0.005f * (float)buildingHeight,
+						  0.4f + 0.4f * (float)Math.random() - 0.005f * (float)buildingHeight,
+						  0.4f + 0.4f * (float)Math.random() - 0.005f * (float)buildingHeight,
+						  1.0f - 0.01f * (float)buildingHeight);
+        return worldObj;
+    }
+
+    public double computeBuildingHeight()
+    {
+        double buildingHeight = 10.0 + Math.random() * 10.0;
+        double exceptChance = Math.random();
+        if (exceptChance >= 0.98)
+        {
+            buildingHeight *= 5.0;
+        }
+        else if (exceptChance >= 0.9)
+        {
+            buildingHeight *= 2.0;
+        }
+        return buildingHeight;
     }
 
     public void insertChopper(StigChopper chap)
@@ -219,13 +410,10 @@ public class World
 
     // TODO: Replace args functionality
     /**
-     * @param surf
      * @throws Exception
      */
-    public World(HeliGLSurfaceView surf) throws Exception
+    public World() throws Exception
     {
-        glSurface = surf;
-        HeliGLRenderer theRenderer = glSurface.getRenderer();
         sizeX = 1000;
         sizeY = 1000;
         sizeZ = 200;
@@ -315,10 +503,13 @@ public class World
         allPackageLocs = new ArrayList<Point3D>();
         // Give the choppers somewhere to go
         setChopperWaypoints();
-
-        theRenderer.setWorld(this);
     }
 
+	public void setSurface(HeliGLSurfaceView surf)
+	{
+		glSurface = surf;
+	}
+	
     public ArrayList<Object3D> getObjects()
     {
         return worldState;
@@ -417,10 +608,14 @@ public class World
                  }
              }
          }
-         HeliGLRenderer renderer = glSurface.getRenderer();
-         // TODO: Remove hard-coding etc.
-         //renderer.orbitCamera(5.0);
-		 glSurface.requestRender();
+		 if (glSurface != null)
+		 {
+			 glSurface.requestRender();
+		 }
+		 else
+		 {
+			 System.out.println("glSurface not set... can't draw the world. " + curTimeStamp);
+		 }
          curTimeStamp += TICK_TIME;
     }
 

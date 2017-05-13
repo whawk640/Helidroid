@@ -11,13 +11,13 @@ import android.view.MotionEvent;
 public class HeliGLSurfaceView extends GLSurfaceView {
     private final HeliGLRenderer mRenderer;
 
-    public HeliGLSurfaceView(Context context){
+    public HeliGLSurfaceView(Context context, World wrld){
         super(context);
 
         // Create an OpenGL ES 2.0 context
         setEGLContextClientVersion(2);
 
-        mRenderer = new HeliGLRenderer(context);
+        mRenderer = new HeliGLRenderer(context, wrld);
 
         // Set the Renderer for drawing on the GLSurfaceView
         setRenderer(mRenderer);
@@ -43,7 +43,6 @@ public class HeliGLSurfaceView extends GLSurfaceView {
         float x = e.getX();
         float y = e.getY();
 
-        /*
         switch (e.getAction()) {
             case MotionEvent.ACTION_MOVE: {
 
@@ -63,9 +62,9 @@ public class HeliGLSurfaceView extends GLSurfaceView {
                 mRenderer.setAngle(
                         mRenderer.getAngle() +
                                 ((dx + dy) * TOUCH_SCALE_FACTOR));
-                requestRender();
+                //requestRender();
             }
-        } */
+        }
 
         mPreviousX = x;
         mPreviousY = y;

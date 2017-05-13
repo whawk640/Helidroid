@@ -39,6 +39,76 @@ public class StigChopper {
 
     protected ArrayList<Point3D> targetWaypoints;
 
+	protected String buildVertexCode(boolean vertexColor, boolean enableTextures)
+	{
+		String vertexString = 
+		  "uniform mat4 uMVPMatrix;" +
+		  "attribute vec4 vPosition;";
+		if (vertexColor)
+		{
+		   vertexString += "attribute vec4 vColor;";  			 			  
+		}
+		if (enableTextures)
+		{
+			vertexString += "attribute vec2 a_texCoordinate;";
+			vertexString += "varying vec2 v_texCoordinate;";
+		}
+		if (vertexColor)
+		{
+			vertexString += "varying vec4 fColor;";  			 			  
+		}
+		vertexString += "void main() {";
+		vertexString += "  gl_Position = uMVPMatrix * vPosition;";
+		if (enableTextures)
+		{
+			vertexString += "  v_texCoordinate = a_texCoordinate;";
+		}
+		if (vertexColor)
+		{
+			vertexString += "  fColor = vColor;";
+		}
+		vertexString +=	"}";
+		return vertexString;
+	}
+
+	protected String buildFragmentCode(boolean vertexColor, boolean enableTextures)
+	{
+		String fragmentString = "precision mediump float;";
+		if (vertexColor == false)
+		{
+			fragmentString += "uniform vec4 vColor;";
+		}
+		if (enableTextures)
+		{
+			fragmentString += "uniform sampler2D u_texture;";
+			fragmentString += "varying vec2 v_texCoordinate;";
+			
+		}
+		if (vertexColor)
+		{
+			fragmentString += "varying vec4 fColor;";
+		}
+		fragmentString += "void main() {";
+		if (enableTextures && vertexColor)
+		{
+			fragmentString += "  gl_FragColor = fColor * texture2D( u_texture, v_texCoordinate);";
+		}
+		else if (enableTextures)
+		{
+			fragmentString += "  gl_FragColor = vColor * texture2D( u_texture, v_texCoordinate);";
+		}
+		else if (vertexColor)
+		{
+			fragmentString += "  gl_FragColor = fColor;";
+		}
+		else // Single color, no texture
+		{
+			fragmentString += "  gl_FragColor = vColor;";
+		}
+		fragmentString += "}";
+		return fragmentString;
+	}		
+	
     // Complication -- homeBase isn't known yet -- we need chopperInfo constructed first
     public StigChopper(int chopperID, World theWorld)
     {
@@ -96,7 +166,6 @@ public class StigChopper {
         Point3D result = new Point3D(X_SIZE, Y_SIZE, Z_SIZE);
         return result;
     }
-
 
     /** This method renders a chopper.  We'll get the position from the world.
      * We need to get information about the chopper's orientation from the

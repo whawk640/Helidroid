@@ -36,11 +36,20 @@ public class MainActivity extends AppCompatActivity {
         timer = new Timer();
         // TODO: Add intents to replace argument parsing from java main
 
+        try {
+            mWorld = new World();
+			Toast.makeText(this,"World Created...",Toast.LENGTH_SHORT);
+        } catch(Exception e)
+        {
+            Toast.makeText(this, "Exception when creating world...", Toast.LENGTH_SHORT);
+            // Do nothing at this time
+        }
         RelativeLayout layout = (RelativeLayout) findViewById(R.id.mainLayout);
-        mGLView = new HeliGLSurfaceView(this);
+        mGLView = new HeliGLSurfaceView(this, mWorld);
         mGLView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT));
         layout.addView(mGLView);
+		mWorld.setSurface(mGLView);
 
 		/*
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -51,14 +60,6 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         }); */
-        try {
-            mWorld = new World(mGLView);
-			Toast.makeText(this,"World Created...",Toast.LENGTH_SHORT);
-        } catch(Exception e)
-        {
-            Toast.makeText(this, "Exception when creating world...", Toast.LENGTH_SHORT);
-            // Do nothing at this time
-        }
 
     }
 
