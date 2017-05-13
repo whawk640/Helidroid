@@ -2,6 +2,8 @@ package heli.org.helidroid;
 
 import android.opengl.GLES20;
 
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 
 import javax.microedition.khronos.opengles.GL10;
@@ -13,7 +15,19 @@ import javax.microedition.khronos.opengles.GL10;
  * All Rights Reserved
  *
  */
-public class StigChopper {
+public class StigChopper
+{
+    private static int mProgram = -1;
+    // TODO: Setup structures for each type of drawing
+    // These buffers are currently designed for triangles
+    static public FloatBuffer vertexBuffer;
+    static public IntBuffer drawListBuffer;
+    static public FloatBuffer uvBuffer;
+    static public FloatBuffer colBuffer;
+
+    static protected boolean useVertexColor = true;
+
+    static protected boolean useTextures = true;
 
     protected Point3D size;
 
@@ -39,76 +53,6 @@ public class StigChopper {
 
     protected ArrayList<Point3D> targetWaypoints;
 
-	protected String buildVertexCode(boolean vertexColor, boolean enableTextures)
-	{
-		String vertexString = 
-		  "uniform mat4 uMVPMatrix;" +
-		  "attribute vec4 vPosition;";
-		if (vertexColor)
-		{
-		   vertexString += "attribute vec4 vColor;";  			 			  
-		}
-		if (enableTextures)
-		{
-			vertexString += "attribute vec2 a_texCoordinate;";
-			vertexString += "varying vec2 v_texCoordinate;";
-		}
-		if (vertexColor)
-		{
-			vertexString += "varying vec4 fColor;";  			 			  
-		}
-		vertexString += "void main() {";
-		vertexString += "  gl_Position = uMVPMatrix * vPosition;";
-		if (enableTextures)
-		{
-			vertexString += "  v_texCoordinate = a_texCoordinate;";
-		}
-		if (vertexColor)
-		{
-			vertexString += "  fColor = vColor;";
-		}
-		vertexString +=	"}";
-		return vertexString;
-	}
-
-	protected String buildFragmentCode(boolean vertexColor, boolean enableTextures)
-	{
-		String fragmentString = "precision mediump float;";
-		if (vertexColor == false)
-		{
-			fragmentString += "uniform vec4 vColor;";
-		}
-		if (enableTextures)
-		{
-			fragmentString += "uniform sampler2D u_texture;";
-			fragmentString += "varying vec2 v_texCoordinate;";
-			
-		}
-		if (vertexColor)
-		{
-			fragmentString += "varying vec4 fColor;";
-		}
-		fragmentString += "void main() {";
-		if (enableTextures && vertexColor)
-		{
-			fragmentString += "  gl_FragColor = fColor * texture2D( u_texture, v_texCoordinate);";
-		}
-		else if (enableTextures)
-		{
-			fragmentString += "  gl_FragColor = vColor * texture2D( u_texture, v_texCoordinate);";
-		}
-		else if (vertexColor)
-		{
-			fragmentString += "  gl_FragColor = fColor;";
-		}
-		else // Single color, no texture
-		{
-			fragmentString += "  gl_FragColor = vColor;";
-		}
-		fragmentString += "}";
-		return fragmentString;
-	}		
-	
     // Complication -- homeBase isn't known yet -- we need chopperInfo constructed first
     public StigChopper(int chopperID, World theWorld)
     {
@@ -122,7 +66,106 @@ public class StigChopper {
         homeBase = null;
         targetWaypoints = new ArrayList<Point3D>();
 
-        System.out.println("StigChopper " + id + " created -- fuel capacity: " + fuelCapacity);
+        if (mProgram < 0) {
+            String vertexCode = buildVertexCode(useVertexColor, useTextures);
+            int vertexShader = HeliGLRenderer.loadShader(GLES20.GL_VERTEX_SHADER,
+                    //vertexShaderCode);
+                    vertexCode);
+            String fragmentCode = buildFragmentCode(useVertexColor, useTextures);
+            int fragmentShader = HeliGLRenderer.loadShader(GLES20.GL_FRAGMENT_SHADER,
+                    //fragmentShaderCode);
+                    fragmentCode);
+            if (vertexShader > 0 && fragmentShader > 0) {
+                // create empty OpenGL ES Program
+                mProgram = GLES20.glCreateProgram();
+
+                // add the vertex shader to program
+                GLES20.glAttachShader(mProgram, vertexShader);
+
+                // add the fragment shader to program
+                GLES20.glAttachShader(mProgram, fragmentShader);
+
+                // creates OpenGL ES program executables
+                GLES20.glLinkProgram(mProgram);
+                System.out.println("StigChopper Shaders created, vtx: " + vertexShader + ", fragment: " +
+                        fragmentShader + ", program ID: " + mProgram);
+            } else {
+                System.out.println("StigChopper Failed to load shader program -- vertex: " + vertexShader +
+                        ", fragment: " + fragmentShader);
+            }
+
+            System.out.println("StigChopper " + id + " created -- fuel capacity: " + fuelCapacity);
+        }
+    }
+
+    protected String buildVertexCode(boolean vertexColor, boolean enableTextures)
+    {
+        String vertexString =
+                "uniform mat4 uMVPMatrix;" +
+                        "attribute vec4 vPosition;";
+        if (vertexColor)
+        {
+            vertexString += "attribute vec4 vColor;";
+        }
+        if (enableTextures)
+        {
+            vertexString += "attribute vec2 a_texCoordinate;";
+            vertexString += "varying vec2 v_texCoordinate;";
+        }
+        if (vertexColor)
+        {
+            vertexString += "varying vec4 fColor;";
+        }
+        vertexString += "void main() {";
+        vertexString += "  gl_Position = uMVPMatrix * vPosition;";
+        if (enableTextures)
+        {
+            vertexString += "  v_texCoordinate = a_texCoordinate;";
+        }
+        if (vertexColor)
+        {
+            vertexString += "  fColor = vColor;";
+        }
+        vertexString +=	"}";
+        return vertexString;
+    }
+
+    protected String buildFragmentCode(boolean vertexColor, boolean enableTextures)
+    {
+        String fragmentString = "precision mediump float;";
+        if (vertexColor == false)
+        {
+            fragmentString += "uniform vec4 vColor;";
+        }
+        if (enableTextures)
+        {
+            fragmentString += "uniform sampler2D u_texture;";
+            fragmentString += "varying vec2 v_texCoordinate;";
+
+        }
+        if (vertexColor)
+        {
+            fragmentString += "varying vec4 fColor;";
+        }
+        fragmentString += "void main() {";
+        if (enableTextures && vertexColor)
+        {
+            fragmentString += "  gl_FragColor = fColor * texture2D( u_texture, v_texCoordinate);";
+        }
+        else if (enableTextures)
+        {
+            fragmentString += "  gl_FragColor = vColor * texture2D( u_texture, v_texCoordinate);";
+        }
+        else if (vertexColor)
+        {
+            fragmentString += "  gl_FragColor = fColor;";
+        }
+        else // Single color, no texture
+        {
+            fragmentString += "  gl_FragColor = vColor;";
+        }
+        fragmentString += "}";
+        return fragmentString;
     }
 
     /** This method sets the chopper's waypoints.  Eventually, we will deliver
@@ -425,25 +468,4 @@ public class StigChopper {
         gl.glPopMatrix();
     } */
 
-    private ArrayList<Object3D> makeChopperObjects(Point3D myPos, Point3D mySize)
-    {
-        ArrayList<Object3D> resultObjects = new ArrayList<Object3D>();
-        Point3D firstPoint = new Point3D(myPos.m_x + 0.5, myPos.m_y, myPos.m_z + 1.0);
-        Point3D firstSize = new Point3D(1.0, 2.5, 1.0);
-        Object3D firstObj = new Object3D(firstPoint, firstSize);
-        resultObjects.add(firstObj);
-        Point3D secondPoint = new Point3D(myPos.m_x, myPos.m_y + 0.5, myPos.m_z + 0.5);
-        Point3D secondSize = new Point3D(2.0, 1.5, 2.0);
-        Object3D secondObj = new Object3D(secondPoint, secondSize);
-        resultObjects.add(secondObj);
-        Point3D firstTPoint = new Point3D(myPos.m_x + 0.75, myPos.m_y + 4.0, myPos.m_z + 1.25);
-        Point3D firstTSize = new Point3D(0.5, 1.0, 0.5);
-        Object3D firstTObj = new Object3D(firstTPoint, firstTSize);
-        resultObjects.add(firstTObj);
-        Point3D secondTPoint = new Point3D(myPos.m_x + 0.75, myPos.m_y + 4.25, myPos.m_z + 1.0);
-        Point3D secondTSize = new Point3D(0.5, 0.5, 1.0);
-        Object3D secondTObj = new Object3D(secondTPoint, secondTSize);
-        resultObjects.add(secondTObj);
-        return resultObjects;
-    }
 }

@@ -65,9 +65,9 @@ public class World
     private static final double TICK_TIME = 1.0 / 50.0;
 
     static protected final int ROW_START = 0;
-    static protected final int BLOCK_ROWS = 16;
+    static protected final int BLOCK_ROWS = 10;
     static protected final int COL_START = 0;
-    static protected final int BLOCK_COLS = 16;
+    static protected final int BLOCK_COLS = 10;
     static protected final int OBJECTS_PER_BLOCK = 37;
 
     static protected final int OBJECT_COUNT = (BLOCK_ROWS - ROW_START) * (BLOCK_COLS - COL_START) * OBJECTS_PER_BLOCK;
@@ -497,9 +497,6 @@ public class World
         Danook myChopper = new Danook(requestNextChopperID(), this);
         insertChopper(myChopper);
 
-
-        //worldState = new ArrayList<Object3D>();
-
         allPackageLocs = new ArrayList<Point3D>();
         // Give the choppers somewhere to go
         setChopperWaypoints();
@@ -619,59 +616,13 @@ public class World
          curTimeStamp += TICK_TIME;
     }
 
-    public static float[] makeVertexArray(Point3D inPoint, Point3D boxSize)
+    public void draw(int textDataHandle, float[] mvpMatrix)
     {
-        float[] resultArray = null;
-        if (inPoint == null)
-        {
-            return resultArray;
-        }
-        // 8 vertexes, 3 coordinates each (Add one for center at end)
-        resultArray = new float[27];
-        float xStart = (float) inPoint.x();
-        float yStart = (float) inPoint.y();
-        float zStart = (float) inPoint.z();
 
-        float xSize = (float) boxSize.x();
-        float ySize = (float) boxSize.y();
-        float zSize = (float) boxSize.z();
-// Vertex 1
-        resultArray[0] = xStart;
-        resultArray[1] = yStart + ySize;
-        resultArray[2] = zStart + zSize;
-        // Vertex 2
-        resultArray[3] = xStart;
-        resultArray[4] = yStart;
-        resultArray[5] = zStart + zSize;
-        // Vertex 3
-        resultArray[6] = xStart + xSize;
-        resultArray[7] = yStart;
-        resultArray[8] = zStart + zSize;
-        // Vertex 4
-        resultArray[9] = xStart + xSize;
-        resultArray[10] = yStart + ySize;
-        resultArray[11] = zStart + zSize;
-        // Vertex 5
-        resultArray[12] = xStart;
-        resultArray[13] = yStart + ySize;
-        resultArray[14] = zStart;
-        // Vertex 6
-        resultArray[15] = xStart + xSize;
-        resultArray[16] = yStart + ySize;
-        resultArray[17] = zStart;
-        // Vertex 7
-        resultArray[18] = xStart + xSize;
-        resultArray[19] = yStart;
-        resultArray[20] = zStart;
-        // Vertex 8
-        resultArray[21] = xStart;
-        resultArray[22] = yStart;
-        resultArray[23] = zStart;
-        // Vertex 9 (Extra -- at center)
-        resultArray[24] = xStart + xSize / 2.0f;
-        resultArray[25] = yStart + ySize / 2.0f;
-        resultArray[26] = zStart + zSize / 2.0f;
-        return resultArray;
+        // First, draw the static world
+        Object3D.draw(textDataHandle,mvpMatrix);
+        //TODO: Iterate over all the choppers and draw them
+
     }
 
     synchronized public Point3D gps(int chopperID)

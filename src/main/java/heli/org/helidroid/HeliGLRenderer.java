@@ -185,7 +185,7 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);
         mCamera = new Camera();
         // TODO: adjust eye position based on world size
-        mCamera.setSource(0.0, 320.0, 125.0);
+        mCamera.setSource(000.0, 450.0, 125.0);
         mCamera.setTarget(500.0, 500.0, 0.0);
         mCamera.setUp(0.0, 0.0, 1.0);
         // NOTE: OpenGL Related objects must be created here after the context is created
@@ -199,11 +199,10 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer
 
     @Override
     public void onDrawFrame(GL10 gl) {
-        // TODO: Remove hardcoding etc.
-        mCamera.source.m_x += 1.0;
         // Redraw background color
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
         // Set the camera position (View matrix)
+        mCamera.source.m_x += 1.0;
         Matrix.setLookAtM(mViewMatrix, 0,
                 (float) mCamera.source.x(), (float) mCamera.source.y(), (float) mCamera.source.z(),
                 (float) mCamera.target.x(), (float) mCamera.target.y(), (float) mCamera.target.z(),
@@ -213,7 +212,7 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer
         Matrix.rotateM(newProjectMatrix,0, mProjectionMatrix,0,mAngle,0.0f,0.0f,1.0f);
         Matrix.multiplyMM(mMVPMatrix, 0, newProjectMatrix, 0, mViewMatrix, 0);
 
-        Object3D.draw(mTextureDataHandle[0],mMVPMatrix);
+        theWorld.draw(mTextureDataHandle[0], mMVPMatrix);
     }
 
     public void orbitCamera(double ticks)

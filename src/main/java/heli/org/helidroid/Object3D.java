@@ -12,7 +12,6 @@ import java.nio.IntBuffer;
  * can be varied by passing in size.
  */
 public class Object3D {
-    // TODO: Utilize one shader program to draw all objects
     private static int mProgram = -1;
     private Point3D position;
     private Point3D size;
@@ -32,6 +31,7 @@ public class Object3D {
     // private int[] whichTexture = {0, 0, 0, 0, 0, 0};
     private int whichTexture;
 
+    /** Example Shader Code to draw textures and per vertex color.
     private final String vertexShaderCode =
             "uniform mat4 uMVPMatrix;" +
                     "attribute vec4 vPosition;" +
@@ -53,6 +53,7 @@ public class Object3D {
                     "void main() {" +
                     "  gl_FragColor = fColor * texture2D( u_texture, v_texCoordinate);" +
                     "}";
+    */
 
     // Use to access and set the view transformation
     static private int mMVPMatrixHandle;
@@ -146,20 +147,33 @@ public class Object3D {
     static private final int vertexStride = COORDS_PER_VERTEX * 4; // 4 bytes per coordinate
     static private final int colorStride = COLORS_PER_VERTEX * 4; // 4 bytes per RGBA
 
-    public Object3D(Point3D thePos, Point3D theSize) {
+    private Boolean overrideTextures = null;
+
+    boolean testTextureOverride()
+    {
+        boolean useText = useTextures;
+        if (overrideTextures != null)
+        {
+            useText = overrideTextures;
+        }
+        return useText;
+    }
+
+    void commonConstructor(Point3D thePos, Point3D theSize)
+    {
         // TODO: Add textures for each side
         position = thePos;
         size = theSize;
         if (mProgram < 0)
         {
-			String vertexCode = buildVertexCode(useVertexColor, useTextures);
+            boolean useVColor = useVertexColor;
+            boolean useText = testTextureOverride();
+            String vertexCode = buildVertexCode(useVColor, useText);
             int vertexShader = HeliGLRenderer.loadShader(GLES20.GL_VERTEX_SHADER,
-                    //vertexShaderCode);
-					vertexCode);
-			String fragmentCode = buildFragmentCode(useVertexColor, useTextures);		
+                    vertexCode);
+            String fragmentCode = buildFragmentCode(useVColor, useText);
             int fragmentShader = HeliGLRenderer.loadShader(GLES20.GL_FRAGMENT_SHADER,
-                    //fragmentShaderCode);
-					fragmentCode);
+                    fragmentCode);
             if (vertexShader > 0 && fragmentShader > 0) {
                 // create empty OpenGL ES Program
                 mProgram = GLES20.glCreateProgram();
@@ -172,16 +186,26 @@ public class Object3D {
 
                 // creates OpenGL ES program executables
                 GLES20.glLinkProgram(mProgram);
-                System.out.println("Shaders created, vtx: " + vertexShader + ", fragment: " +
+                System.out.println("Object3D Shaders created, vtx: " + vertexShader + ", fragment: " +
                         fragmentShader + ", program ID: " + mProgram);
             }
             else
             {
-                System.out.println("Failed to load shader program -- vertex: " + vertexShader +
-                      ", fragment: " + fragmentShader);
+                System.out.println("Object3D Failed to load shader program -- vertex: " + vertexShader +
+                        ", fragment: " + fragmentShader);
             }
 
         }
+    }
+
+    public Object3D(Point3D thePos, Point3D theSize, boolean overText)
+    {
+        commonConstructor(thePos, theSize);
+        overrideTextures = new Boolean(overText);
+    }
+
+    public Object3D(Point3D thePos, Point3D theSize) {
+        commonConstructor(thePos, theSize);
     }
 
 	protected String buildVertexCode(boolean vertexColor, boolean enableTextures)
@@ -378,27 +402,6 @@ public class Object3D {
         return size;
     }
 
-    public float[] buildTransformation(float[] inMatrix, float angDeg, float x, float y, float z, float scaleX, float scaleY, float scaleZ)
-    {
-        float[] transMatrix = new float[16];
-
-        Matrix.setIdentityM(transMatrix,0);
-
-        float[] rotationMatrix = new float[16];
-        Matrix.setRotateM(rotationMatrix, 0, angDeg, x, y, z);
-
-        // Move origin to center of object
-        Matrix.translateM(transMatrix, 0, (float) position.m_x, (float) position.m_y, (float) position.m_z);
-
-        float[] midMatrix = new float[16];
-        Matrix.multiplyMM(midMatrix,0,inMatrix,0, transMatrix,0);
-
-        float[] scratchMatrix = new float[16];
-        Matrix.multiplyMM(scratchMatrix,0,midMatrix,0,rotationMatrix,0);
-        Matrix.scaleM(scratchMatrix,0,scaleX, scaleY, scaleZ);
-        return scratchMatrix;
-    }
-
     static public void draw(int textDataHandle, float[] mvpMatrix) { // pass in the calculated transformation matrix
         // Add program to OpenGL ES environment
         GLES20.glUseProgram(mProgram);
@@ -497,6 +500,107 @@ public class Object3D {
 		{
 			GLES20.glDisableVertexAttribArray(mColorHandle);
 		}
+    }
+
+    public void drawSingle(int textDataHandle, float[] mvpMatrix) { // pass in the calculated transformation matrix
+        // Add program to OpenGL ES environment
+        GLES20.glUseProgram(mProgram);
+        boolean useText = testTextureOverride();
+        int error = GLES20.glGetError();
+        if (error != GLES20.GL_NO_ERROR)
+        {
+            System.out.println("Use Program Error: " + error);
+        }
+
+        // get handle to vertex shader's vPosition member
+        mPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
+        if (mPositionHandle < 0)
+        {
+            System.out.println("Failed to get mPositionHandle");
+        }
+
+        // get handle to shape's transformation matrix
+        mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
+
+        // Enable a handle to the cube vertices
+        GLES20.glEnableVertexAttribArray(mPositionHandle);
+
+        // Prepare the cube coordinate data
+        GLES20.glVertexAttribPointer(mPositionHandle, COORDS_PER_VERTEX,
+                GLES20.GL_FLOAT, false,
+                vertexStride, vertexBuffer);
+
+        // get handle to vertex shader's vColor member
+        if (useVertexColor)
+        {
+            mColorHandle = GLES20.glGetAttribLocation(mProgram, "vColor");
+            if (mColorHandle < 0)
+            {
+                System.out.println("Failed to get vColor");
+            }
+            GLES20.glEnableVertexAttribArray(mColorHandle);
+
+            GLES20.glVertexAttribPointer(mColorHandle, COLORS_PER_VERTEX,
+                    GLES20.GL_FLOAT, false, colorStride, colBuffer);
+        }
+        else
+        {
+            mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor");
+        }
+
+        if (useText)
+        {
+            mTextureUniformHandle = GLES20.glGetUniformLocation(mProgram, "u_texture");
+            if (mTextureUniformHandle < 0)
+            {
+                System.out.println("Failed to get texture uniform");
+            }
+
+            mTextureCoordinateHandle  = GLES20.glGetAttribLocation(mProgram, "a_texCoordinate");
+            if (mTextureCoordinateHandle < 0)
+            {
+                System.out.println("Failed to get texture coordinates.");
+            }
+            GLES20.glEnableVertexAttribArray(mTextureCoordinateHandle);
+
+            // Prepare the uv coordinate data.
+            GLES20.glVertexAttribPointer(mTextureCoordinateHandle, 2,
+                    GLES20.GL_FLOAT, false, 8, uvBuffer);
+
+            // Set the active texture unit to texture unit 0.
+            GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+
+            // Bind the texture to this unit.
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textDataHandle);
+        }
+
+        // Pass the projection and view transformation to the shader
+        GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
+
+        // Tell the texture uniform sampler to use this texture in the shader by binding to texture unit 0.
+        GLES20.glUniform1i(mTextureUniformHandle, 0);
+
+        GLES20.glDrawElements(GLES20.GL_TRIANGLES, drawListBuffer.capacity(),
+                GLES20.GL_UNSIGNED_INT, drawListBuffer);
+        int drawError = GLES20.glGetError();
+        if (drawError != GLES20.GL_NO_ERROR)
+        {
+            System.out.println("Draw Elements Error: " + drawError);
+        }
+
+
+        if (useText)
+        {
+            // Disable texture array
+            GLES20.glDisableVertexAttribArray(mTextureCoordinateHandle);
+        }
+
+        // Disable vertex array
+        GLES20.glDisableVertexAttribArray(mPositionHandle);
+        if (useVertexColor)
+        {
+            GLES20.glDisableVertexAttribArray(mColorHandle);
+        }
     }
 
 }
