@@ -174,13 +174,25 @@ public class Camera {
             ticksPerRevolution = 60.0;
         }
         curAngle += Math.PI /ticksPerRevolution;
-        double deltaX = orbitRadius * Math.sin(curAngle);
-        double deltaY = orbitRadius * Math.cos(curAngle);
+		double orbitRad = computeCamDistance();
+        double deltaX = orbitRad * Math.sin(curAngle);
+        double deltaY = orbitRad * Math.cos(curAngle);
         Point3D newSource = new Point3D(target.x() + deltaX, target.y() + deltaY, target.z() + orbitAltitude);
         source = newSource;
     }
 
-    private void show()
+	public double computeCamDistance()
+	{
+		double deltaX = (source.m_x - target.m_x);
+		double deltaY = (source.m_y - target.m_y);
+		double deltaZ = (source.m_z - target.m_z);
+		double camDistance = Math.sqrt(deltaX * deltaX +
+		                               deltaY * deltaY +
+									   deltaZ * deltaZ);
+		return camDistance;
+	}
+	
+    public void show()
     {
         System.out.println("Camera at: " + source.info());
         System.out.println("Camera Looking at: " + target.info());

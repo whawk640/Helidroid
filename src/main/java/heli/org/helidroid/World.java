@@ -153,7 +153,7 @@ public class World
         int idx = 0;
         // TODO: Prevent double creation
         // Generate the world... TODO: Move to city blocks
-        for (int row = ROW_START; row < BLOCK_ROWS; ++row)
+        /* for (int row = ROW_START; row < BLOCK_ROWS; ++row)
         {
             for (int col = COL_START; col < BLOCK_COLS; ++col)
             {
@@ -223,10 +223,10 @@ public class World
                     worldState.add(bottomHouse);
                 }
             }
-        }
-		//Object3D simpleObject = new Object3D(new Point3D(0.0,0.0,-0.5),new Point3D(5.0,5.0,1.0));
-		//simpleObject.createObject(vxs, dos,lineDos, cls, texs,0,0,0,0,0);
-		//worldState.add(simpleObject);
+        } */
+		Object3D simpleObject = new Object3D(new Point3D(0.0,0.0,-0.5),new Point3D(5.0,5.0,1.0));
+		simpleObject.createObject(vxs, dos,lineDos, cls, texs,0,0,0,0,0);
+		worldState.add(simpleObject);
         Object3D.vertexBuffer = BufferUtils.getFB(vxs);
         Object3D.colBuffer = BufferUtils.getFB(cls);
         Object3D.uvBuffer = BufferUtils.getFB(texs);

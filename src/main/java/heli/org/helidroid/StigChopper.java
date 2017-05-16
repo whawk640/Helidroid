@@ -39,24 +39,75 @@ public class StigChopper
 	public float lineCoords[] = {
 		// Cab to Tail Frame
 		// Left Bottom
-		-1.00f,  0.00f, 0.50f,
-		-0.25f, -1.50f, 1.00f,
+		-1.00f,  0.00f, 0.50f, // 0
+		-0.25f, -1.50f, 1.00f, // 1
 		// Right Bottom
-		+1.00f, 0.00f, 0.50f,
-		0.25f, -1.50f, 1.00f
+		+1.00f, 0.00f, 0.50f, // 2
+		0.25f, -1.50f, 1.00f, // 3
 		// Left Top
-		-1.00f, 0.00f, 2.50f,
-		-0.25f, -1.50f, 2.00f,
+		-1.00f, 0.00f, 2.50f,  // 4
+		-0.25f, -1.50f, 2.00f, // 5
 		// Right Top
-		1.0f, 0.00f, 2.50f,
-		0.25f, -1.50f, 2.00f
-		// Skids (Coming soon)
+		1.0f, 0.00f, 2.50f,   // 6
+		0.25f, -1.50f, 2.00f, // 7
+		// Skids
+		// Left
+		// Front bar
+		-1.00f, 1.50f, 0.50f, // 8
+		-1.00f, 1.50f, 0.00f, // 9
+		// Back Bar
+		-1.00f, 0.50f, 0.50f, // 10
+		-1.00f, 0.50f, 0.00f, // 11
+		// Bottom
+		-1.00f, 2.00f, 0.00f, // 12
+		-1.00f, 0.00f, 0.00f,  // 13
+		// Front Lip
+		-1.00f, 2.50f, 0.50f, // 14
+		// Back Lip
+		-1.00f, -0.50f, 0.50f, // 15
+		// Right
+		// Front bar
+		1.00f, 1.50f, 0.50f, // 16
+		1.00f, 1.50f, 0.00f, // 17
+		// Back Bar
+		1.00f, 0.50f, 0.50f, // 18
+		1.00f, 0.50f, 0.00f, // 19
+		// Bottom
+		1.00f, 2.00f, 0.00f, // 20
+		1.00f, 0.00f, 0.00f,  // 21
+		// Front Lip
+		1.00f, 2.50f, 0.50f, // 22
+		// Back Lip
+		1.00f, -0.50f, 0.50f, // 23
+		// Reinforcing Bar midpoints (for X's)
+		-0.625f, -0.75f, 0.75f, // 24 Down Left
+		0.625f, -0.75f, 0.75f, // 25 Down right
+		-0.625f, -0.75f, 2.25f, // 26 Up Left
+		0.625f, -0.75f, 2.25f  // 27 Up Right
 	};
+	
     public static int lineDrawOrder[] = {
-		// Frame
-		0,  1,  2,  3, // Left
-		4,  5,  6,  7 // Right
-		
+		 // Frame
+		 0,  1,  2,  3, // Left
+		 4,  5,  6,  7, // Right
+		 // Left Skid
+		 8,  9, 10, 11, // Down Bars
+		12, 13, // Bottom Bar
+		// Lips use ends of bottom bar
+		12, 14, 13, 15,
+	     // Left Skid
+	    16, 17, 18, 19, // Down Bars
+	    20, 21, // Bottom Bar
+	    // Lips use ends of bottom bar
+	    20, 22, 21, 23,
+		0, 26, 1, 26,
+		2, 24, 3, 24,
+		0, 25, 1, 25,
+		2, 27, 3, 27,
+		4, 27, 5, 27,
+		6, 26, 7, 26,
+		4, 25, 5, 25,
+		6, 24, 7, 24
 	};
 	
 	public float triCoords[] = {
@@ -251,6 +302,7 @@ public class StigChopper
     /** Size of the texture coordinate data in elements. */
     final int mTextureCoordinateDataSize = 2;
     private int mTextureUniformHandle;
+	private float lineWidth = 3.0f;
 	
     final int COORDS_PER_VERTEX = 3;
     final int COLORS_PER_VERTEX = 4;
@@ -869,6 +921,7 @@ public class StigChopper
         // Pass the projection and view transformation to the shader
         GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
 
+		GLES20.glLineWidth(lineWidth);
         GLES20.glDrawElements(GLES20.GL_LINES, lineDrawListBuffer.capacity(),
 							  GLES20.GL_UNSIGNED_INT, lineDrawListBuffer);
         int drawError = GLES20.glGetError();
