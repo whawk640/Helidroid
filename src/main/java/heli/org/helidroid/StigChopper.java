@@ -17,17 +17,253 @@ import javax.microedition.khronos.opengles.GL10;
  */
 public class StigChopper
 {
-    private static int mProgram = -1;
-    // TODO: Setup structures for each type of drawing
+    private static int mTriProgram = -1;
+	private static int mLineProgram = -1;
+	
     // These buffers are currently designed for triangles
-    static public FloatBuffer vertexBuffer;
-    static public IntBuffer drawListBuffer;
-    static public FloatBuffer uvBuffer;
-    static public FloatBuffer colBuffer;
+    public FloatBuffer triVertexBuffer;
+    public IntBuffer triDrawListBuffer;
+    public FloatBuffer triUvBuffer;
+    public FloatBuffer triColBuffer;
 
-    static protected boolean useVertexColor = true;
+	// Line Buffers	
+	public FloatBuffer lineVertexBuffer;
+    public IntBuffer lineDrawListBuffer;
+    public FloatBuffer lineColBuffer;
+	
+	// NOTE: May not need separate rotor functions
+	public FloatBuffer rotorVertexBuffer;
+	public IntBuffer rotorDrawListBuffer;
+    public FloatBuffer rotorColBuffer;
+	
+	public float lineCoords[] = {
+		// Cab to Tail Frame
+		// Left Bottom
+		-1.00f,  0.00f, 0.50f,
+		-0.25f, -1.50f, 1.00f,
+		// Right Bottom
+		+1.00f, 0.00f, 0.50f,
+		0.25f, -1.50f, 1.00f
+		// Left Top
+		-1.00f, 0.00f, 2.50f,
+		-0.25f, -1.50f, 2.00f,
+		// Right Top
+		1.0f, 0.00f, 2.50f,
+		0.25f, -1.50f, 2.00f
+		// Skids (Coming soon)
+	};
+    public static int lineDrawOrder[] = {
+		// Frame
+		0,  1,  2,  3, // Left
+		4,  5,  6,  7 // Right
+		
+	};
+	
+	public float triCoords[] = {
+		// Large Chopper Cube
+		// Left
+		-1.00f, 2.00f, 2.50f,
+		-1.00f, 2.00f, 0.50f,
+		-1.00f, 0.00f, 0.50f,
+		-1.00f, 0.00f, 2.50f,
 
-    static protected boolean useTextures = true;
+		// Right
+		1.00f, 0.00f, 2.50f,
+		1.00f, 0.00f, 0.50f,
+		1.00f, 2.00f, 0.50f,
+		1.00f, 2.00f, 2.50f,
+
+		// Top
+		-1.00f, 2.00f, 2.50f,
+		-1.00f, 0.00f, 2.50f,
+		1.00f, 0.00f, 2.50f,
+		1.00f, 2.00f, 2.50f,
+		
+		// Bottom
+		1.00f, 2.00f, 0.50f,
+		1.00f, 0.00f, 0.50f,
+		-1.00f, 0.00f, 0.50f,
+		-1.00f, 2.00f, 0.50f,
+		
+		// Front
+		1.00f, 2.00f, 2.50f,
+		1.00f, 2.00f, 0.50f,
+		-1.00f, 2.00f, 0.50f,
+		-1.00f, 2.00f, 2.50f,
+		
+		// Back
+		-1.00f, 0.00f, 2.50f,
+		-1.00f, 0.00f, 0.50f,
+		1.00f, 0.00f, 0.50f,
+		1.00f, 0.00f, 2.50f,
+		
+		// Tail Rotor Mount
+		// Left
+		-0.25f, -1.50f, 2.00f,
+		-0.25f, -1.50f, 1.00f,
+		-0.25f, -2.50f, 1.00f,
+		-0.25f, -2.50f, 2.00f,
+
+		// Right
+		0.25f, -2.50f, 2.00f,
+		0.25f, -2.50f, 1.00f,
+		0.25f, -1.50f, 1.00f,
+		0.25f, -1.50f, 2.00f,
+		
+		// Top
+		-0.25f, -1.50f, 2.00f,
+		-0.25f, -2.50f, 2.00f,
+		0.25f, -2.50f, 2.00f,
+		0.25f, -1.50f, 2.00f,
+
+		// Bottom
+		0.25f, -1.50f, 1.00f,
+		0.25f, -2.50f, 1.00f,
+		-0.25f, -2.50f, 1.00f,
+		-0.25f, -1.50f, 1.00f,
+		
+		// Front
+		0.25f, -1.50f, 2.00f,
+		0.25f, -1.50f, 1.00f,
+		-0.25f, -1.50f, 1.00f,
+		-0.25f, -1.50f, 2.00f,
+
+		// Back
+		-0.25f, -2.50f, 2.00f,
+		-0.25f, -2.50f, 1.00f,
+		0.25f, -2.50f, 1.00f,
+		0.25f, -2.50f, 2.00f,
+		
+		// Rotor Cone
+		// Left
+		-0.5f, 1.5f, 2.5f,
+		-0.5f, 0.5f, 2.5f,
+		0.0f, 1.0f, 3.0f,
+		
+		// Back
+		-0.5f, 0.5f, 2.5f,
+		0.5f, 0.5f, 2.5f,
+		0.0f, 1.0f, 3.0f,
+		
+		// Right
+		0.5f, 0.5f, 2.5f,
+		0.5f, 1.5f, 2.5f,
+		0.0f, 1.0f, 3.0f,
+		
+		// Front
+		0.5f, 1.5f, 2.5f,
+		-0.5f, 1.5f, 2.5f,
+		0.0f, 1.0f, 3.0f
+	};
+
+    public static int triDrawOrder[] = {
+		// Main Cube
+		0,  1,  2,   0,  2,  3, // Top
+		4,  5,  6,   4,  6,  7, // Bottom
+		8,  9,  10,  8, 10, 11, // Back
+		12, 13, 14, 12, 14, 15, // Front
+		16, 17, 18, 16, 18, 19, // Left
+		20, 21, 22, 20, 22, 23, // Right
+		
+		// Small Tail Cube
+	    24, 25, 26, 24, 26, 27, // Top
+	    28, 29, 30, 28, 30, 31, // Bottom
+	    32, 33, 34, 32, 34, 35, // Back
+	    36, 37, 38, 36, 38, 39, // Front
+	    40, 41, 42, 40, 42, 43, // Left
+	    44, 45, 46, 44, 46, 47, // Right
+		
+		// Rotor Cube
+		48, 49, 50, 51, 52, 53,
+		54, 55, 56, 57, 58, 59
+    };
+	
+	private float uvs[] = {
+		// Large Chopper Cube
+		0.0f, 0.0f, 
+		0.0f, 1.0f,
+		1.0f, 1.0f,
+		1.0f, 0.0f,
+		0.0f, 0.0f, 
+		0.0f, 1.0f,
+		1.0f, 1.0f,
+		1.0f, 0.0f,
+		0.0f, 0.0f, 
+		0.0f, 1.0f,
+		1.0f, 1.0f,
+		1.0f, 0.0f,
+		0.0f, 0.0f, 
+		0.0f, 1.0f,
+		1.0f, 1.0f,
+		1.0f, 0.0f,
+		0.0f, 0.0f, 
+		0.0f, 1.0f,
+		1.0f, 1.0f,
+		1.0f, 0.0f,
+		0.0f, 0.0f, 
+		0.0f, 1.0f,
+		1.0f, 1.0f,
+		1.0f, 0.0f,
+		// Small Chopper Cube
+		0.0f, 0.0f, 
+		0.0f, 1.0f,
+		1.0f, 1.0f,
+		1.0f, 0.0f,
+		0.0f, 0.0f, 
+		0.0f, 1.0f,
+		1.0f, 1.0f,
+		1.0f, 0.0f,
+		0.0f, 0.0f, 
+		0.0f, 1.0f,
+		1.0f, 1.0f,
+		1.0f, 0.0f,
+		0.0f, 0.0f, 
+		0.0f, 1.0f,
+		1.0f, 1.0f,
+		1.0f, 0.0f,
+		0.0f, 0.0f, 
+		0.0f, 1.0f,
+		1.0f, 1.0f,
+		1.0f, 0.0f,
+		0.0f, 0.0f, 
+		0.0f, 1.0f,
+		1.0f, 1.0f,
+		1.0f, 0.0f,
+		// Rotor Cone
+		0.0f, 0.0f,
+		0.0f, 1.0f,
+		1.0f, 0.5f,
+		0.0f, 1.0f,
+		1.0f, 1.0f,
+		0.5f, 0.0f,
+		1.0f, 1.0f,
+		1.0f, 0.0f,
+		0.0f, 0.5f,
+		1.0f, 0.0f,
+		0.0f, 0.0f,
+		0.5f, 1.0f
+	};
+	
+	private int mMVPMatrixHandle;
+    private int mPositionHandle;
+    private int mColorHandle;
+    private int mTextureCoordinateHandle;
+    /** Size of the texture coordinate data in elements. */
+    final int mTextureCoordinateDataSize = 2;
+    private int mTextureUniformHandle;
+	
+    final int COORDS_PER_VERTEX = 3;
+    final int COLORS_PER_VERTEX = 4;
+    public final int triVertexCount = triCoords.length / COORDS_PER_VERTEX;
+	public final int lineVertexCount = lineCoords.length / COORDS_PER_VERTEX;
+    private final int vertexStride = COORDS_PER_VERTEX * 4; // 4 bytes per coordinate
+    private final int colorStride = COLORS_PER_VERTEX * 4; // 4 bytes per RGBA
+
+    float color[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+    static protected boolean useVertexColor = false;
+
+    static protected boolean useTextures = false;
 
     protected Point3D size;
 
@@ -56,6 +292,7 @@ public class StigChopper
     // Complication -- homeBase isn't known yet -- we need chopperInfo constructed first
     public StigChopper(int chopperID, World theWorld)
     {
+		System.out.println("Creating StigChopper ID: " + chopperID);
         id = chopperID;
         world = theWorld;
         cargoCapacity = ChopperAggregator.TOTAL_CAPACITY / 2.0;
@@ -66,29 +303,31 @@ public class StigChopper
         homeBase = null;
         targetWaypoints = new ArrayList<Point3D>();
 
-        if (mProgram < 0) {
+        if (mTriProgram < 0) {
             String vertexCode = buildVertexCode(useVertexColor, useTextures);
+			System.out.println("Creating Triangle Vertex Shader: " + vertexCode);
             int vertexShader = HeliGLRenderer.loadShader(GLES20.GL_VERTEX_SHADER,
                     //vertexShaderCode);
                     vertexCode);
             String fragmentCode = buildFragmentCode(useVertexColor, useTextures);
+			System.out.println("Creating Triangle Fragment Shader: " + fragmentCode);
             int fragmentShader = HeliGLRenderer.loadShader(GLES20.GL_FRAGMENT_SHADER,
                     //fragmentShaderCode);
                     fragmentCode);
             if (vertexShader > 0 && fragmentShader > 0) {
                 // create empty OpenGL ES Program
-                mProgram = GLES20.glCreateProgram();
+                mTriProgram = GLES20.glCreateProgram();
 
                 // add the vertex shader to program
-                GLES20.glAttachShader(mProgram, vertexShader);
+                GLES20.glAttachShader(mTriProgram, vertexShader);
 
                 // add the fragment shader to program
-                GLES20.glAttachShader(mProgram, fragmentShader);
+                GLES20.glAttachShader(mTriProgram, fragmentShader);
 
                 // creates OpenGL ES program executables
-                GLES20.glLinkProgram(mProgram);
+                GLES20.glLinkProgram(mTriProgram);
                 System.out.println("StigChopper Shaders created, vtx: " + vertexShader + ", fragment: " +
-                        fragmentShader + ", program ID: " + mProgram);
+                        fragmentShader + ", program ID: " + mTriProgram);
             } else {
                 System.out.println("StigChopper Failed to load shader program -- vertex: " + vertexShader +
                         ", fragment: " + fragmentShader);
@@ -210,6 +449,16 @@ public class StigChopper
         return result;
     }
 
+	public void createBuffers()
+	{
+		triVertexBuffer = BufferUtils.getFB(triCoords);
+        //triColBuffer = getFB(cls);
+        triUvBuffer = BufferUtils.getFB(uvs);
+        triDrawListBuffer = BufferUtils.getIB(triDrawOrder);
+		lineVertexBuffer = BufferUtils.getFB(lineCoords);
+		lineDrawListBuffer = BufferUtils.getIB(lineDrawOrder);
+	}
+	
     /** This method renders a chopper.  We'll get the position from the world.
      * We need to get information about the chopper's orientation from the
      * world object that is in charge of the choppers Orientation.
@@ -467,5 +716,182 @@ public class StigChopper
         gl.glEnd();
         gl.glPopMatrix();
     } */
+	
+	public void drawTriangles(int textDataHandle, float[] mvpMatrix)
+	{
+        // Add program to OpenGL ES environment
+        GLES20.glUseProgram(mTriProgram);
+        int error = GLES20.glGetError();
+        if (error != GLES20.GL_NO_ERROR)
+        {
+            System.out.println("StigChopper: Use Tri Program Error: " + error);
+        }
 
+        // get handle to vertex shader's vPosition member
+        mPositionHandle = GLES20.glGetAttribLocation(mTriProgram, "vPosition");
+        if (mPositionHandle < 0)
+        {
+            System.out.println("StigChopper: Failed to get mPositionHandle");
+        }
+
+        // get handle to shape's transformation matrix
+        mMVPMatrixHandle = GLES20.glGetUniformLocation(mTriProgram, "uMVPMatrix");
+
+        // Pass the projection and view transformation to the shader
+        GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
+
+        // Enable a handle to the cube vertices
+        GLES20.glEnableVertexAttribArray(mPositionHandle);
+
+        // Prepare the cube coordinate data
+        GLES20.glVertexAttribPointer(mPositionHandle, COORDS_PER_VERTEX,
+									 GLES20.GL_FLOAT, false,
+									 vertexStride, triVertexBuffer);
+
+        // get handle to vertex shader's vColor member
+        if (useVertexColor)
+        {
+            mColorHandle = GLES20.glGetAttribLocation(mTriProgram, "vColor");
+            if (mColorHandle < 0)
+            {
+                System.out.println("StigChopper: Failed to get vColor");
+            }
+            GLES20.glEnableVertexAttribArray(mColorHandle);
+
+            GLES20.glVertexAttribPointer(mColorHandle, COLORS_PER_VERTEX,
+										 GLES20.GL_FLOAT, false, colorStride, triColBuffer);
+        }
+        else
+        {
+            mColorHandle = GLES20.glGetUniformLocation(mTriProgram, "vColor");
+			GLES20.glUniform4f(mColorHandle,color[0],color[1],color[2],color[3]);
+        }
+
+        if (StigChopper.useTextures)
+        {
+            mTextureUniformHandle = GLES20.glGetUniformLocation(mTriProgram, "u_texture");
+            if (mTextureUniformHandle < 0)
+            {
+                System.out.println("StigChopper: Failed to get texture uniform");
+            }
+
+            mTextureCoordinateHandle  = GLES20.glGetAttribLocation(mTriProgram, "a_texCoordinate");
+            if (mTextureCoordinateHandle < 0)
+            {
+                System.out.println("StigChopper: Failed to get texture coordinates.");
+            }
+            GLES20.glEnableVertexAttribArray(mTextureCoordinateHandle);
+
+            // Prepare the uv coordinate data.
+            GLES20.glVertexAttribPointer(mTextureCoordinateHandle, 2,
+										 GLES20.GL_FLOAT, false, 8, triUvBuffer);
+
+            // Set the active texture unit to texture unit 0.
+            GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+
+            // Bind the texture to this unit.
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textDataHandle);
+
+			// Tell the texture uniform sampler to use this texture in the shader by binding to texture unit 0.
+			GLES20.glUniform1i(mTextureUniformHandle, 0);
+        }
+
+        GLES20.glDrawElements(GLES20.GL_TRIANGLES, triDrawListBuffer.capacity(),
+							  GLES20.GL_UNSIGNED_INT, triDrawListBuffer);
+        int drawError = GLES20.glGetError();
+        if (drawError != GLES20.GL_NO_ERROR)
+        {
+            System.out.println("StigChopper:Triangle Draw Elements Error: " + drawError + ", color: " + useVertexColor + ", text: " + useTextures);
+        }
+
+        if (StigChopper.useTextures)
+        {
+            // Disable texture array
+            GLES20.glDisableVertexAttribArray(mTextureCoordinateHandle);
+        }
+
+        // Disable vertex array
+        GLES20.glDisableVertexAttribArray(mPositionHandle);
+        if (useVertexColor)
+        {
+            GLES20.glDisableVertexAttribArray(mColorHandle);
+        }
+		System.out.println("StigChopper: Done drawing triangles " + triDrawListBuffer.capacity() + " vertices...");
+	}
+
+	public void drawLines(float[] mvpMatrix)
+	{
+        // Add program to OpenGL ES environment
+        GLES20.glUseProgram(mTriProgram);
+        int error = GLES20.glGetError();
+        if (error != GLES20.GL_NO_ERROR)
+        {
+            System.out.println("StigChopper: Use Line Program Error: " + error);
+        }
+
+        // get handle to vertex shader's vPosition member
+        mPositionHandle = GLES20.glGetAttribLocation(mTriProgram, "vPosition");
+        if (mPositionHandle < 0)
+        {
+            System.out.println("StigChopper -- lines: Failed to get mPositionHandle");
+        }
+
+        // get handle to shape's transformation matrix
+        mMVPMatrixHandle = GLES20.glGetUniformLocation(mTriProgram, "uMVPMatrix");
+
+        // Enable a handle to the cube vertices
+        GLES20.glEnableVertexAttribArray(mPositionHandle);
+
+        // Prepare the cube coordinate data
+        GLES20.glVertexAttribPointer(mPositionHandle, COORDS_PER_VERTEX,
+									 GLES20.GL_FLOAT, false,
+									 vertexStride, lineVertexBuffer);
+
+        // get handle to vertex shader's vColor member
+        if (useVertexColor)
+        {
+            mColorHandle = GLES20.glGetAttribLocation(mTriProgram, "vColor");
+            if (mColorHandle < 0)
+            {
+                System.out.println("StigChopper: Failed to get vColor");
+            }
+            GLES20.glEnableVertexAttribArray(mColorHandle);
+
+            GLES20.glVertexAttribPointer(mColorHandle, COLORS_PER_VERTEX,
+										 GLES20.GL_FLOAT, false, colorStride, triColBuffer);
+        }
+        else
+        {
+            mColorHandle = GLES20.glGetUniformLocation(mTriProgram, "vColor");
+			GLES20.glUniform4f(mColorHandle,color[0],color[1]/2.0f,color[2],color[3]);
+        }
+
+        // Pass the projection and view transformation to the shader
+        GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
+
+        GLES20.glDrawElements(GLES20.GL_LINES, lineDrawListBuffer.capacity(),
+							  GLES20.GL_UNSIGNED_INT, lineDrawListBuffer);
+        int drawError = GLES20.glGetError();
+        if (drawError != GLES20.GL_NO_ERROR)
+        {
+            System.out.println("StigChopper: Line Draw Elements Error: " + drawError + ", color: " + useVertexColor + ", text: " + useTextures);
+        }
+
+        // Disable vertex array
+        GLES20.glDisableVertexAttribArray(mPositionHandle);
+        if (useVertexColor)
+        {
+            GLES20.glDisableVertexAttribArray(mColorHandle);
+        }
+		System.out.println("StigChopper: Done drawing lines " + lineDrawListBuffer.capacity() + " vertices...");
+	}
+	
+    public void draw(int textDataHandle, float[] mvpMatrix) { // pass in the calculated transformation matrix
+		// Consider cloning matrices if any transformations are needed
+		//float[] triMatrix = mvpMatrix.clone();
+		//float[] lineMatrix = mvpMatrix.clone();
+		drawTriangles(textDataHandle, mvpMatrix);
+		drawLines(mvpMatrix);
+	}
+	
 }

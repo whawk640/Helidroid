@@ -185,7 +185,7 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);
         mCamera = new Camera();
         // TODO: adjust eye position based on world size
-        mCamera.setSource(000.0, 450.0, 125.0);
+        mCamera.setSource(-15.0, 450.0, 15);
         mCamera.setTarget(500.0, 500.0, 0.0);
         mCamera.setUp(0.0, 0.0, 1.0);
         // NOTE: OpenGL Related objects must be created here after the context is created
@@ -202,7 +202,9 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer
         // Redraw background color
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
         // Set the camera position (View matrix)
-        mCamera.source.m_x += 1.0;
+        mCamera.source.m_x += 0.333f;
+		mCamera.source.m_y += 0.01;
+		mCamera.source.m_z += 0.1;
         Matrix.setLookAtM(mViewMatrix, 0,
                 (float) mCamera.source.x(), (float) mCamera.source.y(), (float) mCamera.source.z(),
                 (float) mCamera.target.x(), (float) mCamera.target.y(), (float) mCamera.target.z(),

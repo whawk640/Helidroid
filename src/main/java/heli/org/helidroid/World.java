@@ -76,7 +76,8 @@ public class World
     float[] cls = new float[OBJECT_COUNT * (Object3D.vertexCount) * Object3D.COLORS_PER_VERTEX];
     float[] texs = new float[OBJECT_COUNT * Object3D.uvs.length];
     int[] dos = new int[OBJECT_COUNT * Object3D.drawOrder.length];
-
+	int[] lineDos = new int[OBJECT_COUNT * Object3D.lineDrawOrder.length];
+	
     private static final double FULL_BLOCK_SIZE = 100.0;
 
     private static final double STREET_OFFSET = 3.0;
@@ -167,9 +168,10 @@ public class World
                 Point3D sidewalkSize = new Point3D(BLOCK_SIZE, BLOCK_SIZE, 0.1);
                 Object3D sidewalk = new Object3D(sidewalkPos, sidewalkSize);
                 sidewalk.setColor(0.8f, 0.8f, 0.8f, 1.0f);
-                sidewalk.createObject(vxs,dos,cls, texs,
+                sidewalk.createObject(vxs,dos,lineDos, cls, texs,
 									  idx * Object3D.cubeCoords.length,
 									  idx * Object3D.drawOrder.length,
+									  idx * Object3D.lineDrawOrder.length,
 									  idx * Object3D.vertexCount * Object3D.COLORS_PER_VERTEX,
 									  idx * Object3D.uvs.length);
                 ++idx;
@@ -180,17 +182,19 @@ public class World
                 for (int houseIndex = 0; houseIndex < Math.round(HOUSES_PER_BLOCK); ++houseIndex)
                 {
                     Object3D leftHouse = makeHouse(startX, startY + houseIndex * BUILDING_SPACE, startZ);
-                    leftHouse.createObject(vxs,dos,cls, texs,
+                    leftHouse.createObject(vxs,dos,lineDos, cls, texs,
 										   idx * Object3D.cubeCoords.length,
 										   idx * Object3D.drawOrder.length,
+										   idx * Object3D.lineDrawOrder.length,
 										   idx * Object3D.vertexCount * Object3D.COLORS_PER_VERTEX,
 										   idx * Object3D.uvs.length);
                     ++idx;
                     worldState.add(leftHouse);
                     Object3D rightHouse = makeHouse(startX + 9 * BUILDING_SPACE, startY + houseIndex * BUILDING_SPACE, startZ);
-                    rightHouse.createObject(vxs,dos,cls, texs,
+                    rightHouse.createObject(vxs,dos,lineDos, cls, texs,
 											idx * Object3D.cubeCoords.length,
 											idx * Object3D.drawOrder.length,
+											idx * Object3D.lineDrawOrder.length,
 											idx * Object3D.vertexCount * Object3D.COLORS_PER_VERTEX,
 											idx * Object3D.uvs.length);
                     ++idx;
@@ -200,17 +204,19 @@ public class World
                         continue;
                     }
                     Object3D topHouse = makeHouse(startX + houseIndex * BUILDING_SPACE, startY, startZ);
-                    topHouse.createObject(vxs,dos,cls, texs,
+                    topHouse.createObject(vxs,dos,lineDos,cls, texs,
 										  idx * Object3D.cubeCoords.length,
 										  idx * Object3D.drawOrder.length,
+										  idx * Object3D.lineDrawOrder.length,
 										  idx * Object3D.vertexCount * Object3D.COLORS_PER_VERTEX,
 										  idx * Object3D.uvs.length);
                     ++idx;
                     worldState.add(topHouse);
                     Object3D bottomHouse = makeHouse(startX  + houseIndex * BUILDING_SPACE, startY + 9 * BUILDING_SPACE, startZ);
-                    bottomHouse.createObject(vxs,dos,cls,texs,
+                    bottomHouse.createObject(vxs,dos,lineDos,cls,texs,
 											 idx * Object3D.cubeCoords.length,
 											 idx * Object3D.drawOrder.length,
+											 idx * Object3D.lineDrawOrder.length,
 											 idx * Object3D.vertexCount * Object3D.COLORS_PER_VERTEX,
 											 idx * Object3D.uvs.length);
                     ++idx;
@@ -218,16 +224,29 @@ public class World
                 }
             }
         }
-        Object3D.vertexBuffer = getFB(vxs);
-        Object3D.colBuffer = getFB(cls);
-        Object3D.uvBuffer = getFB(texs);
-        Object3D.drawListBuffer = getIB(dos);
+		//Object3D simpleObject = new Object3D(new Point3D(0.0,0.0,-0.5),new Point3D(5.0,5.0,1.0));
+		//simpleObject.createObject(vxs, dos,lineDos, cls, texs,0,0,0,0,0);
+		//worldState.add(simpleObject);
+        Object3D.vertexBuffer = BufferUtils.getFB(vxs);
+        Object3D.colBuffer = BufferUtils.getFB(cls);
+        Object3D.uvBuffer = BufferUtils.getFB(texs);
+        Object3D.drawListBuffer = BufferUtils.getIB(dos);
+		Object3D.lineDrawListBuffer = BufferUtils.getIB(lineDos);
 		createChoppers();
+		
     }
 
 	public void createChoppers()
 	{
-		// NOTE: Objects already constructed, but this is when we have to set them up for drawing
+		myChoppers = new HashMap<Integer, ChopperAggregator>();
+
+        //inserting choppers
+        Apachi apChop = new Apachi(requestNextChopperID(),this);
+        insertChopper(apChop);
+
+        Danook myChopper = new Danook(requestNextChopperID(), this);
+        insertChopper(myChopper);
+
 		Iterator it = myChoppers.entrySet().iterator();
         while (it.hasNext())
         {
@@ -237,40 +256,14 @@ public class World
             if (locData != null)
             {
                 StigChopper theChopper = locData.getChopper();
+				theChopper.createBuffers();
 			}
 		}			
-				
+        allPackageLocs = new ArrayList<Point3D>();
+        // Give the choppers somewhere to go
+        setChopperWaypoints();
 	}
 	
-    public static ByteBuffer getBB(byte[] src)
-    {
-        ByteBuffer idxs = ByteBuffer.allocateDirect(src.length);
-        idxs.order(ByteOrder.nativeOrder());
-        idxs.put(src);
-        idxs.position(0);
-        return idxs;
-    }
-
-    public static FloatBuffer getFB(float[] src)
-    {
-        ByteBuffer idxs = ByteBuffer.allocateDirect(src.length * 4);
-        idxs.order(ByteOrder.nativeOrder());
-        FloatBuffer fb = idxs.asFloatBuffer();
-        fb.put(src);
-        fb.position(0);
-        return fb;
-    }
-
-    public static IntBuffer getIB(int[] src)
-    {
-        ByteBuffer idxs = ByteBuffer.allocateDirect(src.length * 4);
-        idxs.order(ByteOrder.nativeOrder());
-        IntBuffer sb = idxs.asIntBuffer();
-        sb.put(src);
-        sb.position(0);
-        return sb;
-    }
-
     public Object3D makeHouse(double posX, double posY, double posZ)
     {
         double buildingHeight = computeBuildingHeight();
@@ -488,18 +481,6 @@ public class World
                 }
             }
         } */
-        myChoppers = new HashMap<Integer, ChopperAggregator>();
-
-        //inserting choppers
-        Apachi apChop = new Apachi(requestNextChopperID(),this);
-        insertChopper(apChop);
-
-        Danook myChopper = new Danook(requestNextChopperID(), this);
-        insertChopper(myChopper);
-
-        allPackageLocs = new ArrayList<Point3D>();
-        // Give the choppers somewhere to go
-        setChopperWaypoints();
     }
 
 	public void setSurface(HeliGLSurfaceView surf)
@@ -618,11 +599,20 @@ public class World
 
     public void draw(int textDataHandle, float[] mvpMatrix)
     {
-
         // First, draw the static world
         Object3D.draw(textDataHandle,mvpMatrix);
-        //TODO: Iterate over all the choppers and draw them
-
+		Iterator it = myChoppers.entrySet().iterator();
+        while (it.hasNext())
+        {
+            Map.Entry<Integer, ChopperAggregator> pairs = (Map.Entry)it.next();
+            int id = pairs.getKey();
+            ChopperAggregator locData = pairs.getValue();
+            if (locData != null)
+            {
+                StigChopper theChopper = locData.getChopper();
+				theChopper.draw(textDataHandle, mvpMatrix);
+			}
+		}
     }
 
     synchronized public Point3D gps(int chopperID)

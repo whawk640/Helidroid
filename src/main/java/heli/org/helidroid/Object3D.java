@@ -20,9 +20,12 @@ public class Object3D {
 
     static public FloatBuffer vertexBuffer;
     static public IntBuffer drawListBuffer;
+	static public IntBuffer lineDrawListBuffer;
     static public FloatBuffer uvBuffer;
     static public FloatBuffer colBuffer;
 
+	static protected boolean useWireframeOnly = false;
+	
 	static protected boolean useVertexColor = true;
 	
 	static protected boolean useTextures = true;
@@ -30,30 +33,6 @@ public class Object3D {
     // TODO: Add textures for each side
     // private int[] whichTexture = {0, 0, 0, 0, 0, 0};
     private int whichTexture;
-
-    /** Example Shader Code to draw textures and per vertex color.
-    private final String vertexShaderCode =
-            "uniform mat4 uMVPMatrix;" +
-                    "attribute vec4 vPosition;" +
-                    "attribute vec2 a_texCoordinate;" + // Texture coordinates
-                    "attribute vec4 vColor;" +
-                    "varying vec2 v_texCoordinate;" + // Texture coordinates
-                    "varying vec4 fColor;" +
-                    "void main() {" +
-                    "  gl_Position = uMVPMatrix * vPosition;" +
-                    "  v_texCoordinate = a_texCoordinate;" +
-                    "  fColor = vColor;" +
-                    "}";
-
-    private final String fragmentShaderCode =
-            "precision mediump float;" +
-                    "uniform sampler2D u_texture;" +
-                    "varying vec2 v_texCoordinate;" +
-                    "varying vec4 fColor;" +
-                    "void main() {" +
-                    "  gl_FragColor = fColor * texture2D( u_texture, v_texCoordinate);" +
-                    "}";
-    */
 
     // Use to access and set the view transformation
     static private int mMVPMatrixHandle;
@@ -107,6 +86,15 @@ public class Object3D {
             20, 21, 22, 20, 22, 23  // Right
     };
 
+	public static int lineDrawOrder[] = {
+		0,  1,   1,  2,  2,  3,  3,  0, // Top
+		4,  5,   5,  6,  6,  7,  7,  4, // Bottom
+		8,  9,   9, 10, 10, 11, 11,  8, // Back
+		12, 13, 13, 14, 14, 15, 15, 12, // Front
+		16, 17, 17, 18, 18, 19, 19, 16, // Left
+		20, 21, 21, 22, 22, 23, 23, 20  // Right
+    };
+	
     static private int mPositionHandle;
     static private int mColorHandle;
     static private int mTextureCoordinateHandle;
@@ -314,14 +302,16 @@ public class Object3D {
     /**
      vxs - array of vertices
      ors - array of orders
+	 wors - array of wireframe orders
      cls - array of colors
      iv - Position in master vertex array
      io - Position in master draw order array
+	 wio - Position in wireframe draw order array
      ic - Position in master color array
      it - Position in master texture array
      */
-    public void createObject(float[] vxs, int[] ors, float[] cls, float[] texs
-            ,int iv, int io, int ic, int it)
+    public void createObject(float[] vxs, int[] ors, int[] wors,float[] cls, float[] texs
+            ,int iv, int io, int wio, int ic, int it)
     {
         // NOTE: Scaling could probably be done at draw time just like translation
         for (int i = 0; i < cubeCoords.length; ++i)
@@ -347,7 +337,13 @@ public class Object3D {
             ors[io] = drawOrder[i] + objOffset;
             ++io;
         }
-
+        int wObjOffset = wio / lineDrawOrder.length * 24;
+        for(int i = 0; i<lineDrawOrder.length; ++i)
+        {
+            wors[wio] = lineDrawOrder[i] + wObjOffset;
+            ++wio;
+        }
+		
         for(int i = 0; i<vertexCount; ++i)
         {
             cls[ic++] = color[0];
@@ -408,14 +404,14 @@ public class Object3D {
         int error = GLES20.glGetError();
         if (error != GLES20.GL_NO_ERROR)
         {
-            System.out.println("Use Program Error: " + error);
+            System.out.println("Object3d: Use Program Error: " + error);
         }
 
         // get handle to vertex shader's vPosition member
         mPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
         if (mPositionHandle < 0)
         {
-            System.out.println("Failed to get mPositionHandle");
+            System.out.println("Object3d: Failed to get mPositionHandle");
         }
 		
         // get handle to shape's transformation matrix
@@ -435,7 +431,7 @@ public class Object3D {
 			mColorHandle = GLES20.glGetAttribLocation(mProgram, "vColor");
 			if (mColorHandle < 0)
 			{
-				System.out.println("Failed to get vColor");
+				System.out.println("Object3D: Failed to get vColor");
 			}
 			GLES20.glEnableVertexAttribArray(mColorHandle);
 
@@ -445,20 +441,22 @@ public class Object3D {
 		else
 		{
 			mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor");
+			// We do NOT have a static color variable for now
+			GLES20.glUniform4f(mColorHandle,0.1f,0.9f,0.1f,1.0f);
 		}
 		
-		if (useTextures)
+		if (useTextures && (useWireframeOnly == false))
 		{
         	mTextureUniformHandle = GLES20.glGetUniformLocation(mProgram, "u_texture");
         	if (mTextureUniformHandle < 0)
         	{
-            	System.out.println("Failed to get texture uniform");
+            	System.out.println("Object3d: Failed to get texture uniform");
         	}
 
         	mTextureCoordinateHandle  = GLES20.glGetAttribLocation(mProgram, "a_texCoordinate");
         	if (mTextureCoordinateHandle < 0)
         	{
-            	System.out.println("Failed to get texture coordinates.");
+            	System.out.println("Object3d: Failed to get texture coordinates.");
         	}
         	GLES20.glEnableVertexAttribArray(mTextureCoordinateHandle);
 
@@ -471,20 +469,28 @@ public class Object3D {
 
         	// Bind the texture to this unit.
         	GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textDataHandle);
+			
+			// Tell the texture uniform sampler to use this texture in the shader by binding to texture unit 0.
+			GLES20.glUniform1i(mTextureUniformHandle, 0);
 		}
 		
         // Pass the projection and view transformation to the shader
         GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
 
-        // Tell the texture uniform sampler to use this texture in the shader by binding to texture unit 0.
-        GLES20.glUniform1i(mTextureUniformHandle, 0);
-
-        GLES20.glDrawElements(GLES20.GL_TRIANGLES, drawListBuffer.capacity(),
-                GLES20.GL_UNSIGNED_INT, drawListBuffer);
+		if (useWireframeOnly)
+		{
+			GLES20.glDrawElements(GLES20.GL_LINES, lineDrawListBuffer.capacity(),
+								  GLES20.GL_UNSIGNED_INT, lineDrawListBuffer);
+		}
+		else
+		{
+			GLES20.glDrawElements(GLES20.GL_TRIANGLES, drawListBuffer.capacity(),
+								  GLES20.GL_UNSIGNED_INT, drawListBuffer);
+		}
         int drawError = GLES20.glGetError();
         if (drawError != GLES20.GL_NO_ERROR)
         {
-            System.out.println("Draw Elements Error: " + drawError);
+            System.out.println("Object3d: Draw Elements Error: " + drawError);
         }
 
 
@@ -546,6 +552,7 @@ public class Object3D {
         else
         {
             mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor");
+			GLES20.glUniform4f(mColorHandle,color[0],color[1],color[2],color[3]);
         }
 
         if (useText)
