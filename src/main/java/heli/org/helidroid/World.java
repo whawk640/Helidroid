@@ -33,15 +33,8 @@ package heli.org.helidroid;
 //
 //
 
-import android.widget.Toast;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-
-import javax.microedition.khronos.opengles.GL10;
-import java.nio.*;
+import android.opengl.*;
+import java.util.*;
 
 /** World Class, for StigChoppers.  Defines the world.
  * Copyright 2015, Daniel A. LaFuze
@@ -55,7 +48,7 @@ public class World
     static public final long WORLD_DBG = 0x10000000;
     static public int m_camToFollow = 0;
     private int nextChopperID = 0;
-    private double m_rtToRndRatio = 1.0;
+    private int m_rtToRndRatio = 20;
     private int sizeX;
     private int sizeY;
     private int sizeZ;
@@ -63,6 +56,7 @@ public class World
     private double[] chop2Color;
     private double curTimeStamp = 0.0;
     private static final double TICK_TIME = 1.0 / 50.0;
+	private int tickCount = 0;
 
     static protected final int ROW_START = 0;
     static protected final int BLOCK_ROWS = 10;
@@ -153,7 +147,7 @@ public class World
         int idx = 0;
         // TODO: Prevent double creation
         // Generate the world... TODO: Move to city blocks
-        /* for (int row = ROW_START; row < BLOCK_ROWS; ++row)
+        for (int row = ROW_START; row < BLOCK_ROWS; ++row)
         {
             for (int col = COL_START; col < BLOCK_COLS; ++col)
             {
@@ -223,10 +217,7 @@ public class World
                     worldState.add(bottomHouse);
                 }
             }
-        } */
-		Object3D simpleObject = new Object3D(new Point3D(0.0,0.0,-0.5),new Point3D(5.0,5.0,1.0));
-		simpleObject.createObject(vxs, dos,lineDos, cls, texs,0,0,0,0,0);
-		worldState.add(simpleObject);
+        }
         Object3D.vertexBuffer = BufferUtils.getFB(vxs);
         Object3D.colBuffer = BufferUtils.getFB(cls);
         Object3D.uvBuffer = BufferUtils.getFB(texs);
@@ -257,6 +248,7 @@ public class World
             {
                 StigChopper theChopper = locData.getChopper();
 				theChopper.createBuffers();
+				
 			}
 		}			
         allPackageLocs = new ArrayList<Point3D>();
@@ -301,9 +293,11 @@ public class World
         ChopperInfo chopInfo = new ChopperInfo(this, chap, chopperID, startPos, 0.0);
         ChopperAggregator myAggregator = new ChopperAggregator(chap, chopInfo);
         myChoppers.put(chopperID, myAggregator);
+		StigChopper thisChopper = getChopper(chopperID);
+		thisChopper.setColor(1.0f - 0.20f * chopperID, 0.0f, 0.20f * chopperID, 1.0f);
     }
 
-    synchronized double timeRatio()
+    synchronized int timeRatio()
     {
         return m_rtToRndRatio;
     }
@@ -586,15 +580,19 @@ public class World
                  }
              }
          }
-		 if (glSurface != null)
+		 if (tickCount % m_rtToRndRatio == 0)
 		 {
-			 glSurface.requestRender();
-		 }
-		 else
-		 {
-			 System.out.println("glSurface not set... can't draw the world. " + curTimeStamp);
+			 if (glSurface != null)
+			 {
+				 glSurface.requestRender();
+			 }
+			 else
+			 {
+				 System.out.println("glSurface not set... can't draw the world. " + curTimeStamp);
+			 }
 		 }
          curTimeStamp += TICK_TIME;
+		 ++tickCount;
     }
 
     public void draw(int textDataHandle, float[] mvpMatrix)
@@ -604,13 +602,14 @@ public class World
 		Iterator it = myChoppers.entrySet().iterator();
         while (it.hasNext())
         {
+			float[] myMatrix = mvpMatrix.clone();
             Map.Entry<Integer, ChopperAggregator> pairs = (Map.Entry)it.next();
             int id = pairs.getKey();
             ChopperAggregator locData = pairs.getValue();
             if (locData != null)
             {
                 StigChopper theChopper = locData.getChopper();
-				theChopper.draw(textDataHandle, mvpMatrix);
+				theChopper.draw(textDataHandle, myMatrix);
 			}
 		}
     }

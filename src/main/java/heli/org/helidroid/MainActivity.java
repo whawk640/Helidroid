@@ -120,10 +120,11 @@ public class MainActivity extends AppCompatActivity {
     {
         initializeTimerTask();
 
-        // Fastest we hope for is 60 frames per second
-        // We wait 1.5 seconds for world to be created etc.
+        // World computes positions every 20ms of world time
+		// You'll accelerate time by using a shorter delay here
+        // We wait 2.5 seconds for world to be created etc.
         //timer.schedule(timerTask, 1500, 16);
-        timer.schedule(timerTask, 1500, 16);
+        timer.schedule(timerTask, 2500, 4);
     }
 
     @Override

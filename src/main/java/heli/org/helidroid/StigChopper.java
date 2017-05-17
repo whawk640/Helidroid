@@ -1,12 +1,8 @@
 package heli.org.helidroid;
 
-import android.opengl.GLES20;
-
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
-import java.util.ArrayList;
-
-import javax.microedition.khronos.opengles.GL10;
+import android.opengl.*;
+import java.nio.*;
+import java.util.*;
 
 /** This class represents our chopper and its capabilities
  *  Derive fromt this class if you want special features.
@@ -32,9 +28,20 @@ public class StigChopper
     public FloatBuffer lineColBuffer;
 	
 	// NOTE: May not need separate rotor functions
-	public FloatBuffer rotorVertexBuffer;
-	public IntBuffer rotorDrawListBuffer;
-    public FloatBuffer rotorColBuffer;
+	public FloatBuffer mainRotorVertexBuffer;
+	public IntBuffer mainRotorDrawListBuffer;
+    public FloatBuffer mainRotorColBuffer;
+	
+	public float mainRotorCoords[] = {
+		-1.50f, 1.00f, 3.00f,
+		1.50f, 1.00f, 3.00f,
+		0.00f, 2.50f, 3.00f,
+		0.00f, -0.50f, 3.00f
+	};
+	
+	public int mainRotorDrawOrder[] = {
+		0, 1, 2, 3
+	};
 	
 	public float lineCoords[] = {
 		// Cab to Tail Frame
@@ -389,6 +396,22 @@ public class StigChopper
         }
     }
 
+    public void setColor(float red, float green, float blue, float alpha)
+    {
+        color[0] = red;
+        color[1] = green;
+        color[2] = blue;
+        color[3] = alpha;
+    }
+
+    public void setColor(Point3D rgb, double alpha)
+    {
+        color[3] = (float)alpha;
+        color[0] = (float)rgb.m_x;
+        color[1] = (float)rgb.m_y;
+        color[2] = (float)rgb.m_z;
+    }
+
     protected String buildVertexCode(boolean vertexColor, boolean enableTextures)
     {
         String vertexString =
@@ -509,6 +532,8 @@ public class StigChopper
         triDrawListBuffer = BufferUtils.getIB(triDrawOrder);
 		lineVertexBuffer = BufferUtils.getFB(lineCoords);
 		lineDrawListBuffer = BufferUtils.getIB(lineDrawOrder);
+		mainRotorVertexBuffer = BufferUtils.getFB(mainRotorCoords);
+		mainRotorDrawListBuffer = BufferUtils.getIB(mainRotorDrawOrder);
 	}
 	
     /** This method renders a chopper.  We'll get the position from the world.
@@ -915,7 +940,7 @@ public class StigChopper
         else
         {
             mColorHandle = GLES20.glGetUniformLocation(mTriProgram, "vColor");
-			GLES20.glUniform4f(mColorHandle,color[0],color[1]/2.0f,color[2],color[3]);
+			GLES20.glUniform4f(mColorHandle,color[0],color[1],color[2],color[3]);
         }
 
         // Pass the projection and view transformation to the shader
@@ -938,13 +963,100 @@ public class StigChopper
         }
 		System.out.println("StigChopper: Done drawing lines " + lineDrawListBuffer.capacity() + " vertices...");
 	}
+
+	public void drawMainRotor(float[] mvpMatrix)
+	{
+        // Add program to OpenGL ES environment
+        GLES20.glUseProgram(mTriProgram);
+        int error = GLES20.glGetError();
+        if (error != GLES20.GL_NO_ERROR)
+        {
+            System.out.println("StigChopper -- rotors: Use Program Error: " + error);
+        }
+
+        // get handle to vertex shader's vPosition member
+        mPositionHandle = GLES20.glGetAttribLocation(mTriProgram, "vPosition");
+        if (mPositionHandle < 0)
+        {
+            System.out.println("StigChopper -- rotors: Failed to get mPositionHandle");
+        }
+
+        // get handle to shape's transformation matrix
+        mMVPMatrixHandle = GLES20.glGetUniformLocation(mTriProgram, "uMVPMatrix");
+
+        // Enable a handle to the cube vertices
+        GLES20.glEnableVertexAttribArray(mPositionHandle);
+
+        // Prepare the cube coordinate data
+        GLES20.glVertexAttribPointer(mPositionHandle, COORDS_PER_VERTEX,
+									 GLES20.GL_FLOAT, false,
+									 vertexStride, lineVertexBuffer);
+
+        // get handle to vertex shader's vColor member
+        if (useVertexColor)
+        {
+            mColorHandle = GLES20.glGetAttribLocation(mTriProgram, "vColor");
+            if (mColorHandle < 0)
+            {
+                System.out.println("StigChopper: Failed to get vColor");
+            }
+            GLES20.glEnableVertexAttribArray(mColorHandle);
+
+            GLES20.glVertexAttribPointer(mColorHandle, COLORS_PER_VERTEX,
+										 GLES20.GL_FLOAT, false, colorStride, triColBuffer);
+        }
+        else
+        {
+            mColorHandle = GLES20.glGetUniformLocation(mTriProgram, "vColor");
+			GLES20.glUniform4f(mColorHandle,1.0f,1.0f,0.0f,1.0f);
+        }
+
+        // Pass the projection and view transformation to the shader
+        GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
+
+		GLES20.glLineWidth(lineWidth);
+        GLES20.glDrawElements(GLES20.GL_LINES, mainRotorDrawListBuffer.capacity(),
+							  GLES20.GL_UNSIGNED_INT, mainRotorDrawListBuffer);
+        int drawError = GLES20.glGetError();
+        if (drawError != GLES20.GL_NO_ERROR)
+        {
+            System.out.println("StigChopper: Rotor Draw Elements Error: " + drawError + ", color: " + useVertexColor + ", text: " + useTextures);
+        }
+
+        // Disable vertex array
+        GLES20.glDisableVertexAttribArray(mPositionHandle);
+        if (useVertexColor)
+        {
+            GLES20.glDisableVertexAttribArray(mColorHandle);
+        }
+		System.out.println("StigChopper: Done drawing lines " + lineDrawListBuffer.capacity() + " vertices...");
+	}
 	
-    public void draw(int textDataHandle, float[] mvpMatrix) { // pass in the calculated transformation matrix
-		// Consider cloning matrices if any transformations are needed
-		//float[] triMatrix = mvpMatrix.clone();
-		//float[] lineMatrix = mvpMatrix.clone();
-		drawTriangles(textDataHandle, mvpMatrix);
-		drawLines(mvpMatrix);
+    public void draw(int textDataHandle, float[] myMatrix) { // pass in the calculated transformation matrix
+		float[] transMatrix = new float[16];
+		float[] mainRotorMatrix = myMatrix.clone();
+		ChopperInfo myInfo = world.getChopInfo(id);
+		Point3D myPos = myInfo.getPosition();
+		double headingDeg = myInfo.getHeading();
+		double tiltDeg = myInfo.getTilt();
+		double mainRotorDeg = myInfo.getMainRotorPosition();
+		double tailRotorDeg = myInfo.getTailRotorPosition();
+		Matrix.setIdentityM(transMatrix,0);
+		Matrix.translateM(transMatrix,0,(float)myPos.m_x, (float)myPos.m_y, (float)myPos.m_z);
+		Matrix.rotateM(transMatrix, 0, (float)headingDeg, 0.0f, 0.0f, -1.0f);
+		Matrix.rotateM(transMatrix, 0, (float)tiltDeg, 1.0f, 0.0f, 1.0f);
+		Matrix.multiplyMM(myMatrix,0,myMatrix,0,transMatrix,0);
+		drawTriangles(textDataHandle, myMatrix);
+		drawLines(myMatrix);
+		// Move center to center of top rotor
+        myPos.m_y -= 1.25;
+        myPos.m_z += 3.00;
+		float[] mainRotorTransMatrix = new float[16];
+		Matrix.setIdentityM(mainRotorTransMatrix,0);
+		Matrix.translateM(mainRotorTransMatrix,0,(float)myPos.m_x, (float)myPos.m_y,(float)myPos.m_z);
+		Matrix.rotateM(mainRotorTransMatrix,0,(float)mainRotorDeg, 0.0f, 0.0f, -1.0f);
+		Matrix.translateM(mainRotorTransMatrix,0,(float)-myPos.m_x, (float)-myPos.m_y,(float)-myPos.m_z);
+		drawMainRotor(mainRotorMatrix);
 	}
 	
 }

@@ -364,7 +364,6 @@ public class Object3D {
 
     public void setTexture(int newTexture) { whichTexture = newTexture; }
 
-    // TODO: Switch to doubles
     public void setColor(float red, float green, float blue, float alpha)
     {
         color[0] = red;
@@ -373,7 +372,6 @@ public class Object3D {
         color[3] = alpha;
     }
 
-    // TODO: Switch to doubles
     public void setColor(Point3D rgb, double alpha)
     {
         color[3] = (float)alpha;

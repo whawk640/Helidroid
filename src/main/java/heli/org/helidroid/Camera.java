@@ -177,7 +177,7 @@ public class Camera {
 		double orbitRad = computeCamDistance();
         double deltaX = orbitRad * Math.sin(curAngle);
         double deltaY = orbitRad * Math.cos(curAngle);
-        Point3D newSource = new Point3D(target.x() + deltaX, target.y() + deltaY, target.z() + orbitAltitude);
+        Point3D newSource = new Point3D(target.x() + deltaX, target.y() + deltaY, source.m_z);
         source = newSource;
     }
 
@@ -185,10 +185,8 @@ public class Camera {
 	{
 		double deltaX = (source.m_x - target.m_x);
 		double deltaY = (source.m_y - target.m_y);
-		double deltaZ = (source.m_z - target.m_z);
 		double camDistance = Math.sqrt(deltaX * deltaX +
-		                               deltaY * deltaY +
-									   deltaZ * deltaZ);
+		                               deltaY * deltaY);
 		return camDistance;
 	}
 	
