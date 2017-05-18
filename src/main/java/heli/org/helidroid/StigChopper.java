@@ -27,10 +27,31 @@ public class StigChopper
     public IntBuffer lineDrawListBuffer;
     public FloatBuffer lineColBuffer;
 	
-	// NOTE: May not need separate rotor functions
 	public FloatBuffer mainRotorVertexBuffer;
 	public IntBuffer mainRotorDrawListBuffer;
     public FloatBuffer mainRotorColBuffer;
+	
+	public FloatBuffer tailRotorVertexBuffer;
+	public IntBuffer tailRotorDrawListBuffer;
+    public FloatBuffer tailRotorColBuffer;
+
+	public float tailRotorCoords[] = {
+		// Left Rotor
+		-0.30f, -2.0f, 2.5f,
+		-0.30f, -2.0f, 0.5f,
+		-0.30f, -1.0f, 1.5f,
+		-0.30f, -3.0f, 1.5f,
+		// Right Rotor
+		0.30f, -2.0f, 2.5f,
+		0.30f, -2.0f, 0.5f,
+		0.30f, -1.0f, 1.5f,
+		0.30f, -3.0f, 1.5f,
+		
+	};
+	
+	public int tailRotorDrawOrder[] = {
+		0,1,2,3,4,5,6,7
+	};
 	
 	public float mainRotorCoords[] = {
 		-1.50f, 1.00f, 3.00f, // 0
@@ -534,265 +555,9 @@ public class StigChopper
 		lineDrawListBuffer = BufferUtils.getIB(lineDrawOrder);
 		mainRotorVertexBuffer = BufferUtils.getFB(mainRotorCoords);
 		mainRotorDrawListBuffer = BufferUtils.getIB(mainRotorDrawOrder);
+		tailRotorVertexBuffer = BufferUtils.getFB(tailRotorCoords);
+		tailRotorDrawListBuffer = BufferUtils.getIB(tailRotorDrawOrder);
 	}
-	
-    /** This method renders a chopper.  We'll get the position from the world.
-     * We need to get information about the chopper's orientation from the
-     * world object that is in charge of the choppers Orientation.
-     * @param drawable Access to OpenGL pipeline
-     * @param actHeading Direction in degrees, so we can rotate appropriately
-     * @param actTilt Tilt in degrees so we can rotate accordingly
-     * @param rotorPos Rotation of the rotor (0 - 360) so we can draw it
-     * @param tailRotorPos Rotation of the rotor (0 - 360) so we can draw it
-     */
-    /* public void render(GLAutoDrawable drawable, double actHeading, double actTilt, double rotorPos, double tailRotorPos)
-    {
-        GL2 gl = drawable.getGL().getGL2();
-        Point3D myPosition = world.gps(id);
-        // Capture our first position reading as our home base
-        if (homeBase == null)
-        {
-            homeBase = myPosition;
-        }
-        // This method returns the bottom center of our chopper, first, get center
-        Point3D centerPos = new Point3D(myPosition.m_x, myPosition.m_y, myPosition.m_z);
-        // For now, we need our center point for an axis of rotation (Pitch and heading)
-        // When we start rendering a more realistic chopper, we'll have to do that in addition
-        // to rotating the rotors
-        centerPos.m_z += Z_SIZE / 2.0;
-        // Next, get bounding rectangular prism
-        myPosition.m_x -= X_SIZE / 2.0;
-        myPosition.m_y -= Y_SIZE / 2.0;
-        Point3D mySize = new Point3D(X_SIZE, Y_SIZE, Z_SIZE);
-        // Translate the center of chopper to the origin, so rotation doesn't move chopper
-        gl.glPushMatrix();
-        gl.glTranslated(centerPos.m_x, centerPos.m_y, centerPos.m_z);
-        Point3D transformation = world.transformations(id);
-        // rotate chopper by heading
-        // NOTE: I accidentally drew them facing south instead of north, rotate 180
-        gl.glRotated(transformation.m_x + 180.0, 0.0, 0.0, -1.0);
-        // rotate chopper by tilt
-        gl.glRotated(transformation.m_y, 1.0, 0.0, 0.0);
-        gl.glTranslated(-centerPos.m_x,  -centerPos.m_y, -centerPos.m_z);
-        ArrayList<Object3D> chopperObjects = makeChopperObjects(myPosition, mySize);
-        for (Object3D chopperObject : chopperObjects)
-        {
-            chopperObject.setColor(1.0 - 0.25 * id,  0.0, 0.0 + 0.25 * id, 1.0);
-            double objColor[] = chopperObject.getColor();
-            float[] bufferArray = World.makeVertexArray(chopperObject.getPosition(), chopperObject.getSize());
-            if (bufferArray != null)
-            {
-                gl.glColor4dv(objColor, 0);
-                Texture fakeTexture = null;
-                World.drawRectangles(gl,bufferArray, true, fakeTexture);
-            }
-            gl.glColor4dv(objColor, 0);
-        }
-        drawTopRotorPyramid(gl, centerPos.copy());
-        //drawWindows(gl, centerPos.copy());
-        drawRearFrame(gl, centerPos.copy());
-        drawTopRotor(gl, centerPos.copy(), rotorPos);
-        drawTailRotor(gl, centerPos.copy(), tailRotorPos, 0.3);
-        drawTailRotor(gl, centerPos.copy(), tailRotorPos, -0.3);
-        gl.glPopMatrix();
-    } */
-
-    /*
-    private void drawWindows(GL10 gl, Point3D centerPos)
-    {
-        gl.glColor4d(0.20, 0.2, 0.2, 0.2);
-        gl.glBegin(gl.GL_TRIANGLES);
-        // Draw Left Top Angled Window
-        gl.glVertex3d(centerPos.m_x - 0.5, centerPos.m_y - 2.5, centerPos.m_z + 0.5);
-        gl.glVertex3d(centerPos.m_x - 1.0, centerPos.m_y - 2.0, centerPos.m_z + 0.5);
-        gl.glVertex3d(centerPos.m_x - 0.5, centerPos.m_y - 2.0, centerPos.m_z + 1.0);
-        // Draw Right Top Angled Window
-        gl.glVertex3d(centerPos.m_x + 1.0, centerPos.m_y - 2.0, centerPos.m_z + 0.5);
-        gl.glVertex3d(centerPos.m_x + 0.5, centerPos.m_y - 2.5, centerPos.m_z + 0.5);
-        gl.glVertex3d(centerPos.m_x + 0.5, centerPos.m_y - 2.0, centerPos.m_z + 1.0);
-        gl.glEnd();
-        // Draw Front Top Straight Window
-        gl.glBegin(gl.GL_QUADS);
-        gl.glVertex3d(centerPos.m_x + 0.5, centerPos.m_y - 2.5, centerPos.m_z + 0.5);
-        gl.glVertex3d(centerPos.m_x - 0.5, centerPos.m_y - 2.5, centerPos.m_z + 0.5);
-        gl.glVertex3d(centerPos.m_x - 0.5, centerPos.m_y - 2.0, centerPos.m_z + 1.0);
-        gl.glVertex3d(centerPos.m_x + 0.5, centerPos.m_y - 2.0, centerPos.m_z + 1.0);
-        gl.glEnd();
-        gl.glBegin(gl.GL_TRIANGLES);
-        // Draw Left Bottom Angled Window
-        gl.glVertex3d(centerPos.m_x - 0.5, centerPos.m_y - 2.5, centerPos.m_z - 0.5);
-        gl.glVertex3d(centerPos.m_x - 1.0, centerPos.m_y - 2.0, centerPos.m_z - 0.5);
-        gl.glVertex3d(centerPos.m_x - 0.5, centerPos.m_y - 2.0, centerPos.m_z - 1.0);
-        // Draw Right Bottom Angled Window
-        gl.glVertex3d(centerPos.m_x + 1.0, centerPos.m_y - 2.0, centerPos.m_z - 0.5);
-        gl.glVertex3d(centerPos.m_x + 0.5, centerPos.m_y - 2.5, centerPos.m_z - 0.5);
-        gl.glVertex3d(centerPos.m_x + 0.5, centerPos.m_y - 2.0, centerPos.m_z - 1.0);
-        gl.glEnd();
-        // Draw Front Bottom Straight Window
-        gl.glBegin(gl.GL_QUADS);
-        gl.glVertex3d(centerPos.m_x + 0.5, centerPos.m_y - 2.0, centerPos.m_z - 1.0);
-        gl.glVertex3d(centerPos.m_x - 0.5, centerPos.m_y - 2.0, centerPos.m_z - 1.0);
-        gl.glVertex3d(centerPos.m_x - 0.5, centerPos.m_y - 2.5, centerPos.m_z - 0.5);
-        gl.glVertex3d(centerPos.m_x + 0.5, centerPos.m_y - 2.5, centerPos.m_z - 0.5);
-        // Draw Left Straight Window
-        gl.glVertex3d(centerPos.m_x - 0.5, centerPos.m_y - 2.5, centerPos.m_z + 0.5);
-        gl.glVertex3d(centerPos.m_x - 0.5, centerPos.m_y - 2.5, centerPos.m_z - 0.5);
-        gl.glVertex3d(centerPos.m_x - 0.5, centerPos.m_y - 2.0, centerPos.m_z - 0.5);
-        gl.glVertex3d(centerPos.m_x - 0.5, centerPos.m_y - 2.0, centerPos.m_z + 0.5);
-        // Draw Right Straight Window
-        gl.glVertex3d(centerPos.m_x + 0.5, centerPos.m_y - 2.0, centerPos.m_z + 0.5);
-        gl.glVertex3d(centerPos.m_x + 0.5, centerPos.m_y - 2.0, centerPos.m_z - 0.5);
-        gl.glVertex3d(centerPos.m_x + 0.5, centerPos.m_y - 2.5, centerPos.m_z - 0.5);
-        gl.glVertex3d(centerPos.m_x + 0.5, centerPos.m_y - 2.5, centerPos.m_z + 0.5);
-        gl.glEnd();
-    }
-
-    private void drawTopRotorPyramid(GL2 gl, Point3D centerPos)
-    {
-        gl.glBegin(gl.GL_TRIANGLE_STRIP);
-        gl.glVertex3d(centerPos.m_x - 0.5, centerPos.m_y - 1.75, centerPos.m_z + 1.0);
-        gl.glVertex3d(centerPos.m_x - 0.5, centerPos.m_y - 0.75, centerPos.m_z + 1.0);
-        gl.glVertex3d(centerPos.m_x, centerPos.m_y - 1.25, centerPos.m_z + 1.5);
-        gl.glVertex3d(centerPos.m_x + 0.5, centerPos.m_y - 0.75, centerPos.m_z + 1.0);
-        gl.glVertex3d(centerPos.m_x + 0.5, centerPos.m_y - 1.75, centerPos.m_z + 1.0);
-        gl.glVertex3d(centerPos.m_x - 0.5, centerPos.m_y - 1.75, centerPos.m_z + 1.0);
-        gl.glEnd();
-        gl.glBegin(gl.GL_LINES);
-        gl.glColor3d(0.25, 0.25, 0.25);
-        gl.glVertex3d(centerPos.m_x - 0.5, centerPos.m_y - 1.75, centerPos.m_z + 1.0);
-        gl.glVertex3d(centerPos.m_x - 0.5, centerPos.m_y - 0.75, centerPos.m_z + 1.0);
-        gl.glVertex3d(centerPos.m_x, centerPos.m_y - 1.25, centerPos.m_z + 1.5);
-        gl.glVertex3d(centerPos.m_x - 0.5, centerPos.m_y - 0.75, centerPos.m_z + 1.0);
-        gl.glVertex3d(centerPos.m_x + 0.5, centerPos.m_y - 0.75, centerPos.m_z + 1.0);
-        gl.glVertex3d(centerPos.m_x, centerPos.m_y - 1.25, centerPos.m_z + 1.5);
-        gl.glVertex3d(centerPos.m_x + 0.5, centerPos.m_y - 0.75, centerPos.m_z + 1.0);
-        gl.glVertex3d(centerPos.m_x + 0.5, centerPos.m_y - 1.75, centerPos.m_z + 1.0);
-        gl.glVertex3d(centerPos.m_x, centerPos.m_y - 1.25, centerPos.m_z + 1.5);
-        gl.glVertex3d(centerPos.m_x + 0.5, centerPos.m_y - 1.75, centerPos.m_z + 1.0);
-        gl.glVertex3d(centerPos.m_x - 0.5, centerPos.m_y - 1.75, centerPos.m_z + 1.0);
-        gl.glVertex3d(centerPos.m_x, centerPos.m_y - 1.25, centerPos.m_z + 1.5);
-        gl.glEnd();
-    }
-
-    private void drawRearFrame(GL2 gl, Point3D centerPos)
-    {
-        gl.glBegin(gl.GL_LINES);
-        gl.glColor3d(0.75, 0.75, 0.75);
-        // Draw 4 lines to contain the frame
-        gl.glVertex3d(centerPos.m_x - 0.5, centerPos.m_y, centerPos.m_z + 0.5);
-        gl.glVertex3d(centerPos.m_x - 0.25, centerPos.m_y + 1.5, centerPos.m_z + 0.25);
-        gl.glVertex3d(centerPos.m_x + 0.5, centerPos.m_y, centerPos.m_z + 0.5);
-        gl.glVertex3d(centerPos.m_x + 0.25, centerPos.m_y + 1.5, centerPos.m_z + 0.25);
-        gl.glVertex3d(centerPos.m_x - 0.5, centerPos.m_y, centerPos.m_z - 0.5);
-        gl.glVertex3d(centerPos.m_x - 0.25, centerPos.m_y + 1.5, centerPos.m_z - 0.25);
-        gl.glVertex3d(centerPos.m_x + 0.5, centerPos.m_y, centerPos.m_z - 0.5);
-        gl.glVertex3d(centerPos.m_x + 0.25, centerPos.m_y + 1.5, centerPos.m_z - 0.25);
-        // Draw left X closest to body
-        gl.glVertex3d(centerPos.m_x - 0.5, centerPos.m_y, centerPos.m_z + 0.5);
-        gl.glVertex3d(centerPos.m_x - 0.5 + (0.25*0.33), centerPos.m_y + 0.5, centerPos.m_z - 0.5 + (0.25*0.33));
-        gl.glVertex3d(centerPos.m_x - 0.5, centerPos.m_y, centerPos.m_z - 0.5);
-        gl.glVertex3d(centerPos.m_x - 0.5 + (0.25*0.33), centerPos.m_y + 0.5, centerPos.m_z + 0.5 - (0.25*0.33));
-        // Draw Right X closest to body
-        gl.glVertex3d(centerPos.m_x + 0.5, centerPos.m_y, centerPos.m_z + 0.5);
-        gl.glVertex3d(centerPos.m_x + 0.5 - (0.25*0.33), centerPos.m_y + 0.5, centerPos.m_z - 0.5 + (0.25*0.33));
-        gl.glVertex3d(centerPos.m_x + 0.5, centerPos.m_y, centerPos.m_z - 0.5);
-        gl.glVertex3d(centerPos.m_x + 0.5 - (0.25*0.33), centerPos.m_y + 0.5, centerPos.m_z + 0.5 - (0.25*0.33));
-        // Draw Top X closest to body
-        gl.glVertex3d(centerPos.m_x - 0.5, centerPos.m_y, centerPos.m_z + 0.5);
-        gl.glVertex3d(centerPos.m_x + 0.5 - (0.25*0.33), centerPos.m_y + 0.5, centerPos.m_z + 0.5 - (0.25*0.33));
-        gl.glVertex3d(centerPos.m_x + 0.5, centerPos.m_y, centerPos.m_z + 0.5);
-        gl.glVertex3d(centerPos.m_x - 0.5 + (0.25*0.33), centerPos.m_y + 0.5, centerPos.m_z + 0.5 - (0.25*0.33));
-        // Draw Bottom X closest to body
-        gl.glVertex3d(centerPos.m_x - 0.5, centerPos.m_y, centerPos.m_z - 0.5);
-        gl.glVertex3d(centerPos.m_x + 0.5 - (0.25*0.33), centerPos.m_y + 0.5, centerPos.m_z - 0.5 + (0.25*0.33));
-        gl.glVertex3d(centerPos.m_x + 0.5, centerPos.m_y, centerPos.m_z - 0.5);
-        gl.glVertex3d(centerPos.m_x - 0.5 + (0.25*0.33), centerPos.m_y + 0.5, centerPos.m_z - 0.5 + (0.25*0.33));
-        // Draw second left X
-        gl.glVertex3d(centerPos.m_x - 0.5 + (0.25*0.33), centerPos.m_y + 0.5, centerPos.m_z + 0.5 - (0.25*0.66));
-        gl.glVertex3d(centerPos.m_x - 0.5 + (0.25*0.66), centerPos.m_y + 1.0, centerPos.m_z - 0.5 + (0.25*0.33));
-        gl.glVertex3d(centerPos.m_x - 0.5 + (0.25*0.33), centerPos.m_y + 0.5, centerPos.m_z - 0.5 + (0.25*0.66));
-        gl.glVertex3d(centerPos.m_x - 0.5 + (0.25*0.66), centerPos.m_y + 1.0, centerPos.m_z + 0.5 - (0.25*0.33));
-        // Draw second Right X
-        gl.glVertex3d(centerPos.m_x + 0.5 - (0.25*0.33), centerPos.m_y + 0.5, centerPos.m_z + 0.5 - (0.25*0.66));
-        gl.glVertex3d(centerPos.m_x + 0.5 - (0.25*0.66), centerPos.m_y + 1.0, centerPos.m_z - 0.5 + (0.25*0.33));
-        gl.glVertex3d(centerPos.m_x + 0.5 - (0.25*0.33), centerPos.m_y + 0.5, centerPos.m_z - 0.5 + (0.25*0.66));
-        gl.glVertex3d(centerPos.m_x + 0.5 - (0.25*0.66), centerPos.m_y + 1.0, centerPos.m_z + 0.5 - (0.25*0.33));
-        // Draw second Top X
-        gl.glVertex3d(centerPos.m_x - 0.5 + (0.25*0.66), centerPos.m_y + 0.5, centerPos.m_z + 0.5 - (0.25*0.33));
-        gl.glVertex3d(centerPos.m_x + 0.5 - (0.25*0.33), centerPos.m_y + 1.0, centerPos.m_z + 0.5 - (0.25*0.66));
-        gl.glVertex3d(centerPos.m_x + 0.5 - (0.25*0.66), centerPos.m_y + 0.5, centerPos.m_z + 0.5 - (0.25*0.33));
-        gl.glVertex3d(centerPos.m_x - 0.5 + (0.25*0.33), centerPos.m_y + 1.0, centerPos.m_z + 0.5 - (0.25*0.66));
-        // Draw second Bottom X
-        gl.glVertex3d(centerPos.m_x - 0.5 + (0.25*1.0), centerPos.m_y + 0.5, centerPos.m_z - 0.5 + (0.25*0.66));
-        gl.glVertex3d(centerPos.m_x + 0.5 - (0.25*0.66), centerPos.m_y + 1.0, centerPos.m_z - 0.5 + (0.25*1.0));
-        gl.glVertex3d(centerPos.m_x + 0.5 - (0.25*1.0), centerPos.m_y + 0.5, centerPos.m_z - 0.5 + (0.25*0.66));
-        gl.glVertex3d(centerPos.m_x - 0.5 + (0.25*0.66), centerPos.m_y + 1.0, centerPos.m_z - 0.5 + (0.25*1.0));
-        // Draw third left X
-        gl.glVertex3d(centerPos.m_x - 0.5 + (0.25*0.66), centerPos.m_y + 1.0, centerPos.m_z + 0.5 - (0.25*1.0));
-        gl.glVertex3d(centerPos.m_x - 0.5 + (0.25*1.0), centerPos.m_y + 1.5, centerPos.m_z - 0.5 + (0.25*0.66));
-        gl.glVertex3d(centerPos.m_x - 0.5 + (0.25*0.66), centerPos.m_y + 1.0, centerPos.m_z - 0.5 + (0.25*1.0));
-        gl.glVertex3d(centerPos.m_x - 0.5 + (0.25*1.0), centerPos.m_y + 1.5, centerPos.m_z + 0.5 - (0.25*0.66));
-        // Draw third Right X
-        gl.glVertex3d(centerPos.m_x + 0.5 - (0.25*0.66), centerPos.m_y + 1.0, centerPos.m_z + 0.5 - (0.25*1.0));
-        gl.glVertex3d(centerPos.m_x + 0.5 - (0.25*1.0), centerPos.m_y + 1.5, centerPos.m_z - 0.5 + (0.25*0.66));
-        gl.glVertex3d(centerPos.m_x + 0.5 - (0.25*0.66), centerPos.m_y + 1.0, centerPos.m_z - 0.5 + (0.25*1.0));
-        gl.glVertex3d(centerPos.m_x + 0.5 - (0.25*1.0), centerPos.m_y + 1.5, centerPos.m_z + 0.5 - (0.25*0.66));
-        // Draw third Top X
-        gl.glVertex3d(centerPos.m_x - 0.5 + (0.25*1.0), centerPos.m_y + 1.0, centerPos.m_z + 0.5 - (0.25*0.66));
-        gl.glVertex3d(centerPos.m_x + 0.5 - (0.25*0.66), centerPos.m_y + 1.5, centerPos.m_z + 0.5 - (0.25*1.0));
-        gl.glVertex3d(centerPos.m_x + 0.5 - (0.25*1.0), centerPos.m_y + 1.0, centerPos.m_z + 0.5 - (0.25*0.66));
-        gl.glVertex3d(centerPos.m_x - 0.5 + (0.25*0.66), centerPos.m_y + 1.5, centerPos.m_z + 0.5 - (0.25*1.0));
-        // Draw third Bottom X
-        gl.glVertex3d(centerPos.m_x - 0.5 + (0.25*1.0), centerPos.m_y + 1.0, centerPos.m_z - 0.5 + (0.25*0.66));
-        gl.glVertex3d(centerPos.m_x + 0.5 - (0.25*0.66), centerPos.m_y + 1.5, centerPos.m_z - 0.5 + (0.25*1.0));
-        gl.glVertex3d(centerPos.m_x + 0.5 - (0.25*1.0), centerPos.m_y + 1.0, centerPos.m_z - 0.5 + (0.25*0.66));
-        gl.glVertex3d(centerPos.m_x - 0.5 + (0.25*0.66), centerPos.m_y + 1.5, centerPos.m_z - 0.5 + (0.25*1.0));
-        gl.glEnd();
-    }
-
-    private void drawTopRotor(GL2 gl, Point3D centerPos, double rotorPos)
-    {
-        // Move center to center of top rotor
-        centerPos.m_y -= 1.25;
-        centerPos.m_z += 1.50;
-        gl.glPushMatrix();
-        gl.glTranslated(centerPos.m_x, centerPos.m_y, centerPos.m_z);
-        gl.glRotated(rotorPos, 0.0, 0.0, 1.0);
-        gl.glTranslated(-centerPos.m_x, -centerPos.m_y, -centerPos.m_z);
-        // Draw main rotor
-        gl.glBegin(gl.GL_LINES);
-        gl.glColor3d(1.0, 1.0, 0.00);
-        // All 3 rotor blades start in the center
-        gl.glVertex3d(centerPos.m_x, centerPos.m_y, centerPos.m_z);
-        gl.glVertex3d(centerPos.m_x, centerPos.m_y + 1.5, centerPos.m_z);
-        gl.glVertex3d(centerPos.m_x, centerPos.m_y, centerPos.m_z);
-        gl.glVertex3d(centerPos.m_x - 1.3, centerPos.m_y - 1.0, centerPos.m_z);
-        gl.glVertex3d(centerPos.m_x, centerPos.m_y, centerPos.m_z);
-        gl.glVertex3d(centerPos.m_x + 1.3, centerPos.m_y - 1.0, centerPos.m_z);
-        gl.glEnd();
-        gl.glPopMatrix();
-    }
-
-    private void drawTailRotor(GL2 gl, Point3D centerPos, double rotorPos, double xOffset)
-    {
-        // Move center to center of top rotor
-        centerPos.m_y += 2.00;
-        centerPos.m_x += xOffset;
-        gl.glPushMatrix();
-        gl.glTranslated(centerPos.m_x, centerPos.m_y, centerPos.m_z);
-        gl.glRotated(rotorPos, 1.0, 0.0, 0.0);
-        gl.glTranslated(-centerPos.m_x, -centerPos.m_y, -centerPos.m_z);
-        // Draw tail rotor
-        gl.glBegin(gl.GL_LINES);
-        gl.glColor3d(1.0, 1.0, 0.0);
-        // Both rotor blades start in the center
-        gl.glVertex3d(centerPos.m_x, centerPos.m_y, centerPos.m_z);
-        gl.glVertex3d(centerPos.m_x, centerPos.m_y, centerPos.m_z + 0.5);
-        gl.glVertex3d(centerPos.m_x, centerPos.m_y, centerPos.m_z);
-        gl.glVertex3d(centerPos.m_x, centerPos.m_y, centerPos.m_z - 0.5);
-        gl.glEnd();
-        gl.glPopMatrix();
-    } */
 	
 	public void drawTriangles(int textDataHandle, float[] mvpMatrix)
 	{
@@ -1006,7 +771,7 @@ public class StigChopper
         else
         {
             mColorHandle = GLES20.glGetUniformLocation(mTriProgram, "vColor");
-			GLES20.glUniform4f(mColorHandle,1.0f,1.0f,0.0f,1.0f);
+			GLES20.glUniform4f(mColorHandle,1.0f,1.0f,0.0f,0.7f);
         }
 
         // Pass the projection and view transformation to the shader
@@ -1029,6 +794,73 @@ public class StigChopper
         }
 	}
 	
+	public void drawTailRotor(float[] mvpMatrix)
+	{
+        // Add program to OpenGL ES environment
+        GLES20.glUseProgram(mTriProgram);
+        int error = GLES20.glGetError();
+        if (error != GLES20.GL_NO_ERROR)
+        {
+            System.out.println("StigChopper -- rotors: Use Program Error: " + error);
+        }
+
+        // get handle to vertex shader's vPosition member
+        mPositionHandle = GLES20.glGetAttribLocation(mTriProgram, "vPosition");
+        if (mPositionHandle < 0)
+        {
+            System.out.println("StigChopper -- rotors: Failed to get mPositionHandle");
+        }
+
+        // get handle to shape's transformation matrix
+        mMVPMatrixHandle = GLES20.glGetUniformLocation(mTriProgram, "uMVPMatrix");
+
+        // Enable a handle to the cube vertices
+        GLES20.glEnableVertexAttribArray(mPositionHandle);
+
+        // Prepare the cube coordinate data
+        GLES20.glVertexAttribPointer(mPositionHandle, COORDS_PER_VERTEX,
+									 GLES20.GL_FLOAT, false,
+									 vertexStride, tailRotorVertexBuffer);
+
+        // get handle to vertex shader's vColor member
+        if (useVertexColor)
+        {
+            mColorHandle = GLES20.glGetAttribLocation(mTriProgram, "vColor");
+            if (mColorHandle < 0)
+            {
+                System.out.println("StigChopper: Failed to get vColor");
+            }
+            GLES20.glEnableVertexAttribArray(mColorHandle);
+
+            GLES20.glVertexAttribPointer(mColorHandle, COLORS_PER_VERTEX,
+										 GLES20.GL_FLOAT, false, colorStride, triColBuffer);
+        }
+        else
+        {
+            mColorHandle = GLES20.glGetUniformLocation(mTriProgram, "vColor");
+			GLES20.glUniform4f(mColorHandle,1.0f,1.0f,0.0f,0.6f);
+        }
+
+        // Pass the projection and view transformation to the shader
+        GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
+
+		GLES20.glLineWidth(lineWidth);
+        GLES20.glDrawElements(GLES20.GL_LINES, tailRotorDrawListBuffer.capacity(),
+							  GLES20.GL_UNSIGNED_INT, tailRotorDrawListBuffer);
+        int drawError = GLES20.glGetError();
+        if (drawError != GLES20.GL_NO_ERROR)
+        {
+            System.out.println("StigChopper: Rotor Draw Elements Error: " + drawError + ", color: " + useVertexColor + ", text: " + useTextures);
+        }
+
+        // Disable vertex array
+        GLES20.glDisableVertexAttribArray(mPositionHandle);
+        if (useVertexColor)
+        {
+            GLES20.glDisableVertexAttribArray(mColorHandle);
+        }
+	}
+
     public void draw(int textDataHandle, float[] myMatrix) { // pass in the calculated transformation matrix
 		ChopperInfo myInfo = world.getChopInfo(id);
 		Point3D myPos = myInfo.getPosition();
@@ -1041,28 +873,37 @@ public class StigChopper
 		Matrix.translateM(transMatrix,0,(float)myPos.m_x, (float)myPos.m_y, (float)myPos.m_z);
 		Matrix.rotateM(transMatrix, 0, (float)headingDeg, 0.0f, 0.0f, -1.0f);
 		Matrix.rotateM(transMatrix, 0, (float)tiltDeg, 1.0f, 0.0f, 1.0f);
-		// Save a copy of myMatrix for rotors before messing with it
+		// Save a copies of myMatrix for rotors before messing with it
 		float[] mainRotorMatrix = myMatrix.clone();
+		float[] tailRotorMatrix = myMatrix.clone();
 		Matrix.multiplyMM(myMatrix,0,myMatrix,0,transMatrix,0);
 		drawTriangles(textDataHandle, myMatrix);
 		drawLines(myMatrix);
-		// Move center to center of top rotor
 		float[] mainRotorTransMatrix = new float[16];
 		Matrix.setIdentityM(mainRotorTransMatrix,0);
-		// OK, first, move the rotor with the chopper
+		// OK, first, move the main rotor with the chopper
 		Matrix.translateM(mainRotorTransMatrix,0,(float)myPos.m_x, (float)myPos.m_y,(float)myPos.m_z);
 		Matrix.rotateM(mainRotorTransMatrix, 0, (float)headingDeg, 0.0f, 0.0f, -1.0f);
 		Matrix.rotateM(mainRotorTransMatrix, 0, (float)tiltDeg, 1.0f, 0.0f, 1.0f);
 		// Now move the origin to the position of the center of the rotor
-		// OK, there's gotta be a better way than this hack
-		double headingRadians = headingDeg * Math.PI / 180.0;
-		double deltaX = -1.0 * Math.sin(headingRadians);
-		double deltaY = 1.0 * Math.cos(headingRadians);
-		Matrix.translateM(mainRotorTransMatrix,0,(float)deltaX, (float)deltaY,0.0f);
+		Matrix.translateM(mainRotorTransMatrix,0,0.0f, 1.0f,0.0f);
 		Matrix.rotateM(mainRotorTransMatrix,0,(float)mainRotorDeg, 0.0f, 0.0f, -1.0f);
-		Matrix.translateM(mainRotorTransMatrix,0,(float)-deltaX, (float)-deltaY,0.0f);
+		Matrix.translateM(mainRotorTransMatrix,0,0.0f, -1.0f,0.0f);
 		Matrix.multiplyMM(mainRotorMatrix,0,mainRotorMatrix,0,mainRotorTransMatrix,0);
 		drawMainRotor(mainRotorMatrix);
+		// Move center to center of top rotor
+		float[] tailRotorTransMatrix = new float[16];
+		Matrix.setIdentityM(tailRotorTransMatrix,0);
+		// OK, first, move the tail rotor with the chopper
+		Matrix.translateM(tailRotorTransMatrix,0,(float)myPos.m_x, (float)myPos.m_y,(float)myPos.m_z);
+		Matrix.rotateM(tailRotorTransMatrix, 0, (float)headingDeg, 0.0f, 0.0f, -1.0f);
+		Matrix.rotateM(tailRotorTransMatrix, 0, (float)tiltDeg, 1.0f, 0.0f, 1.0f);
+		// Now move the origin to the position of the center of the tail rotor
+		Matrix.translateM(tailRotorTransMatrix,0,0.0f, -2.0f,1.5f);
+		Matrix.rotateM(tailRotorTransMatrix,0,(float)tailRotorDeg, 1.0f, 0.0f, 0.0f);
+		Matrix.translateM(tailRotorTransMatrix,0,0.0f, 2.0f,-1.5f);
+		Matrix.multiplyMM(tailRotorMatrix,0,tailRotorMatrix,0,tailRotorTransMatrix,0);
+		drawTailRotor(tailRotorMatrix);
 	}
 	
 }
