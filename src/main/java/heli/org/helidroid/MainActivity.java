@@ -33,6 +33,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Button camDown = null;
     Button camIn = null;
     Button camOut = null;
+	Button exit = null;
 
     private HeliGLSurfaceView mGLView;
     private World mWorld;
@@ -41,7 +42,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
-        System.out.println("Button Clicked: " + v.getId() + ", Text: " + ((Button)v).getText());
         if (v == nextChopper)
         {
             mWorld.nextChopper();
@@ -50,6 +50,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         {
             mWorld.toggleChaseCam();
         }
+		else if (v == camOut)
+		{
+			mWorld.cameraFarther();
+		}
+		else if (v == camIn)
+		{
+			mWorld.cameraCloser();
+		}
+		else if (v == exit)
+		{
+			finishAffinity();
+		}
         // implements your things
     }
     @Override
@@ -81,8 +93,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         nextCamera.setText("Next Camera");
         nextCamera.setId(LayoutTools.getNextViewID());
         nextCamera.setOnClickListener(this);
+		camIn = new Button(this);
+		camIn.setText("Camera In");
+		camIn.setId(LayoutTools.getNextViewID());
+		camIn.setOnClickListener(this);
+		camOut = new Button(this);
+		camOut.setText("Camera Out");
+		camOut.setId(LayoutTools.getNextViewID());
+		camOut.setOnClickListener(this);
+		exit = new Button(this);
+		exit.setText("Exit");
+		exit.setId(LayoutTools.getNextViewID());
+		exit.setOnClickListener(this);
         btnLayout.addView(nextChopper);
         btnLayout.addView(nextCamera);
+		btnLayout.addView(camIn);
+		btnLayout.addView(camOut);
+		btnLayout.addView(exit);
         mGLView = new HeliGLSurfaceView(this, mWorld);
         mGLView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT));

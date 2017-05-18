@@ -207,10 +207,11 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer
 		//mCamera.source.m_z -= 0.002;
 		Point3D chopPosition = theWorld.gps(theWorld.getVisibleChopper());
         if (theWorld.getChaseCam()) {
-            mCamera.chase(chopPosition, 15.0f);
+            mCamera.chase(chopPosition, theWorld.getCamDistance());
         }
         else
         {
+			// TODO: Respect camera distance change
             mCamera.setTarget(chopPosition);
             mCamera.orbit(60);
         }

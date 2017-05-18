@@ -54,6 +54,7 @@ public class World
 	private int tickCount = 0;
     private int visibleChopper = 0;
     private boolean chaseCam = true;
+	private double camDistance = 100.0;
 
     static protected final int ROW_START = 0;
     static protected final int BLOCK_ROWS = 10;
@@ -91,7 +92,11 @@ public class World
 
     public static final double MAX_PACKAGE_DISTANCE = 2.0;
 
-    private HeliGLSurfaceView glSurface = null;
+	private static final double MIN_CAM_DISTANCE = 10.0;
+	
+	private static final double MAX_CAM_DISTANCE = 1000.0;
+	
+	private HeliGLSurfaceView glSurface = null;
 
     private double maxTime = 10000.0;
 
@@ -131,6 +136,38 @@ public class World
         }
     }
 
+	public void boundsCheckCamDistance()
+	{
+		if (camDistance < MIN_CAM_DISTANCE)
+		{
+			camDistance = MIN_CAM_DISTANCE;
+		}
+		else if (camDistance > MAX_CAM_DISTANCE)
+		{
+			camDistance = MAX_CAM_DISTANCE;
+		}
+	}
+	
+	public void cameraCloser()
+	{
+		camDistance *= 0.90;
+		boundsCheckCamDistance();
+        if (glSurface != null)
+        {
+            glSurface.requestRender();
+        }
+	}
+	
+	public void cameraFarther()
+	{
+		camDistance *= 1.11;
+		boundsCheckCamDistance();
+        if (glSurface != null)
+        {
+            glSurface.requestRender();
+        }
+	}
+
     public int getVisibleChopper()
     {
         return visibleChopper;
@@ -140,6 +177,12 @@ public class World
     {
         return chaseCam;
     }
+	
+	public double getCamDistance()
+	{
+		return camDistance;
+	}
+	
     /** With this array, the world will attempt to maintain a list of all
      * addresses given to the delivery choppers so it can validate
      * attempted deliveries.

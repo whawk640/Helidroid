@@ -40,17 +40,11 @@ public class StigChopper
 		-0.30f, -2.0f, 2.5f,
 		-0.30f, -2.0f, 0.5f,
 		-0.30f, -1.0f, 1.5f,
-		-0.30f, -3.0f, 1.5f,
-		// Right Rotor
-		0.30f, -2.0f, 2.5f,
-		0.30f, -2.0f, 0.5f,
-		0.30f, -1.0f, 1.5f,
-		0.30f, -3.0f, 1.5f,
-		
+		-0.30f, -3.0f, 1.5f
 	};
 	
 	public int tailRotorDrawOrder[] = {
-		0,1,2,3,4,5,6,7
+		0,1,2,3
 	};
 	
 	public float mainRotorCoords[] = {
