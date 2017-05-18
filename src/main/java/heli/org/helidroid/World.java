@@ -49,12 +49,11 @@ public class World
     static public int m_camToFollow = 0;
     private int nextChopperID = 0;
     private int m_rtToRndRatio = 5;
-    private int sizeX;
-    private int sizeY;
-    private int sizeZ;
     private double curTimeStamp = 0.0;
     private static final double TICK_TIME = 1.0 / 50.0;
 	private int tickCount = 0;
+    private int visibleChopper = 0;
+    private boolean chaseCam = true;
 
     static protected final int ROW_START = 0;
     static protected final int BLOCK_ROWS = 10;
@@ -100,6 +99,47 @@ public class World
 
     private Map<Integer, ChopperAggregator> myChoppers;
 
+    public void nextChopper()
+    {
+        if (visibleChopper < (nextChopperID - 1))
+        {
+            ++visibleChopper;
+        }
+        else
+        {
+            visibleChopper = 0;
+        }
+        if (glSurface != null)
+        {
+            glSurface.requestRender();
+        }
+    }
+
+    public void toggleChaseCam()
+    {
+        if (chaseCam == true)
+        {
+            chaseCam = false;
+        }
+        else
+        {
+            chaseCam = true;
+        }
+        if (glSurface != null)
+        {
+            glSurface.requestRender();
+        }
+    }
+
+    public int getVisibleChopper()
+    {
+        return visibleChopper;
+    }
+
+    public boolean getChaseCam()
+    {
+        return chaseCam;
+    }
     /** With this array, the world will attempt to maintain a list of all
      * addresses given to the delivery choppers so it can validate
      * attempted deliveries.
@@ -399,10 +439,6 @@ public class World
      */
     public World() throws Exception
     {
-        sizeX = 1000;
-        sizeY = 1000;
-        sizeZ = 200;
-
         /*
         for (String thisArg: args)
         {

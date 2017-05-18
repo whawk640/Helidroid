@@ -11,6 +11,8 @@ import android.view.MotionEvent;
 public class HeliGLSurfaceView extends GLSurfaceView {
     private final HeliGLRenderer mRenderer;
 
+    private int chopperID = 0;
+    private int camMode = 0;
     public HeliGLSurfaceView(Context context, World wrld){
         super(context);
 

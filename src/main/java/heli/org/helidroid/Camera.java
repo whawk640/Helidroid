@@ -66,7 +66,7 @@ public class Camera {
         fovDegrees = 60.0;
         nearClip = 5.0;
         farClip = 1500.0;
-        System.out.println("Camera at " + source.info() + " looking at " + target.info());
+        //System.out.println("Camera at " + source.info() + " looking at " + target.info());
     }
 
     /** This constructor for a camera sets the defaults
@@ -114,14 +114,13 @@ public class Camera {
     }
     /**
      * This method allows the camera to move randomly
-     * @param radius
+     * @param radius Distance camera can wobble
      */
     public void wobble(double radius) {
-        double deltaX = 2.0 * Math.random() - 1.0;
-        double deltaY = 2.0 * Math.random() - 1.0;
-        double deltaZ = 2.0 * Math.random() - 1.0;
-        Point3D newPoint = new Point3D(source.x() + deltaX, source.y() + deltaY, source.z() + deltaZ);
-        source = newPoint;
+        double deltaX = radius * Math.random() - 1.0;
+        double deltaY = radius * Math.random() - 1.0;
+        double deltaZ = radius * Math.random() - 1.0;
+        source = new Point3D(source.x() + deltaX, source.y() + deltaY, source.z() + deltaZ);
     }
 
     public void chase(Point3D newTarget, double minDistance)
@@ -154,8 +153,7 @@ public class Camera {
         double deltaZ = source.z() - target.z();
         double deltaY = source.y() - target.y();
         double deltaX = source.x() - target.x();
-        double magnitude = Math.sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
-        return magnitude;
+        return Math.sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
     }
 
     public void approach(double approachPercent) {
@@ -177,17 +175,15 @@ public class Camera {
 		double orbitRad = computeCamDistance();
         double deltaX = orbitRad * Math.sin(curAngle);
         double deltaY = orbitRad * Math.cos(curAngle);
-        Point3D newSource = new Point3D(target.x() + deltaX, target.y() + deltaY, source.m_z);
-        source = newSource;
+        source = new Point3D(target.x() + deltaX, target.y() + deltaY, source.m_z);
     }
 
 	public double computeCamDistance()
 	{
 		double deltaX = (source.m_x - target.m_x);
 		double deltaY = (source.m_y - target.m_y);
-		double camDistance = Math.sqrt(deltaX * deltaX +
+		return Math.sqrt(deltaX * deltaX +
 		                               deltaY * deltaY);
-		return camDistance;
 	}
 	
     public void show()

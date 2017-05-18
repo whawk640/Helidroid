@@ -205,10 +205,15 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer
         //mCamera.source.m_x += 0.016f;
 		//mCamera.source.m_y += 0.001;
 		//mCamera.source.m_z -= 0.002;
-		Point3D chopPosition = theWorld.gps(1);
-		mCamera.chase(chopPosition, 15.0f);
-		//mCamera.orbit(360);
-		mCamera.show();
+		Point3D chopPosition = theWorld.gps(theWorld.getVisibleChopper());
+        if (theWorld.getChaseCam()) {
+            mCamera.chase(chopPosition, 15.0f);
+        }
+        else
+        {
+            mCamera.setTarget(chopPosition);
+            mCamera.orbit(60);
+        }
         Matrix.setLookAtM(mViewMatrix, 0,
                 (float) mCamera.source.x(), (float) mCamera.source.y(), (float) mCamera.source.z(),
                 (float) mCamera.target.x(), (float) mCamera.target.y(), (float) mCamera.target.z(),

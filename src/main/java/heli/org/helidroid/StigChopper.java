@@ -5,7 +5,7 @@ import java.nio.*;
 import java.util.*;
 
 /** This class represents our chopper and its capabilities
- *  Derive fromt this class if you want special features.
+ *  Derive from this class if you want special features.
  * @author Daniel LaFuze
  * Copyright 2015
  * All Rights Reserved
@@ -381,7 +381,7 @@ public class StigChopper
         size = new Point3D(X_SIZE, Y_SIZE, Z_SIZE);
         landed = true;
         homeBase = null;
-        targetWaypoints = new ArrayList<Point3D>();
+        targetWaypoints = new ArrayList<>();
 
         if (mTriProgram < 0) {
             String vertexCode = buildVertexCode(useVertexColor, useTextures);
@@ -506,7 +506,7 @@ public class StigChopper
     /** This method sets the chopper's waypoints.  Eventually, we will deliver
      * packages by reaching a waypoint, and notifying the world of our intent
      * to drop off a package.  Land at a waypoint to enable delivery.
-     * @param newWaypoints
+     * @param newWaypoints List of points where packages must go
      */
     public void setWaypoints(ArrayList<Point3D> newWaypoints)
     {

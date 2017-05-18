@@ -6,10 +6,14 @@ import android.os.Handler;
 //import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 //import android.support.v7.widget.Toolbar;
+import android.view.Gravity;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
@@ -17,11 +21,18 @@ import android.widget.Toast;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     private Timer timer;
     TimerTask timerTask;
-	boolean firstDisplay;
+    LinearLayout masterLayout = null;
+    LinearLayout btnLayout = null;
+    Button nextChopper = null;
+    Button nextCamera = null;
+    Button camUp = null;
+    Button camDown = null;
+    Button camIn = null;
+    Button camOut = null;
 
     private HeliGLSurfaceView mGLView;
     private World mWorld;
@@ -29,12 +40,24 @@ public class MainActivity extends AppCompatActivity {
     private final Handler handler = new Handler();
 
     @Override
+    public void onClick(View v) {
+        System.out.println("Button Clicked: " + v.getId() + ", Text: " + ((Button)v).getText());
+        if (v == nextChopper)
+        {
+            mWorld.nextChopper();
+        }
+        else if (v == nextCamera)
+        {
+            mWorld.toggleChaseCam();
+        }
+        // implements your things
+    }
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.content_main);
         //Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         //setSupportActionBar(toolbar);
-		firstDisplay = false;
         timer = new Timer();
         // TODO: Add intents to replace argument parsing from java main
 
@@ -47,10 +70,23 @@ public class MainActivity extends AppCompatActivity {
             // Do nothing at this time
         }
         RelativeLayout layout = (RelativeLayout) findViewById(R.id.mainLayout);
+        masterLayout = LayoutTools.addLL(LayoutTools.MP,LayoutTools.MP,LayoutTools.getNextViewID(),LinearLayout.VERTICAL,layout,this);
+        btnLayout = LayoutTools.addLL(LayoutTools.WC,LayoutTools.MP,LayoutTools.getNextViewID(),LinearLayout.HORIZONTAL,masterLayout,this);
+        btnLayout.setGravity(Gravity.TOP);
+        nextChopper = new Button(this);
+        nextChopper.setId(LayoutTools.getNextViewID());
+        nextChopper.setText("Next Chopper");
+        nextChopper.setOnClickListener(this);
+        nextCamera = new Button(this);
+        nextCamera.setText("Next Camera");
+        nextCamera.setId(LayoutTools.getNextViewID());
+        nextCamera.setOnClickListener(this);
+        btnLayout.addView(nextChopper);
+        btnLayout.addView(nextCamera);
         mGLView = new HeliGLSurfaceView(this, mWorld);
         mGLView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT));
-        layout.addView(mGLView);
+        masterLayout.addView(mGLView);
 		mWorld.setSurface(mGLView);
 		mGLView.requestRender();
 
