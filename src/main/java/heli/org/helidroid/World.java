@@ -48,12 +48,10 @@ public class World
     static public final long WORLD_DBG = 0x10000000;
     static public int m_camToFollow = 0;
     private int nextChopperID = 0;
-    private int m_rtToRndRatio = 20;
+    private int m_rtToRndRatio = 5;
     private int sizeX;
     private int sizeY;
     private int sizeZ;
-    private double[] chop1Color;
-    private double[] chop2Color;
     private double curTimeStamp = 0.0;
     private static final double TICK_TIME = 1.0 / 50.0;
 	private int tickCount = 0;
@@ -294,7 +292,7 @@ public class World
         ChopperAggregator myAggregator = new ChopperAggregator(chap, chopInfo);
         myChoppers.put(chopperID, myAggregator);
 		StigChopper thisChopper = getChopper(chopperID);
-		thisChopper.setColor(1.0f - 0.20f * chopperID, 0.0f, 0.20f * chopperID, 1.0f);
+		thisChopper.setColor(0.0f, 1.0f - 0.50f * chopperID, 0.50f * chopperID, 1.0f);
     }
 
     synchronized int timeRatio()

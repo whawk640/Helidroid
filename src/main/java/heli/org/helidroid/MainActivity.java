@@ -21,6 +21,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Timer timer;
     TimerTask timerTask;
+	boolean firstDisplay;
 
     private HeliGLSurfaceView mGLView;
     private World mWorld;
@@ -33,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.content_main);
         //Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         //setSupportActionBar(toolbar);
+		firstDisplay = false;
         timer = new Timer();
         // TODO: Add intents to replace argument parsing from java main
 
@@ -50,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
                 ViewGroup.LayoutParams.WRAP_CONTENT));
         layout.addView(mGLView);
 		mWorld.setSurface(mGLView);
+		mGLView.requestRender();
 
 		/*
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);

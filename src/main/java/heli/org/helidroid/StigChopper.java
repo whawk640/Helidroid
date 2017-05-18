@@ -33,10 +33,10 @@ public class StigChopper
     public FloatBuffer mainRotorColBuffer;
 	
 	public float mainRotorCoords[] = {
-		-1.50f, 1.00f, 3.00f,
-		1.50f, 1.00f, 3.00f,
-		0.00f, 2.50f, 3.00f,
-		0.00f, -0.50f, 3.00f
+		-1.50f, 1.00f, 3.00f, // 0
+		1.50f, 1.00f, 3.00f, // 1
+		0.00f, 2.50f, 3.00f, // 2
+		0.00f, -0.50f, 3.00f // 3
 	};
 	
 	public int mainRotorDrawOrder[] = {
@@ -893,7 +893,6 @@ public class StigChopper
         {
             GLES20.glDisableVertexAttribArray(mColorHandle);
         }
-		System.out.println("StigChopper: Done drawing triangles " + triDrawListBuffer.capacity() + " vertices...");
 	}
 
 	public void drawLines(float[] mvpMatrix)
@@ -961,7 +960,6 @@ public class StigChopper
         {
             GLES20.glDisableVertexAttribArray(mColorHandle);
         }
-		System.out.println("StigChopper: Done drawing lines " + lineDrawListBuffer.capacity() + " vertices...");
 	}
 
 	public void drawMainRotor(float[] mvpMatrix)
@@ -990,7 +988,7 @@ public class StigChopper
         // Prepare the cube coordinate data
         GLES20.glVertexAttribPointer(mPositionHandle, COORDS_PER_VERTEX,
 									 GLES20.GL_FLOAT, false,
-									 vertexStride, lineVertexBuffer);
+									 vertexStride, mainRotorVertexBuffer);
 
         // get handle to vertex shader's vColor member
         if (useVertexColor)
@@ -1029,33 +1027,41 @@ public class StigChopper
         {
             GLES20.glDisableVertexAttribArray(mColorHandle);
         }
-		System.out.println("StigChopper: Done drawing lines " + lineDrawListBuffer.capacity() + " vertices...");
 	}
 	
     public void draw(int textDataHandle, float[] myMatrix) { // pass in the calculated transformation matrix
-		float[] transMatrix = new float[16];
-		float[] mainRotorMatrix = myMatrix.clone();
 		ChopperInfo myInfo = world.getChopInfo(id);
 		Point3D myPos = myInfo.getPosition();
 		double headingDeg = myInfo.getHeading();
 		double tiltDeg = myInfo.getTilt();
 		double mainRotorDeg = myInfo.getMainRotorPosition();
 		double tailRotorDeg = myInfo.getTailRotorPosition();
+		float[] transMatrix = new float[16];
 		Matrix.setIdentityM(transMatrix,0);
 		Matrix.translateM(transMatrix,0,(float)myPos.m_x, (float)myPos.m_y, (float)myPos.m_z);
 		Matrix.rotateM(transMatrix, 0, (float)headingDeg, 0.0f, 0.0f, -1.0f);
 		Matrix.rotateM(transMatrix, 0, (float)tiltDeg, 1.0f, 0.0f, 1.0f);
+		// Save a copy of myMatrix for rotors before messing with it
+		float[] mainRotorMatrix = myMatrix.clone();
 		Matrix.multiplyMM(myMatrix,0,myMatrix,0,transMatrix,0);
 		drawTriangles(textDataHandle, myMatrix);
 		drawLines(myMatrix);
 		// Move center to center of top rotor
-        myPos.m_y -= 1.25;
-        myPos.m_z += 3.00;
 		float[] mainRotorTransMatrix = new float[16];
 		Matrix.setIdentityM(mainRotorTransMatrix,0);
+		// OK, first, move the rotor with the chopper
 		Matrix.translateM(mainRotorTransMatrix,0,(float)myPos.m_x, (float)myPos.m_y,(float)myPos.m_z);
+		Matrix.rotateM(mainRotorTransMatrix, 0, (float)headingDeg, 0.0f, 0.0f, -1.0f);
+		Matrix.rotateM(mainRotorTransMatrix, 0, (float)tiltDeg, 1.0f, 0.0f, 1.0f);
+		// Now move the origin to the position of the center of the rotor
+		// OK, there's gotta be a better way than this hack
+		double headingRadians = headingDeg * Math.PI / 180.0;
+		double deltaX = -1.0 * Math.sin(headingRadians);
+		double deltaY = 1.0 * Math.cos(headingRadians);
+		Matrix.translateM(mainRotorTransMatrix,0,(float)deltaX, (float)deltaY,0.0f);
 		Matrix.rotateM(mainRotorTransMatrix,0,(float)mainRotorDeg, 0.0f, 0.0f, -1.0f);
-		Matrix.translateM(mainRotorTransMatrix,0,(float)-myPos.m_x, (float)-myPos.m_y,(float)-myPos.m_z);
+		Matrix.translateM(mainRotorTransMatrix,0,(float)-deltaX, (float)-deltaY,0.0f);
+		Matrix.multiplyMM(mainRotorMatrix,0,mainRotorMatrix,0,mainRotorTransMatrix,0);
 		drawMainRotor(mainRotorMatrix);
 	}
 	

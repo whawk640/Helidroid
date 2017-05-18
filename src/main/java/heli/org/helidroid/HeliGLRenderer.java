@@ -185,7 +185,7 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);
         mCamera = new Camera();
         // TODO: adjust eye position based on world size
-        mCamera.setSource(450.0, 450.0, 75.0);
+        mCamera.setSource(495.0, 480.0, 5.0);
         mCamera.setTarget(500.0, 500.0, 0.0);
         mCamera.setUp(0.0, 0.0, 1.0);
         // NOTE: OpenGL Related objects must be created here after the context is created
@@ -205,8 +205,8 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer
         //mCamera.source.m_x += 0.016f;
 		//mCamera.source.m_y += 0.001;
 		//mCamera.source.m_z -= 0.002;
-		Point3D chopPosition = theWorld.gps(0);
-		mCamera.chase(chopPosition, 50.0f);
+		Point3D chopPosition = theWorld.gps(1);
+		mCamera.chase(chopPosition, 15.0f);
 		//mCamera.orbit(360);
 		mCamera.show();
         Matrix.setLookAtM(mViewMatrix, 0,
