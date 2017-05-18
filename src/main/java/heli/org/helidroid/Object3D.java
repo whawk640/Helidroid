@@ -24,7 +24,7 @@ public class Object3D {
     static public FloatBuffer uvBuffer;
     static public FloatBuffer colBuffer;
 
-	static protected boolean useWireframeOnly = false;
+	static public boolean useWireframeOnly = false;
 	
 	static protected boolean useVertexColor = true;
 	

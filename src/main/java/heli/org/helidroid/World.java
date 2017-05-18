@@ -54,7 +54,8 @@ public class World
 	private int tickCount = 0;
     private int visibleChopper = 0;
     private boolean chaseCam = true;
-	private double camDistance = 100.0;
+	private boolean wireFrame = false;
+	private double camDistance = 50.0;
 
     static protected final int ROW_START = 0;
     static protected final int BLOCK_ROWS = 10;
@@ -136,6 +137,22 @@ public class World
         }
     }
 
+    public void toggleWireFrame()
+    {
+        if (wireFrame == true)
+        {
+            wireFrame = false;
+        }
+        else
+        {
+            wireFrame = true;
+        }
+        if (glSurface != null)
+        {
+            glSurface.requestRender();
+        }
+    }
+
 	public void boundsCheckCamDistance()
 	{
 		if (camDistance < MIN_CAM_DISTANCE)
@@ -173,6 +190,11 @@ public class World
         return visibleChopper;
     }
 
+	public boolean getWireFrame()
+	{
+		return wireFrame;
+	}
+	
     public boolean getChaseCam()
     {
         return chaseCam;
@@ -675,6 +697,7 @@ public class World
     public void draw(int textDataHandle, float[] mvpMatrix)
     {
         // First, draw the static world
+		Object3D.useWireframeOnly = wireFrame;
         Object3D.draw(textDataHandle,mvpMatrix);
 		Iterator it = myChoppers.entrySet().iterator();
         while (it.hasNext())

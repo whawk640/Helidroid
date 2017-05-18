@@ -158,7 +158,14 @@ public class LayoutTools
 
   public static <T extends View> T addWidget(T res, float we, int h, int w, int id, LinearLayout par)
   {
-    res.setId(id);
+	if (id == 0)
+	{
+		res.setId(getNextViewID());
+	}
+	else
+	{
+		res.setId(id);
+	}
     LL_Pars p = new LL_Pars(LMP,LMP);
     p.weight = we;
     p.height = h;

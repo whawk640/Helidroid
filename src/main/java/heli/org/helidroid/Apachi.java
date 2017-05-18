@@ -46,6 +46,29 @@ public class Apachi extends StigChopper
         inventory = 16;
 
     }
+	
+	public void draw(int textDataHandle, float[] myMatrix) { // pass in the calculated transformation matrix
+		int slow = 70;
+        double wts = world.getTimestamp();
+        if(wts > 30 && wts < slow)
+        {
+            maintainAlt(90);
+            maintainSpeed(5.0,-1.0);
+        }
+
+        if(wts > slow && m_curSpeed > 0.05)
+        {
+            maintainSpeed(0.0,-1.0);
+        }
+
+        if(wts > slow && m_curSpeed < 0.049)
+        {
+            hover(-1.0);
+        }
+        //m_altJL.setText("Alt: " + Apachi.f(m_alt.m_lastAlt));
+		
+		super.draw(textDataHandle, myMatrix);
+	}
     /** This method renders a chopper.  We'll get the position from the world.
      * We need to get information about the chopper's orientation from the
      * world object that is in charge of the choppers Orientation.

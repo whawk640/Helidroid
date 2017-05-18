@@ -19,6 +19,7 @@ public class StigChopper
     // These buffers are currently designed for triangles
     public FloatBuffer triVertexBuffer;
     public IntBuffer triDrawListBuffer;
+	public IntBuffer triOLDrawListBuffer;
     public FloatBuffer triUvBuffer;
     public FloatBuffer triColBuffer;
 
@@ -229,6 +230,29 @@ public class StigChopper
 		0.0f, 1.0f, 3.0f
 	};
 
+	public static int triOutlineDrawOrder[] = {
+		// Main Cube
+		0,   1,  1,  2,  2,  3,  3,  0,
+		4,   5,  5,  6,  6,  7,  7,  4,
+		8,   9,  9, 10, 10, 11, 11,  8,
+		12, 13, 13, 14, 14, 15, 15, 12,
+		16, 17, 17, 18, 18, 19, 19, 16,
+		20, 21, 21, 22, 22, 23, 23, 20,
+		
+		// Tail Cube
+		24, 25, 25, 26, 26, 27, 27, 24,
+		28, 29, 29, 30, 30, 31, 31, 28,
+		32, 33, 33, 34, 34, 35, 35, 32,
+		36, 37, 37, 38, 38, 39, 39, 36,
+		40, 41, 41, 42, 42, 43, 43, 40,
+		44, 45, 45, 46, 46, 47, 47, 44,
+		// Rotor Pyramid
+		48, 49, 49, 50, 50, 48,
+		51, 52, 52, 53, 53, 51,
+		54, 55, 55, 56, 56, 54,
+		57, 58, 58, 59, 59, 57
+	};
+	
     public static int triDrawOrder[] = {
 		// Main Cube
 		0,  1,  2,   0,  2,  3, // Top
@@ -246,7 +270,7 @@ public class StigChopper
 	    40, 41, 42, 40, 42, 43, // Left
 	    44, 45, 46, 44, 46, 47, // Right
 		
-		// Rotor Cube
+		// Rotor pyramid
 		48, 49, 50, 51, 52, 53,
 		54, 55, 56, 57, 58, 59
     };
@@ -545,6 +569,7 @@ public class StigChopper
         //triColBuffer = getFB(cls);
         triUvBuffer = BufferUtils.getFB(uvs);
         triDrawListBuffer = BufferUtils.getIB(triDrawOrder);
+		triOLDrawListBuffer = BufferUtils.getIB(triOutlineDrawOrder);
 		lineVertexBuffer = BufferUtils.getFB(lineCoords);
 		lineDrawListBuffer = BufferUtils.getIB(lineDrawOrder);
 		mainRotorVertexBuffer = BufferUtils.getFB(mainRotorCoords);
@@ -644,6 +669,72 @@ public class StigChopper
         {
             // Disable texture array
             GLES20.glDisableVertexAttribArray(mTextureCoordinateHandle);
+        }
+
+        // Disable vertex array
+        GLES20.glDisableVertexAttribArray(mPositionHandle);
+        if (useVertexColor)
+        {
+            GLES20.glDisableVertexAttribArray(mColorHandle);
+        }
+	}
+
+	public void drawOutlines(float[] mvpMatrix)
+	{
+        // Add program to OpenGL ES environment
+        GLES20.glUseProgram(mTriProgram);
+        int error = GLES20.glGetError();
+        if (error != GLES20.GL_NO_ERROR)
+        {
+            System.out.println("StigChopper: Use Tri Program Error: " + error);
+        }
+
+        // get handle to vertex shader's vPosition member
+        mPositionHandle = GLES20.glGetAttribLocation(mTriProgram, "vPosition");
+        if (mPositionHandle < 0)
+        {
+            System.out.println("StigChopper: Failed to get mPositionHandle");
+        }
+
+        // get handle to shape's transformation matrix
+        mMVPMatrixHandle = GLES20.glGetUniformLocation(mTriProgram, "uMVPMatrix");
+
+        // Pass the projection and view transformation to the shader
+        GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
+
+        // Enable a handle to the cube vertices
+        GLES20.glEnableVertexAttribArray(mPositionHandle);
+
+        // Prepare the cube coordinate data
+        GLES20.glVertexAttribPointer(mPositionHandle, COORDS_PER_VERTEX,
+									 GLES20.GL_FLOAT, false,
+									 vertexStride, triVertexBuffer);
+
+        // get handle to vertex shader's vColor member
+        if (useVertexColor)
+        {
+            mColorHandle = GLES20.glGetAttribLocation(mTriProgram, "vColor");
+            if (mColorHandle < 0)
+            {
+                System.out.println("StigChopper: Failed to get vColor");
+            }
+            GLES20.glEnableVertexAttribArray(mColorHandle);
+
+            GLES20.glVertexAttribPointer(mColorHandle, COLORS_PER_VERTEX,
+										 GLES20.GL_FLOAT, false, colorStride, triColBuffer);
+        }
+        else
+        {
+            mColorHandle = GLES20.glGetUniformLocation(mTriProgram, "vColor");
+			GLES20.glUniform4f(mColorHandle,color[0]*0.9f,color[1]*0.9f,color[2]*0.9f,color[3]);
+        }
+
+        GLES20.glDrawElements(GLES20.GL_LINES, triOLDrawListBuffer.capacity(),
+							  GLES20.GL_UNSIGNED_INT, triOLDrawListBuffer);
+        int drawError = GLES20.glGetError();
+        if (drawError != GLES20.GL_NO_ERROR)
+        {
+            System.out.println("StigChopper:Triangle Draw Elements Error: " + drawError + ", color: " + useVertexColor + ", text: " + useTextures);
         }
 
         // Disable vertex array
@@ -872,6 +963,7 @@ public class StigChopper
 		float[] tailRotorMatrix = myMatrix.clone();
 		Matrix.multiplyMM(myMatrix,0,myMatrix,0,transMatrix,0);
 		drawTriangles(textDataHandle, myMatrix);
+		drawOutlines(myMatrix);
 		drawLines(myMatrix);
 		float[] mainRotorTransMatrix = new float[16];
 		Matrix.setIdentityM(mainRotorTransMatrix,0);

@@ -131,9 +131,9 @@ public class Camera {
         }
         target = newTarget;
         // Don't look up -- always look down :)
-        if (source.m_z < (target.m_z + 10.0))
+        if (source.m_z < (target.m_z + 5.0))
         {
-            source.m_z = target.m_z + 10.0;
+            source.m_z = target.m_z + 5.0;
         }
         double actDistance = eyeDistance();
         if (actDistance > minDistance * 1.1)

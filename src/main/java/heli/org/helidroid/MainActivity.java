@@ -33,6 +33,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Button camDown = null;
     Button camIn = null;
     Button camOut = null;
+	Button wireFrame = null;
 	Button exit = null;
 
     private HeliGLSurfaceView mGLView;
@@ -57,6 +58,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 		else if (v == camIn)
 		{
 			mWorld.cameraCloser();
+		}
+		else if (v == wireFrame)
+		{
+			mWorld.toggleWireFrame();
 		}
 		else if (v == exit)
 		{
@@ -85,48 +90,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         masterLayout = LayoutTools.addLL(LayoutTools.MP,LayoutTools.MP,LayoutTools.getNextViewID(),LinearLayout.VERTICAL,layout,this);
         btnLayout = LayoutTools.addLL(LayoutTools.WC,LayoutTools.MP,LayoutTools.getNextViewID(),LinearLayout.HORIZONTAL,masterLayout,this);
         btnLayout.setGravity(Gravity.TOP);
-        nextChopper = new Button(this);
-        nextChopper.setId(LayoutTools.getNextViewID());
-        nextChopper.setText("Next Chopper");
+		nextChopper = LayoutTools.addWidget(new Button(this),1.0f,LayoutTools.MP, LayoutTools.WC,0,btnLayout);
+        nextChopper.setText(R.string.btn_nxtChop);
         nextChopper.setOnClickListener(this);
-        nextCamera = new Button(this);
-        nextCamera.setText("Next Camera");
-        nextCamera.setId(LayoutTools.getNextViewID());
+		nextCamera = LayoutTools.addWidget(new Button(this),1.0f, LayoutTools.MP, LayoutTools.WC,0,btnLayout);
+        nextCamera.setText(R.string.btn_nxtCam);
         nextCamera.setOnClickListener(this);
-		camIn = new Button(this);
-		camIn.setText("Camera In");
-		camIn.setId(LayoutTools.getNextViewID());
+		camIn = LayoutTools.addWidget(new Button(this), 1.0f, LayoutTools.MP, LayoutTools.WC,0,btnLayout);
+		camIn.setText(R.string.btn_camIn);
 		camIn.setOnClickListener(this);
-		camOut = new Button(this);
-		camOut.setText("Camera Out");
-		camOut.setId(LayoutTools.getNextViewID());
+		camOut = LayoutTools.addWidget(new Button(this), 1.0f, LayoutTools.MP, LayoutTools.WC,0,btnLayout);
+		camOut.setText(R.string.btn_camOut);
 		camOut.setOnClickListener(this);
-		exit = new Button(this);
-		exit.setText("Exit");
-		exit.setId(LayoutTools.getNextViewID());
+		wireFrame = LayoutTools.addWidget(new Button(this), 1.0f, LayoutTools.MP, LayoutTools.WC,0,btnLayout);
+		wireFrame.setText(R.string.btn_togWF);
+		wireFrame.setOnClickListener(this);
+		exit = LayoutTools.addWidget(new Button(this), 1.0f, LayoutTools.MP, LayoutTools.WC,0,btnLayout);
+		exit.setText(R.string.btn_exit);
 		exit.setOnClickListener(this);
-        btnLayout.addView(nextChopper);
-        btnLayout.addView(nextCamera);
-		btnLayout.addView(camIn);
-		btnLayout.addView(camOut);
-		btnLayout.addView(exit);
         mGLView = new HeliGLSurfaceView(this, mWorld);
         mGLView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT));
         masterLayout.addView(mGLView);
 		mWorld.setSurface(mGLView);
 		mGLView.requestRender();
-
-		/*
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        }); */
-
     }
 
     public void initializeTimerTask()
