@@ -97,6 +97,8 @@ public class World
 	
 	private static final double MAX_CAM_DISTANCE = 1000.0;
 	
+	private static final double VERTICAL_CAM_STEP = 10.0;
+	
 	private HeliGLSurfaceView glSurface = null;
 
     private double maxTime = 10000.0;
@@ -165,6 +167,28 @@ public class World
 		}
 	}
 	
+	public void cameraUp()
+	{
+		if (glSurface != null)
+		{
+			Point3D newPoint = new Point3D(0.0, 0.0, VERTICAL_CAM_STEP);
+			HeliGLRenderer rend = glSurface.getRenderer();
+			rend.moveCamera(newPoint);
+			glSurface.requestRender();
+		}
+	}
+	
+	public void cameraDown()
+	{
+		if (glSurface != null)
+		{
+			Point3D newPoint = new Point3D(0.0, 0.0, -1.0 * VERTICAL_CAM_STEP);
+			HeliGLRenderer rend = glSurface.getRenderer();
+			rend.moveCamera(newPoint);
+			glSurface.requestRender();
+		}
+	}
+
 	public void cameraCloser()
 	{
 		camDistance *= 0.90;

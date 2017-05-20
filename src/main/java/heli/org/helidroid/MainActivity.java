@@ -1,32 +1,20 @@
 package heli.org.helidroid;
 
-import android.os.Bundle;
-import android.os.Handler;
-//import android.support.design.widget.FloatingActionButton;
-//import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
-//import android.support.v7.widget.Toolbar;
-import android.view.Gravity;
-import android.view.View;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.FrameLayout;
-import android.widget.LinearLayout;
-import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
-import android.widget.Toast;
-
-import java.util.Timer;
-import java.util.TimerTask;
+import android.os.*;
+import android.support.v7.app.*;
+import android.view.*;
+import android.widget.*;
+import java.util.*;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     private Timer timer;
     TimerTask timerTask;
-    LinearLayout masterLayout = null;
-    LinearLayout btnLayout = null;
+	// TODO: Consider screen rotation and/or phones
+    LinearLayout masterLayout = null; // Vertical
+    LinearLayout btnLayout = null; // Horizonta
+	LinearLayout glLayout = null; // Horizontal
+	LinearLayout panelLayout = null; // Vertical
     Button nextChopper = null;
     Button nextCamera = null;
     Button camUp = null;
@@ -59,6 +47,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 		{
 			mWorld.cameraCloser();
 		}
+		else if (v == camUp)
+		{
+			mWorld.cameraUp();
+		}
+		else if (v == camDown)
+		{
+			mWorld.cameraDown();
+		}
 		else if (v == wireFrame)
 		{
 			mWorld.toggleWireFrame();
@@ -88,6 +84,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         RelativeLayout layout = (RelativeLayout) findViewById(R.id.mainLayout);
         masterLayout = LayoutTools.addLL(LayoutTools.MP,LayoutTools.MP,LayoutTools.getNextViewID(),LinearLayout.VERTICAL,layout,this);
+		glLayout = LayoutTools.addLL(LayoutTools.WC,LayoutTools.MP,LayoutTools.getNextViewID(), LinearLayout.HORIZONTAL,masterLayout,this);
+		panelLayout = LayoutTools.addLL(LayoutTools.MP,LayoutTools.WC,LayoutTools.getNextViewID(),LinearLayout.VERTICAL,glLayout,this);
+		
         btnLayout = LayoutTools.addLL(LayoutTools.WC,LayoutTools.MP,LayoutTools.getNextViewID(),LinearLayout.HORIZONTAL,masterLayout,this);
         btnLayout.setGravity(Gravity.TOP);
 		nextChopper = LayoutTools.addWidget(new Button(this),1.0f,LayoutTools.MP, LayoutTools.WC,0,btnLayout);
@@ -102,6 +101,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 		camOut = LayoutTools.addWidget(new Button(this), 1.0f, LayoutTools.MP, LayoutTools.WC,0,btnLayout);
 		camOut.setText(R.string.btn_camOut);
 		camOut.setOnClickListener(this);
+		camUp = LayoutTools.addWidget(new Button(this), 1.0f, LayoutTools.MP, LayoutTools.WC,0,btnLayout);
+		camUp.setText(R.string.btn_camUp);
+		camUp.setOnClickListener(this);
+		camDown = LayoutTools.addWidget(new Button(this), 1.0f, LayoutTools.MP, LayoutTools.WC,0,btnLayout);
+		camDown.setText(R.string.btn_camDown);
+		camDown.setOnClickListener(this);
 		wireFrame = LayoutTools.addWidget(new Button(this), 1.0f, LayoutTools.MP, LayoutTools.WC,0,btnLayout);
 		wireFrame.setText(R.string.btn_togWF);
 		wireFrame.setOnClickListener(this);

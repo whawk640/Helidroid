@@ -729,6 +729,7 @@ public class StigChopper
 			GLES20.glUniform4f(mColorHandle,color[0]*0.9f,color[1]*0.9f,color[2]*0.9f,color[3]);
         }
 
+		GLES20.glLineWidth(lineWidth);
         GLES20.glDrawElements(GLES20.GL_LINES, triOLDrawListBuffer.capacity(),
 							  GLES20.GL_UNSIGNED_INT, triOLDrawListBuffer);
         int drawError = GLES20.glGetError();

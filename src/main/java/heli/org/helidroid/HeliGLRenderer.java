@@ -32,7 +32,7 @@ import javax.microedition.khronos.opengles.GL10;
  */
 public class HeliGLRenderer implements GLSurfaceView.Renderer 
 {
-    private Camera mCamera;
+    private Camera mCamera = null;
     private double camDistance;
     private int[] mTextureDataHandle;
     private boolean surfaceCreated;
@@ -177,6 +177,15 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer
         return textureHandle;
     }
 
+	public void moveCamera(Point3D deltaCam)
+	{
+		if (mCamera != null)
+		{
+			Point3D newSrc = mCamera.source.add(deltaCam);
+		}
+		
+	}
+	
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         // Set the background frame color
@@ -185,11 +194,10 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);
         mCamera = new Camera();
         // TODO: adjust eye position based on world size
-        mCamera.setSource(495.0, 480.0, 5.0);
+        mCamera.setSource(495.0, 450.0, 15.0);
         mCamera.setTarget(500.0, 500.0, 0.0);
         mCamera.setUp(0.0, 0.0, 1.0);
         // NOTE: OpenGL Related objects must be created here after the context is created
-        int cell = 0;
         // Number of textures below
         mTextureDataHandle = initImage(mContext, gl, 1);
         theWorld.createObjects();
