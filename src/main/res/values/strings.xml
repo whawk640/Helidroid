@@ -3,6 +3,8 @@
     <string name="action_settings">Settings</string>
 	<string name="btn_nxtChop">Next Chopper</string>
 	<string name="btn_nxtCam">Next Camera</string>
+	<string name="btn_pause">Pause</string>
+	<string name="btn_resume">Resume</string>
 	<string name="btn_camIn">Cam In</string>
 	<string name="btn_camOut">Cam Out</string>
 	<string name="btn_camUp">Cam Up</string>

@@ -17,12 +17,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 	LinearLayout panelLayout = null; // Vertical
     Button nextChopper = null;
     Button nextCamera = null;
+	Button pauseResume = null;
     Button camUp = null;
     Button camDown = null;
     Button camIn = null;
     Button camOut = null;
 	Button wireFrame = null;
 	Button exit = null;
+	boolean worldPaused = false;
 
     private HeliGLSurfaceView mGLView;
     private World mWorld;
@@ -39,6 +41,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         {
             mWorld.toggleChaseCam();
         }
+		else if (v == pauseResume)
+		{
+			if (worldPaused == false)
+			{
+				((Button)v).setText(R.string.btn_resume);
+				mWorld.pause();
+				worldPaused = true;
+			}
+			else
+			{
+				((Button)v).setText(R.string.btn_pause);
+				mWorld.resume();
+				worldPaused = false;
+			}
+		}
 		else if (v == camOut)
 		{
 			mWorld.cameraFarther();
@@ -68,6 +85,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+		worldPaused = false;
         setContentView(R.layout.content_main);
         //Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         //setSupportActionBar(toolbar);
@@ -95,18 +113,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 		nextCamera = LayoutTools.addWidget(new Button(this),1.0f, LayoutTools.MP, LayoutTools.WC,0,btnLayout);
         nextCamera.setText(R.string.btn_nxtCam);
         nextCamera.setOnClickListener(this);
-		camIn = LayoutTools.addWidget(new Button(this), 1.0f, LayoutTools.MP, LayoutTools.WC,0,btnLayout);
-		camIn.setText(R.string.btn_camIn);
-		camIn.setOnClickListener(this);
-		camOut = LayoutTools.addWidget(new Button(this), 1.0f, LayoutTools.MP, LayoutTools.WC,0,btnLayout);
-		camOut.setText(R.string.btn_camOut);
-		camOut.setOnClickListener(this);
+		pauseResume = LayoutTools.addWidget(new Button(this), 1.0f, LayoutTools.MP, LayoutTools.WC,0,btnLayout);
+		pauseResume.setText(R.string.btn_pause);
+		pauseResume.setOnClickListener(this);
+		/* 
 		camUp = LayoutTools.addWidget(new Button(this), 1.0f, LayoutTools.MP, LayoutTools.WC,0,btnLayout);
 		camUp.setText(R.string.btn_camUp);
 		camUp.setOnClickListener(this);
 		camDown = LayoutTools.addWidget(new Button(this), 1.0f, LayoutTools.MP, LayoutTools.WC,0,btnLayout);
 		camDown.setText(R.string.btn_camDown);
 		camDown.setOnClickListener(this);
+		camIn = LayoutTools.addWidget(new Button(this), 1.0f, LayoutTools.MP, LayoutTools.WC,0,btnLayout);
+		camIn.setText(R.string.btn_camIn);
+		camIn.setOnClickListener(this);
+		camOut = LayoutTools.addWidget(new Button(this), 1.0f, LayoutTools.MP, LayoutTools.WC,0,btnLayout);
+		camOut.setText(R.string.btn_camOut);
+		camOut.setOnClickListener(this); */
 		wireFrame = LayoutTools.addWidget(new Button(this), 1.0f, LayoutTools.MP, LayoutTools.WC,0,btnLayout);
 		wireFrame.setText(R.string.btn_togWF);
 		wireFrame.setOnClickListener(this);
@@ -118,7 +140,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 ViewGroup.LayoutParams.WRAP_CONTENT));
         masterLayout.addView(mGLView);
 		mWorld.setSurface(mGLView);
-		mGLView.requestRender();
+		//mGLView.requestRender();
     }
 
     public void initializeTimerTask()
@@ -182,7 +204,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 		// You'll accelerate time by using a shorter delay here
         // We wait 2.5 seconds for world to be created etc.
         //timer.schedule(timerTask, 1500, 16);
-        timer.schedule(timerTask, 2500, 4);
+        timer.schedule(timerTask, 5000, 4);
     }
 
     @Override

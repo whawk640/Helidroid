@@ -2,7 +2,6 @@ package heli.org.helidroid;
 
 import android.opengl.GLES20;
 import android.opengl.Matrix;
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -11,8 +10,7 @@ import java.nio.IntBuffer;
 /** For now, an object3D is a cube-like object, though each individual dimension
  * can be varied by passing in size.
  */
-public class Object3D {
-    private static int mProgram = -1;
+public class Object3D extends Base3D {
     private Point3D position;
     private Point3D size;
 
@@ -24,18 +22,9 @@ public class Object3D {
     static public FloatBuffer uvBuffer;
     static public FloatBuffer colBuffer;
 
-	static public boolean useWireframeOnly = false;
-	
-	static protected boolean useVertexColor = true;
-	
-	static protected boolean useTextures = true;
-	
     // TODO: Add textures for each side
     // private int[] whichTexture = {0, 0, 0, 0, 0, 0};
     private int whichTexture;
-
-    // Use to access and set the view transformation
-    static private int mMVPMatrixHandle;
 
     // number of coordinates per vertex in this array
 
@@ -95,13 +84,6 @@ public class Object3D {
 		20, 21, 21, 22, 22, 23, 23, 20  // Right
     };
 	
-    static private int mPositionHandle;
-    static private int mColorHandle;
-    static private int mTextureCoordinateHandle;
-    /** Size of the texture coordinate data in elements. */
-    private final int mTextureCoordinateDataSize = 2;
-    static private int mTextureUniformHandle;
-
     public static final float uvs[] = {
             0.0f, 0.0f, // First Face
             0.0f, 1.0f,
@@ -149,122 +131,23 @@ public class Object3D {
 
     void commonConstructor(Point3D thePos, Point3D theSize)
     {
-        // TODO: Add textures for each side
+		// TODO: Add textures for each side
         position = thePos;
         size = theSize;
-        if (mProgram < 0)
-        {
-            boolean useVColor = useVertexColor;
-            boolean useText = testTextureOverride();
-            String vertexCode = buildVertexCode(useVColor, useText);
-            int vertexShader = HeliGLRenderer.loadShader(GLES20.GL_VERTEX_SHADER,
-                    vertexCode);
-            String fragmentCode = buildFragmentCode(useVColor, useText);
-            int fragmentShader = HeliGLRenderer.loadShader(GLES20.GL_FRAGMENT_SHADER,
-                    fragmentCode);
-            if (vertexShader > 0 && fragmentShader > 0) {
-                // create empty OpenGL ES Program
-                mProgram = GLES20.glCreateProgram();
-
-                // add the vertex shader to program
-                GLES20.glAttachShader(mProgram, vertexShader);
-
-                // add the fragment shader to program
-                GLES20.glAttachShader(mProgram, fragmentShader);
-
-                // creates OpenGL ES program executables
-                GLES20.glLinkProgram(mProgram);
-                System.out.println("Object3D Shaders created, vtx: " + vertexShader + ", fragment: " +
-                        fragmentShader + ", program ID: " + mProgram);
-            }
-            else
-            {
-                System.out.println("Object3D Failed to load shader program -- vertex: " + vertexShader +
-                        ", fragment: " + fragmentShader);
-            }
-
-        }
     }
 
     public Object3D(Point3D thePos, Point3D theSize, boolean overText)
     {
+		super();
         commonConstructor(thePos, theSize);
         overrideTextures = new Boolean(overText);
     }
 
-    public Object3D(Point3D thePos, Point3D theSize) {
+    public Object3D(Point3D thePos, Point3D theSize)
+	{
+		super();
         commonConstructor(thePos, theSize);
     }
-
-	protected String buildVertexCode(boolean vertexColor, boolean enableTextures)
-	{
-		String vertexString = 
-			"uniform mat4 uMVPMatrix;" +
-			"attribute vec4 vPosition;";
-		if (vertexColor)
-		{
-			vertexString += "attribute vec4 vColor;";  			 			  
-		}
-		if (enableTextures)
-		{
-			vertexString += "attribute vec2 a_texCoordinate;";
-			vertexString += "varying vec2 v_texCoordinate;";
-		}
-		if (vertexColor)
-		{
-			vertexString += "varying vec4 fColor;";  			 			  
-		}
-		vertexString += "void main() {";
-		vertexString += "  gl_Position = uMVPMatrix * vPosition;";
-		if (enableTextures)
-		{
-			vertexString += "  v_texCoordinate = a_texCoordinate;";
-		}
-		if (vertexColor)
-		{
-			vertexString += "  fColor = vColor;";
-		}
-		vertexString +=	"}";
-		return vertexString;
-	}
-
-	protected String buildFragmentCode(boolean vertexColor, boolean enableTextures)
-	{
-		String fragmentString = "precision mediump float;";
-		if (vertexColor == false)
-		{
-			fragmentString += "uniform vec4 vColor;";
-		}
-		if (enableTextures)
-		{
-			fragmentString += "uniform sampler2D u_texture;";
-			fragmentString += "varying vec2 v_texCoordinate;";
-
-		}
-		if (vertexColor)
-		{
-			fragmentString += "varying vec4 fColor;";
-		}
-		fragmentString += "void main() {";
-		if (enableTextures && vertexColor)
-		{
-			fragmentString += "  gl_FragColor = fColor * texture2D( u_texture, v_texCoordinate);";
-		}
-		else if (enableTextures)
-		{
-			fragmentString += "  gl_FragColor = vColor * texture2D( u_texture, v_texCoordinate);";
-		}
-		else if (vertexColor)
-		{
-			fragmentString += "  gl_FragColor = fColor;";
-		}
-		else // Single color, no texture
-		{
-			fragmentString += "  gl_FragColor = vColor;";
-		}
-		fragmentString += "}";
-		return fragmentString;
-	}		
 
     boolean testValues(int thisMin, int thisMax, int otherMin, int otherMax)
     {
@@ -357,7 +240,6 @@ public class Object3D {
             texs[it++] = uvs[i];
         }
     }
-
 
     // TODO: Update textures for each side
     public int getTexture() { return whichTexture; }
@@ -592,7 +474,6 @@ public class Object3D {
         {
             System.out.println("Draw Elements Error: " + drawError);
         }
-
 
         if (useText)
         {

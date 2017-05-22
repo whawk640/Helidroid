@@ -1,13 +1,8 @@
 package heli.org.helidroid;
 
-//import android.opengl.EGLConfig;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.opengl.GLES20;
-import android.opengl.GLSurfaceView;
-import android.opengl.GLUtils;
-import android.opengl.Matrix;
 import android.os.SystemClock;
 
 import java.io.IOException;
@@ -26,6 +21,11 @@ import java.util.Set;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
+
+import android.opengl.GLES20;
+import android.opengl.GLSurfaceView;
+import android.opengl.GLUtils;
+import android.opengl.Matrix;
 
 /**
  * Created by Dan LaFuze on 10/16/2015.
@@ -182,12 +182,14 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer
 		if (mCamera != null)
 		{
 			Point3D newSrc = mCamera.source.add(deltaCam);
+			mCamera.setSource(newSrc);
 		}
 		
 	}
 	
     @Override
-    public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+    public void onSurfaceCreated(GL10 gl, EGLConfig config)
+	{
         // Set the background frame color
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         GLES20.glEnable(GLES20.GL_CULL_FACE);
@@ -200,7 +202,7 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer
         // NOTE: OpenGL Related objects must be created here after the context is created
         // Number of textures below
         mTextureDataHandle = initImage(mContext, gl, 1);
-        theWorld.createObjects();
+		theWorld.createObjects(gl,config);
 
         surfaceCreated = true;
     }

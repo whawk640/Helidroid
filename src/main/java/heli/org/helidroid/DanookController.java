@@ -28,13 +28,13 @@ public class DanookController extends Thread
 
     private static final double MAX_HORZ_ACCEL = 0.4;
 
-    private static final double DECEL_DISTANCE_VERT = 12.0;
+    private static final double DECEL_DISTANCE_VERT = 10.0;
 
-    private static final double DECEL_DISTANCE_HORZ = 16.0;
+    private static final double DECEL_DISTANCE_HORZ = 14.0;
 
-    private static final double VERT_DECEL_SPEED = 0.5;
+    private static final double VERT_DECEL_SPEED = 0.45;
 
-    private static final double HORZ_DECEL_SPEED = 2.0;
+    private static final double HORZ_DECEL_SPEED = 1.9;
 
     private static final int MAX_FAIL_COUNT = 40;
 

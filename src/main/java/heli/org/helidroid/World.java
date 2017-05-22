@@ -33,8 +33,10 @@ package heli.org.helidroid;
 //
 //
 
-import android.opengl.*;
 import java.util.*;
+import javax.microedition.khronos.egl.EGLConfig;
+import javax.microedition.khronos.opengles.GL10;
+import android.opengl.*;
 
 /** World Class, for StigChoppers.  Defines the world.
  * Copyright 2015, Daniel A. LaFuze
@@ -70,6 +72,7 @@ public class World
     float[] texs = new float[OBJECT_COUNT * Object3D.uvs.length];
     int[] dos = new int[OBJECT_COUNT * Object3D.drawOrder.length];
 	int[] lineDos = new int[OBJECT_COUNT * Object3D.lineDrawOrder.length];
+	boolean worldPaused;
 	
     private static final double FULL_BLOCK_SIZE = 100.0;
 
@@ -104,131 +107,11 @@ public class World
     private double maxTime = 10000.0;
 
     private ArrayList<Object3D> worldState;
+	
+	private ArrayList<BullsEye> targets;
 
     private Map<Integer, ChopperAggregator> myChoppers;
 
-    public void nextChopper()
-    {
-        if (visibleChopper < (nextChopperID - 1))
-        {
-            ++visibleChopper;
-        }
-        else
-        {
-            visibleChopper = 0;
-        }
-        if (glSurface != null)
-        {
-            glSurface.requestRender();
-        }
-    }
-
-    public void toggleChaseCam()
-    {
-        if (chaseCam == true)
-        {
-            chaseCam = false;
-        }
-        else
-        {
-            chaseCam = true;
-        }
-        if (glSurface != null)
-        {
-            glSurface.requestRender();
-        }
-    }
-
-    public void toggleWireFrame()
-    {
-        if (wireFrame == true)
-        {
-            wireFrame = false;
-        }
-        else
-        {
-            wireFrame = true;
-        }
-        if (glSurface != null)
-        {
-            glSurface.requestRender();
-        }
-    }
-
-	public void boundsCheckCamDistance()
-	{
-		if (camDistance < MIN_CAM_DISTANCE)
-		{
-			camDistance = MIN_CAM_DISTANCE;
-		}
-		else if (camDistance > MAX_CAM_DISTANCE)
-		{
-			camDistance = MAX_CAM_DISTANCE;
-		}
-	}
-	
-	public void cameraUp()
-	{
-		if (glSurface != null)
-		{
-			Point3D newPoint = new Point3D(0.0, 0.0, VERTICAL_CAM_STEP);
-			HeliGLRenderer rend = glSurface.getRenderer();
-			rend.moveCamera(newPoint);
-			glSurface.requestRender();
-		}
-	}
-	
-	public void cameraDown()
-	{
-		if (glSurface != null)
-		{
-			Point3D newPoint = new Point3D(0.0, 0.0, -1.0 * VERTICAL_CAM_STEP);
-			HeliGLRenderer rend = glSurface.getRenderer();
-			rend.moveCamera(newPoint);
-			glSurface.requestRender();
-		}
-	}
-
-	public void cameraCloser()
-	{
-		camDistance *= 0.90;
-		boundsCheckCamDistance();
-        if (glSurface != null)
-        {
-            glSurface.requestRender();
-        }
-	}
-	
-	public void cameraFarther()
-	{
-		camDistance *= 1.11;
-		boundsCheckCamDistance();
-        if (glSurface != null)
-        {
-            glSurface.requestRender();
-        }
-	}
-
-    public int getVisibleChopper()
-    {
-        return visibleChopper;
-    }
-
-	public boolean getWireFrame()
-	{
-		return wireFrame;
-	}
-	
-    public boolean getChaseCam()
-    {
-        return chaseCam;
-    }
-	
-	public double getCamDistance()
-	{
-		return camDistance;
-	}
-	
     /** With this array, the world will attempt to maintain a list of all
      * addresses given to the delivery choppers so it can validate
      * attempted deliveries.
@@ -246,6 +129,7 @@ public class World
             return "unk. method: ";
         }
     }
+
     static public String mName(int depth)
     {
         try
@@ -266,11 +150,16 @@ public class World
         }
     }
 
-    public void createObjects() {
+    public void createObjects(GL10 gl, EGLConfig cfg)
+	{
         if (worldState == null)
         {
             worldState = new ArrayList<Object3D>();
         }
+		if (targets == null)
+		{
+			targets = new ArrayList<BullsEye>();
+		}
         int idx = 0;
         // TODO: Prevent double creation
         // Generate the world... TODO: Move to city blocks
@@ -350,11 +239,132 @@ public class World
         Object3D.uvBuffer = BufferUtils.getFB(texs);
         Object3D.drawListBuffer = BufferUtils.getIB(dos);
 		Object3D.lineDrawListBuffer = BufferUtils.getIB(lineDos);
-		createChoppers();
-		
+		createChoppers(gl,cfg);
     }
 
-	public void createChoppers()
+    public void nextChopper()
+    {
+        if (visibleChopper < (nextChopperID - 1))
+        {
+            ++visibleChopper;
+        }
+        else
+        {
+            visibleChopper = 0;
+        }
+        if (glSurface != null)
+        {
+            glSurface.requestRender();
+        }
+    }
+
+    public void toggleChaseCam()
+    {
+        if (chaseCam == true)
+        {
+            chaseCam = false;
+        }
+        else
+        {
+            chaseCam = true;
+        }
+        if (glSurface != null)
+        {
+            glSurface.requestRender();
+        }
+    }
+
+    public void toggleWireFrame()
+    {
+        if (wireFrame == true)
+        {
+            wireFrame = false;
+        }
+        else
+        {
+            wireFrame = true;
+        }
+        if (glSurface != null)
+        {
+            glSurface.requestRender();
+        }
+    }
+
+	public void boundsCheckCamDistance()
+	{
+		if (camDistance < MIN_CAM_DISTANCE)
+		{
+			camDistance = MIN_CAM_DISTANCE;
+		}
+		else if (camDistance > MAX_CAM_DISTANCE)
+		{
+			camDistance = MAX_CAM_DISTANCE;
+		}
+	}
+
+	public void cameraUp()
+	{
+		if (glSurface != null)
+		{
+			Point3D newPoint = new Point3D(0.0, 0.0, VERTICAL_CAM_STEP);
+			HeliGLRenderer rend = glSurface.getRenderer();
+			rend.moveCamera(newPoint);
+			glSurface.requestRender();
+		}
+	}
+
+	public void cameraDown()
+	{
+		if (glSurface != null)
+		{
+			Point3D newPoint = new Point3D(0.0, 0.0, -1.0 * VERTICAL_CAM_STEP);
+			HeliGLRenderer rend = glSurface.getRenderer();
+			rend.moveCamera(newPoint);
+			glSurface.requestRender();
+		}
+	}
+
+	public void cameraCloser()
+	{
+		camDistance *= 0.90;
+		boundsCheckCamDistance();
+        if (glSurface != null)
+        {
+            glSurface.requestRender();
+        }
+	}
+
+	public void cameraFarther()
+	{
+		camDistance *= 1.11;
+		boundsCheckCamDistance();
+        if (glSurface != null)
+        {
+            glSurface.requestRender();
+        }
+	}
+
+    public int getVisibleChopper()
+    {
+        return visibleChopper;
+    }
+
+	public boolean getWireFrame()
+	{
+		return wireFrame;
+	}
+
+    public boolean getChaseCam()
+    {
+        return chaseCam;
+    }
+
+	public double getCamDistance()
+	{
+		return camDistance;
+	}
+
+	public void createChoppers(GL10 gl, EGLConfig cfg)
 	{
 		myChoppers = new HashMap<Integer, ChopperAggregator>();
 
@@ -374,8 +384,7 @@ public class World
             if (locData != null)
             {
                 StigChopper theChopper = locData.getChopper();
-				theChopper.createBuffers();
-				
+				theChopper.onSurfaceCreated(gl, cfg);
 			}
 		}			
         allPackageLocs = new ArrayList<Point3D>();
@@ -444,6 +453,7 @@ public class World
             if (locData != null)
             {
                 StigChopper theChopper = locData.getChopper();
+				float[] chopperColor = theChopper.getColor();
                 ArrayList targetPoints = new ArrayList<Point3D>();
                 for (int i = 0; i < theChopper.itemCount(); ++i)
                 {
@@ -456,7 +466,9 @@ public class World
                     double targetY = 100.0 * whichRow + inBlockY;
                     double targetZ = 0.1; // There's a curb height
                     Point3D targetPoint = new Point3D(targetX, targetY, targetZ);
+					BullsEye target = new BullsEye(targetPoint, chopperColor);
                     targetPoints.add(targetPoint);
+					targets.add(target);
                 }
                 theChopper.setWaypoints(targetPoints);
                 allPackageLocs.addAll(targetPoints);
@@ -598,8 +610,19 @@ public class World
                 }
             }
         } */
+		worldPaused = false;
     }
 
+	public void pause()
+	{
+		worldPaused = true;
+	}
+	
+	public void resume()
+	{
+		worldPaused = false;
+	}
+	
 	public void setSurface(HeliGLSurfaceView surf)
 	{
 		glSurface = surf;
@@ -683,24 +706,32 @@ public class World
 
     public void tick() throws Exception
     {
-         synchronized(this)
-         {
-             Iterator it = myChoppers.entrySet().iterator();
-             while (it.hasNext())
-             {
-                 Map.Entry<Integer, ChopperAggregator> pairs = (Map.Entry)it.next();
-                 int id = pairs.getKey();
-                 ChopperAggregator locData = pairs.getValue();
-                 if (locData != null)
-                 {
-                     ChopperInfo chopInfo = locData.getInfo();
-                     if (chopInfo != null)
-                     {
-                         chopInfo.fly(curTimeStamp, TICK_TIME);
-                         locData.setInfo(chopInfo);
-                         myChoppers.put(id, locData);
-                     }
-                 }
+		if (worldPaused)
+		{
+			if (glSurface != null)
+			{
+				glSurface.requestRender();
+			}
+			return;
+		}
+        synchronized(this)
+        {
+            Iterator it = myChoppers.entrySet().iterator();
+            while (it.hasNext())
+            {
+                Map.Entry<Integer, ChopperAggregator> pairs = (Map.Entry)it.next();
+                int id = pairs.getKey();
+                ChopperAggregator locData = pairs.getValue();
+                if (locData != null)
+                {
+                    ChopperInfo chopInfo = locData.getInfo();
+                    if (chopInfo != null)
+					{
+                        chopInfo.fly(curTimeStamp, TICK_TIME);
+                        locData.setInfo(chopInfo);
+                        myChoppers.put(id, locData);
+                    }
+                }
              }
          }
 		 if (tickCount % m_rtToRndRatio == 0)
@@ -736,6 +767,11 @@ public class World
 				theChopper.draw(textDataHandle, myMatrix);
 			}
 		}
+		/*
+		for (BullsEye target : targets)
+		{
+			target.draw(mvpMatrix);
+		} */
     }
 
     synchronized public Point3D gps(int chopperID)
