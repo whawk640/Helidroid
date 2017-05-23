@@ -67,7 +67,7 @@ public class Apachi extends StigChopper
         }
         //m_altJL.setText("Alt: " + Apachi.f(m_alt.m_lastAlt));
 		
-		super.draw(textDataHandle, myMatrix);
+		super.draw(myMatrix);
 	}
     /** This method renders a chopper.  We'll get the position from the world.
      * We need to get information about the chopper's orientation from the

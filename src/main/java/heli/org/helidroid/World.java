@@ -33,10 +33,12 @@ package heli.org.helidroid;
 //
 //
 
+import android.app.*;
+import android.content.*;
+import android.widget.*;
 import java.util.*;
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.opengles.GL10;
-import android.opengl.*;
+import javax.microedition.khronos.egl.*;
+import javax.microedition.khronos.opengles.*;
 
 /** World Class, for StigChoppers.  Defines the world.
  * Copyright 2015, Daniel A. LaFuze
@@ -58,6 +60,8 @@ public class World
     private boolean chaseCam = true;
 	private boolean wireFrame = false;
 	private double camDistance = 50.0;
+	private Activity mainAct = null;
+	private LinearLayout panelLay = null;
 
     static protected final int ROW_START = 0;
     static protected final int BLOCK_ROWS = 10;
@@ -150,7 +154,7 @@ public class World
         }
     }
 
-    public void createObjects(GL10 gl, EGLConfig cfg)
+    public void createObjects(Context context, GL10 gl, EGLConfig cfg)
 	{
         if (worldState == null)
         {
@@ -161,6 +165,7 @@ public class World
 			targets = new ArrayList<BullsEye>();
 		}
         int idx = 0;
+		Object3D.initImage(context,gl);
         // TODO: Prevent double creation
         // Generate the world... TODO: Move to city blocks
         for (int row = ROW_START; row < BLOCK_ROWS; ++row)
@@ -538,8 +543,10 @@ public class World
     /**
      * @throws Exception
      */
-    public World() throws Exception
+    public World(Activity act, LinearLayout panLay) throws Exception
     {
+		mainAct = act;
+		panelLay = panLay;
         /*
         for (String thisArg: args)
         {
@@ -730,6 +737,15 @@ public class World
                         chopInfo.fly(curTimeStamp, TICK_TIME);
                         locData.setInfo(chopInfo);
                         myChoppers.put(id, locData);
+						StigChopper myChopper = locData.getChopper();
+						if (myChopper != null)
+						{
+							ChopperPanel myPanel = myChopper.getPanel();
+							if (myPanel != null)
+							{
+								myPanel.update(chopInfo);
+							}
+						}
                     }
                 }
              }
@@ -749,11 +765,11 @@ public class World
 		 ++tickCount;
     }
 
-    public void draw(int textDataHandle, float[] mvpMatrix)
+    public void draw(float[] mvpMatrix)
     {
         // First, draw the static world
 		Object3D.useWireframeOnly = wireFrame;
-        Object3D.draw(textDataHandle,mvpMatrix);
+        Object3D.draw(mvpMatrix);
 		Iterator it = myChoppers.entrySet().iterator();
         while (it.hasNext())
         {
@@ -764,7 +780,7 @@ public class World
             if (locData != null)
             {
                 StigChopper theChopper = locData.getChopper();
-				theChopper.draw(textDataHandle, myMatrix);
+				theChopper.draw(myMatrix);
 			}
 		}
 		/*
@@ -818,7 +834,8 @@ public class World
             if (locData != null)
             {
                 StigChopper theChopper = locData.getChopper();
-                //m_chopperInfoPanel.add(theChopper.m_info);
+				//ChopperPanel newPanel = new ChopperPanel(mainAct,panelLay);
+				//theChopper.setPanel(newPanel);
             }
         }
     }

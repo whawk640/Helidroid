@@ -11,4 +11,7 @@
 	<string name="btn_camDown">Cam Down</string>
 	<string name="btn_togWF">Toggle Wireframe</string>
 	<string name="btn_exit">Exit</string>
+	<string name="label_alt">Altitude:</string>
+	<string name="label_speed">Speed:</string>
+	<string name="label_inv">Inventory:</string>
 </resources>

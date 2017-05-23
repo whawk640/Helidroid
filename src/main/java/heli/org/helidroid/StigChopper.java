@@ -351,6 +351,7 @@ public class StigChopper extends Base3D
     final int mTextureCoordinateDataSize = 2;
     private int mTextureUniformHandle;
 	private float lineWidth = 3.0f;
+	private ChopperPanel myPanel = null;
 	
     final int COORDS_PER_VERTEX = 3;
     final int COLORS_PER_VERTEX = 4;
@@ -389,6 +390,16 @@ public class StigChopper extends Base3D
 
     protected ArrayList<Point3D> targetWaypoints;
 
+	public void setPanel(ChopperPanel pan)
+	{
+		myPanel = pan;
+	}
+	
+	public ChopperPanel getPanel()
+	{
+		return myPanel;
+	}
+	
     // Complication -- homeBase isn't known yet -- we need chopperInfo constructed first
     public StigChopper(int chopperID, World theWorld)
     {
@@ -494,7 +505,8 @@ public class StigChopper extends Base3D
 		tailRotorDrawListBuffer = BufferUtils.getIB(tailRotorDrawOrder);
 	}
 	
-	public void drawTriangles(int textDataHandle, float[] mvpMatrix)
+	// TODO: Re-enable textures when added here
+	public void drawTriangles(float[] mvpMatrix)
 	{
         // Add program to OpenGL ES environment
         //GLES20.glUseProgram(mTriProgram);
@@ -568,7 +580,7 @@ public class StigChopper extends Base3D
             GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
 
             // Bind the texture to this unit.
-            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textDataHandle);
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, -1);
 
 			// Tell the texture uniform sampler to use this texture in the shader by binding to texture unit 0.
 			GLES20.glUniform1i(mTextureUniformHandle, 0);
@@ -868,7 +880,7 @@ public class StigChopper extends Base3D
 		System.out.println("Drew chopper tail rotor");
 	}
 
-    public void draw(int textDataHandle, float[] myMatrix) { // pass in the calculated transformation matrix
+    public void draw(float[] myMatrix) { // pass in the calculated transformation matrix
 		ChopperInfo myInfo = world.getChopInfo(id);
 		Point3D myPos = myInfo.getPosition();
 		double headingDeg = myInfo.getHeading();
@@ -884,7 +896,7 @@ public class StigChopper extends Base3D
 		float[] mainRotorMatrix = myMatrix.clone();
 		float[] tailRotorMatrix = myMatrix.clone();
 		Matrix.multiplyMM(myMatrix,0,myMatrix,0,transMatrix,0);
-		drawTriangles(textDataHandle, myMatrix);
+		drawTriangles(myMatrix);
 		drawOutlines(myMatrix);
 		drawLines(myMatrix);
 		float[] mainRotorTransMatrix = new float[16];

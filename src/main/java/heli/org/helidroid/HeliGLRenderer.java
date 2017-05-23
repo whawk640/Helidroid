@@ -34,7 +34,6 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer
 {
     private Camera mCamera = null;
     private double camDistance;
-    private int[] mTextureDataHandle;
     private boolean surfaceCreated;
     private World theWorld = null;
 
@@ -74,109 +73,6 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer
         mAngle = angle;
     }
 
-    private static int[] initImage(final Context context, GL10 gl, int numTextures) {
-        final int[] textureHandle = new int[numTextures];
-        gl.glGenTextures(numTextures, textureHandle, 0);
-        if (textureHandle[0] != 0) {
-            gl.glBindTexture(GL10.GL_TEXTURE_2D, textureHandle[0]);
-            gl.glTexParameterf(
-                    GL10.GL_TEXTURE_2D,
-                    GL10.GL_TEXTURE_MIN_FILTER,
-                    GL10.GL_NEAREST);
-            gl.glTexParameterf(
-                    GL10.GL_TEXTURE_2D,
-                    GL10.GL_TEXTURE_MAG_FILTER,
-                    GL10.GL_LINEAR);
-            gl.glTexParameterf(
-                    GL10.GL_TEXTURE_2D,
-                    GL10.GL_TEXTURE_WRAP_S,
-                    GL10.GL_CLAMP_TO_EDGE);
-            gl.glTexParameterf(
-                    GL10.GL_TEXTURE_2D,
-                    GL10.GL_TEXTURE_WRAP_T,
-                    GL10.GL_CLAMP_TO_EDGE);
-            gl.glTexEnvf(
-                    GL10.GL_TEXTURE_ENV,
-                    GL10.GL_TEXTURE_ENV_MODE,
-                    GL10.GL_REPLACE);
-            int resID = R.drawable.helipad_256_a;
-            InputStream in = context.getResources().openRawResource(resID);
-            Bitmap image;
-            try {
-                image = BitmapFactory.decodeStream(in);
-            } finally {
-                try {
-                    in.close();
-                } catch (IOException e) {
-                    System.out.println("Couldn't decode texture stream!");
-                }
-            }
-            GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, image, 0);
-            GLES20.glGenerateMipmap(GLES20.GL_TEXTURE_2D);
-            image.recycle();
-        }
-
-        /* Re-enable this to bind more textures
-        for (int i = 1; i < numTextures; ++i)
-        {
-            if (textureHandle[i] != 0) {
-                gl.glBindTexture(GL10.GL_TEXTURE_2D, textureHandle[i]);
-                gl.glTexParameterf(
-                        GL10.GL_TEXTURE_2D,
-                        GL10.GL_TEXTURE_MIN_FILTER,
-                        GL10.GL_NEAREST);
-                gl.glTexParameterf(
-                        GL10.GL_TEXTURE_2D,
-                        GL10.GL_TEXTURE_MAG_FILTER,
-                        GL10.GL_LINEAR);
-                gl.glTexParameterf(
-                        GL10.GL_TEXTURE_2D,
-                        GL10.GL_TEXTURE_WRAP_S,
-                        GL10.GL_CLAMP_TO_EDGE);
-                gl.glTexParameterf(
-                        GL10.GL_TEXTURE_2D,
-                        GL10.GL_TEXTURE_WRAP_T,
-                        GL10.GL_CLAMP_TO_EDGE);
-                gl.glTexEnvf(
-                        GL10.GL_TEXTURE_ENV,
-                        GL10.GL_TEXTURE_ENV_MODE,
-                        GL10.GL_REPLACE);
-
-                // Set filtering
-                GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
-                GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
-
-                int resID = R.drawable.masked_1;
-                String resourceName;
-                try {
-                    resourceName = "masked_" + i;
-                    resID = context.getResources().getIdentifier(resourceName, "drawable", context.getPackageName());
-                } catch (Exception e) {
-                    System.out.println("Failed to create resource...");
-                }
-                InputStream in = context.getResources().openRawResource(resID);
-                Bitmap image;
-                try {
-                    image = BitmapFactory.decodeStream(in);
-                } finally {
-                    try {
-                        in.close();
-                    } catch (IOException e) {
-                        System.out.println("Couldn't decode texture stream!");
-                    }
-                }
-                GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, image, 0);
-                image.recycle();
-            }
-            else
-            {
-                System.out.println("Texture is 0...");
-            }
-        } */
-
-        return textureHandle;
-    }
-
 	public void moveCamera(Point3D deltaCam)
 	{
 		if (mCamera != null)
@@ -199,10 +95,7 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer
         mCamera.setSource(495.0, 450.0, 15.0);
         mCamera.setTarget(500.0, 500.0, 0.0);
         mCamera.setUp(0.0, 0.0, 1.0);
-        // NOTE: OpenGL Related objects must be created here after the context is created
-        // Number of textures below
-        mTextureDataHandle = initImage(mContext, gl, 1);
-		theWorld.createObjects(gl,config);
+		theWorld.createObjects(mContext,gl,config);
 
         surfaceCreated = true;
     }
@@ -234,7 +127,7 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer
         Matrix.rotateM(newProjectMatrix,0, mProjectionMatrix,0,mAngle,0.0f,0.0f,1.0f);
         Matrix.multiplyMM(mMVPMatrix, 0, newProjectMatrix, 0, mViewMatrix, 0);
 
-        theWorld.draw(mTextureDataHandle[0], mMVPMatrix);
+        theWorld.draw(mMVPMatrix);
     }
 
     public void orbitCamera(double ticks)

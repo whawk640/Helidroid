@@ -1,11 +1,11 @@
 package heli.org.helidroid;
 
-import android.opengl.GLES20;
-import android.opengl.Matrix;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
+import android.content.*;
+import android.graphics.*;
+import android.opengl.*;
+import java.io.*;
+import java.nio.*;
+import javax.microedition.khronos.opengles.*;
 
 /** For now, an object3D is a cube-like object, though each individual dimension
  * can be varied by passing in size.
@@ -24,7 +24,8 @@ public class Object3D extends Base3D {
 
     // TODO: Add textures for each side
     // private int[] whichTexture = {0, 0, 0, 0, 0, 0};
-    private int whichTexture;
+    static private int[] mTextureDataHandle;
+    static private final int WHICH_TEXTURE = 0;
 
     // number of coordinates per vertex in this array
 
@@ -111,6 +112,7 @@ public class Object3D extends Base3D {
             1.0f, 0.0f
     };
 
+	private static final int NUM_TEXTURES = 2;
     static final int COORDS_PER_VERTEX = 3;
     static final int COLORS_PER_VERTEX = 4;
     public static final int vertexCount = cubeCoords.length / COORDS_PER_VERTEX;
@@ -118,6 +120,106 @@ public class Object3D extends Base3D {
     static private final int colorStride = COLORS_PER_VERTEX * 4; // 4 bytes per RGBA
 
     private Boolean overrideTextures = null;
+
+    static public void initImage(final Context context, GL10 gl) {
+        mTextureDataHandle = new int[NUM_TEXTURES];
+        gl.glGenTextures(NUM_TEXTURES, mTextureDataHandle, 0);
+        if (mTextureDataHandle[0] != 0) {
+            gl.glBindTexture(GL10.GL_TEXTURE_2D, mTextureDataHandle[0]);
+            gl.glTexParameterf(
+				GL10.GL_TEXTURE_2D,
+				GL10.GL_TEXTURE_MIN_FILTER,
+				GL10.GL_NEAREST);
+            gl.glTexParameterf(
+				GL10.GL_TEXTURE_2D,
+				GL10.GL_TEXTURE_MAG_FILTER,
+				GL10.GL_LINEAR);
+            gl.glTexParameterf(
+				GL10.GL_TEXTURE_2D,
+				GL10.GL_TEXTURE_WRAP_S,
+				GL10.GL_CLAMP_TO_EDGE);
+            gl.glTexParameterf(
+				GL10.GL_TEXTURE_2D,
+				GL10.GL_TEXTURE_WRAP_T,
+				GL10.GL_CLAMP_TO_EDGE);
+            gl.glTexEnvf(
+				GL10.GL_TEXTURE_ENV,
+				GL10.GL_TEXTURE_ENV_MODE,
+				GL10.GL_REPLACE);
+            int resID = R.drawable.helipad_256;
+            InputStream in = context.getResources().openRawResource(resID);
+            Bitmap image;
+            try {
+                image = BitmapFactory.decodeStream(in);
+            } finally {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    System.out.println("Couldn't decode texture stream!");
+                }
+            }
+            GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, image, 0);
+            GLES20.glGenerateMipmap(GLES20.GL_TEXTURE_2D);
+            image.recycle();
+        }
+
+		 for (int i = 1; i < NUM_TEXTURES; ++i)
+		 {
+		 if (mTextureDataHandle[i] != 0) {
+		 gl.glBindTexture(GL10.GL_TEXTURE_2D, mTextureDataHandle[i]);
+		 gl.glTexParameterf(
+		 GL10.GL_TEXTURE_2D,
+		 GL10.GL_TEXTURE_MIN_FILTER,
+		 GL10.GL_NEAREST);
+		 gl.glTexParameterf(
+		 GL10.GL_TEXTURE_2D,
+		 GL10.GL_TEXTURE_MAG_FILTER,
+		 GL10.GL_LINEAR);
+		 gl.glTexParameterf(
+		 GL10.GL_TEXTURE_2D,
+		 GL10.GL_TEXTURE_WRAP_S,
+		 GL10.GL_CLAMP_TO_EDGE);
+		 gl.glTexParameterf(
+		 GL10.GL_TEXTURE_2D,
+		 GL10.GL_TEXTURE_WRAP_T,
+		 GL10.GL_CLAMP_TO_EDGE);
+		 gl.glTexEnvf(
+		 GL10.GL_TEXTURE_ENV,
+		 GL10.GL_TEXTURE_ENV_MODE,
+		 GL10.GL_REPLACE);
+
+		 // Set filtering
+		 GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
+		 GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
+
+		 int resID = R.drawable.helipad_256_a;
+		 //String resourceName;
+		 //try {
+		 //resourceName = "masked_" + i;
+		 //resID = context.getResources().getIdentifier(resourceName, "drawable", context.getPackageName());
+		 //} catch (Exception e) {
+		 //System.out.println("Failed to create resource...");
+		 //}
+		 InputStream in = context.getResources().openRawResource(resID);
+		 Bitmap image;
+		 try {
+		 image = BitmapFactory.decodeStream(in);
+		 } finally {
+		 try {
+		 in.close();
+		 } catch (IOException e) {
+		 System.out.println("Couldn't decode texture stream!");
+		 }
+		 }
+		 GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, image, 0);
+		 image.recycle();
+		 }
+		 else
+		 {
+		 System.out.println("Texture is 0...");
+		 }
+		 }
+    }
 
     boolean testTextureOverride()
     {
@@ -239,12 +341,14 @@ public class Object3D extends Base3D {
         {
             texs[it++] = uvs[i];
         }
+		// NOTE: OpenGL Related objects must be created here after the context is created
+		// Number of textures below
     }
 
     // TODO: Update textures for each side
-    public int getTexture() { return whichTexture; }
+    public int getTexture() { return Object3D.WHICH_TEXTURE; }
 
-    public void setTexture(int newTexture) { whichTexture = newTexture; }
+    //public void setTexture(int newTexture) { whichTexture = newTexture; }
 
     public void setColor(float red, float green, float blue, float alpha)
     {
@@ -278,7 +382,7 @@ public class Object3D extends Base3D {
         return size;
     }
 
-    static public void draw(int textDataHandle, float[] mvpMatrix) { // pass in the calculated transformation matrix
+    static public void draw(float[] mvpMatrix) { // pass in the calculated transformation matrix
         // Add program to OpenGL ES environment
         GLES20.glUseProgram(mProgram);
         int error = GLES20.glGetError();
@@ -348,7 +452,7 @@ public class Object3D extends Base3D {
         	GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
 
         	// Bind the texture to this unit.
-        	GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textDataHandle);
+        	GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureDataHandle[Object3D.WHICH_TEXTURE]);
 			
 			// Tell the texture uniform sampler to use this texture in the shader by binding to texture unit 0.
 			GLES20.glUniform1i(mTextureUniformHandle, 0);

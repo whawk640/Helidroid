@@ -26,9 +26,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 	Button exit = null;
 	boolean worldPaused = false;
 
-    private HeliGLSurfaceView mGLView;
-    private World mWorld;
-
+    private HeliGLSurfaceView mGLView = null;
+    private World mWorld = null;
+	private ChopperPanel mChopPanel = null;
+	
     private final Handler handler = new Handler();
 
     @Override
@@ -87,25 +88,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
 		worldPaused = false;
         setContentView(R.layout.content_main);
-        //Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        //setSupportActionBar(toolbar);
-        timer = new Timer();
         // TODO: Add intents to replace argument parsing from java main
 
-        try {
-            mWorld = new World();
-			Toast.makeText(this,"World Created...",Toast.LENGTH_SHORT);
-        } catch(Exception e)
-        {
-            Toast.makeText(this, "Exception when creating world...", Toast.LENGTH_SHORT);
-            // Do nothing at this time
-        }
         RelativeLayout layout = (RelativeLayout) findViewById(R.id.mainLayout);
         masterLayout = LayoutTools.addLL(LayoutTools.MP,LayoutTools.MP,LayoutTools.getNextViewID(),LinearLayout.VERTICAL,layout,this);
-		glLayout = LayoutTools.addLL(LayoutTools.WC,LayoutTools.MP,LayoutTools.getNextViewID(), LinearLayout.HORIZONTAL,masterLayout,this);
-		panelLayout = LayoutTools.addLL(LayoutTools.MP,LayoutTools.WC,LayoutTools.getNextViewID(),LinearLayout.VERTICAL,glLayout,this);
 		
         btnLayout = LayoutTools.addLL(LayoutTools.WC,LayoutTools.MP,LayoutTools.getNextViewID(),LinearLayout.HORIZONTAL,masterLayout,this);
+		glLayout = LayoutTools.addLL(LayoutTools.WC,LayoutTools.MP,LayoutTools.getNextViewID(), LinearLayout.HORIZONTAL,masterLayout,this);
         btnLayout.setGravity(Gravity.TOP);
 		nextChopper = LayoutTools.addWidget(new Button(this),1.0f,LayoutTools.MP, LayoutTools.WC,0,btnLayout);
         nextChopper.setText(R.string.btn_nxtChop);
@@ -135,12 +124,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 		exit = LayoutTools.addWidget(new Button(this), 1.0f, LayoutTools.MP, LayoutTools.WC,0,btnLayout);
 		exit.setText(R.string.btn_exit);
 		exit.setOnClickListener(this);
-        mGLView = new HeliGLSurfaceView(this, mWorld);
+        try {
+            mWorld = new World(this,panelLayout);
+			Toast.makeText(this,"World Created...",Toast.LENGTH_SHORT);
+        } catch(Exception e)
+        {
+            Toast.makeText(this, "Exception when creating world...", Toast.LENGTH_SHORT);
+            // Do nothing at this time
+        }
+		
+		mGLView = new HeliGLSurfaceView(this, mWorld);
+		//mGLView = LayoutTools.addWidget(new HeliGLSurfaceView(this, mWorld), 1.0f,LayoutTools.getNextViewID(),glLayout);
         mGLView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT));
-        masterLayout.addView(mGLView);
+														   ViewGroup.LayoutParams.WRAP_CONTENT));
+        glLayout.addView(mGLView);
+		panelLayout = LayoutTools.addLL(LayoutTools.MP,LayoutTools.WC,LayoutTools.getNextViewID(),LinearLayout.VERTICAL,glLayout,this);
 		mWorld.setSurface(mGLView);
 		//mGLView.requestRender();
+        timer = new Timer();
     }
 
     public void initializeTimerTask()
