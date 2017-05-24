@@ -25,10 +25,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 	Button wireFrame = null;
 	Button exit = null;
 	boolean worldPaused = false;
+	boolean panelsCreated = false;
 
+	private final int NUM_CHOPPERS = 2;
     private HeliGLSurfaceView mGLView = null;
     private World mWorld = null;
-	private ChopperPanel mChopPanel = null;
+	private ChopperPanel[] chopPanels = {
+		null, null
+	};
 	
     private final Handler handler = new Handler();
 
@@ -87,12 +91,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 		worldPaused = false;
-        setContentView(R.layout.content_main);
+       // setContentView(R.layout.content_main);
         // TODO: Add intents to replace argument parsing from java main
 
-        RelativeLayout layout = (RelativeLayout) findViewById(R.id.mainLayout);
-        masterLayout = LayoutTools.addLL(LayoutTools.MP,LayoutTools.MP,LayoutTools.getNextViewID(),LinearLayout.VERTICAL,layout,this);
-		
+        //RelativeLayout layout = (RelativeLayout) findViewById(R.id.mainLayout);
+        masterLayout = LayoutTools.addLL(LayoutTools.MP,LayoutTools.MP,LayoutTools.getNextViewID(),LinearLayout.VERTICAL,null,this);
+		setContentView(masterLayout);
         btnLayout = LayoutTools.addLL(LayoutTools.WC,LayoutTools.MP,LayoutTools.getNextViewID(),LinearLayout.HORIZONTAL,masterLayout,this);
 		glLayout = LayoutTools.addLL(LayoutTools.WC,LayoutTools.MP,LayoutTools.getNextViewID(), LinearLayout.HORIZONTAL,masterLayout,this);
         btnLayout.setGravity(Gravity.TOP);
@@ -134,16 +138,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 		
 		mGLView = new HeliGLSurfaceView(this, mWorld);
-		//mGLView = LayoutTools.addWidget(new HeliGLSurfaceView(this, mWorld), 1.0f,LayoutTools.getNextViewID(),glLayout);
-        mGLView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-														   ViewGroup.LayoutParams.WRAP_CONTENT));
-        glLayout.addView(mGLView);
+		mGLView = LayoutTools.addWidget(new HeliGLSurfaceView(this, mWorld), 1.0f,LayoutTools.getNextViewID(),glLayout);
 		panelLayout = LayoutTools.addLL(LayoutTools.MP,LayoutTools.WC,LayoutTools.getNextViewID(),LinearLayout.VERTICAL,glLayout,this);
+		// TODO: Make panelLayout want to be wider
+		chopPanels[0] = new ChopperPanel(this,panelLayout);
+		chopPanels[1] = new ChopperPanel(this,panelLayout);
 		mWorld.setSurface(mGLView);
+		
 		//mGLView.requestRender();
         timer = new Timer();
     }
 
+	public ChopperPanel getChopperPanel(int which)
+	{
+		ChopperPanel result = null;
+		if (which >= 0 && which < NUM_CHOPPERS)
+		{
+			result = chopPanels[which];
+		}
+		return result;
+	}
+	
     public void initializeTimerTask()
     {
         System.out.println("Starting Timer Task...");
@@ -153,6 +168,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 handler.post(new Runnable() {
                     public void run() {
                         try {
+							/* if (panelsCreated == false)
+							{
+								mWorld.addPanels();
+								panelsCreated = true;
+							} */
                             mWorld.tick();
                             Toast.makeText(getApplicationContext(),"World Time: " + mWorld.getTimestamp(), Toast.LENGTH_SHORT);
                         }

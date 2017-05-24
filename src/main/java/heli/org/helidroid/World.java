@@ -60,7 +60,7 @@ public class World
     private boolean chaseCam = true;
 	private boolean wireFrame = false;
 	private double camDistance = 50.0;
-	private Activity mainAct = null;
+	private MainActivity mainAct = null;
 	private LinearLayout panelLay = null;
 
     static protected final int ROW_START = 0;
@@ -432,7 +432,9 @@ public class World
         int chopperID = chap.getId();
         Point3D startPos = getStartingPosition(chopperID);
         ChopperInfo chopInfo = new ChopperInfo(this, chap, chopperID, startPos, 0.0);
-        ChopperAggregator myAggregator = new ChopperAggregator(chap, chopInfo);
+		ChopperPanel toAdd = null;
+		toAdd = mainAct.getChopperPanel(chopperID);
+        ChopperAggregator myAggregator = new ChopperAggregator(chap, chopInfo,toAdd);
         myChoppers.put(chopperID, myAggregator);
 		StigChopper thisChopper = getChopper(chopperID);
 		thisChopper.setColor(0.0f, 1.0f - 0.50f * chopperID, 0.50f * chopperID, 1.0f);
@@ -545,7 +547,7 @@ public class World
      */
     public World(Activity act, LinearLayout panLay) throws Exception
     {
-		mainAct = act;
+		mainAct = (MainActivity)act;
 		panelLay = panLay;
         /*
         for (String thisArg: args)
@@ -732,6 +734,7 @@ public class World
                 if (locData != null)
                 {
                     ChopperInfo chopInfo = locData.getInfo();
+					ChopperPanel chopPanel = locData.getPanel();
                     if (chopInfo != null)
 					{
                         chopInfo.fly(curTimeStamp, TICK_TIME);
@@ -740,10 +743,9 @@ public class World
 						StigChopper myChopper = locData.getChopper();
 						if (myChopper != null)
 						{
-							ChopperPanel myPanel = myChopper.getPanel();
-							if (myPanel != null)
+							if (chopPanel != null)
 							{
-								myPanel.update(chopInfo);
+								chopPanel.update(chopInfo);
 							}
 						}
                     }
@@ -834,8 +836,8 @@ public class World
             if (locData != null)
             {
                 StigChopper theChopper = locData.getChopper();
-				//ChopperPanel newPanel = new ChopperPanel(mainAct,panelLay);
-				//theChopper.setPanel(newPanel);
+				ChopperPanel newPanel = new ChopperPanel(mainAct,panelLay);
+				theChopper.setPanel(newPanel);
             }
         }
     }

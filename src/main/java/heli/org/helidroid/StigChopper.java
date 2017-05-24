@@ -606,7 +606,6 @@ public class StigChopper extends Base3D
         {
             GLES20.glDisableVertexAttribArray(mColorHandle);
         }
-		System.out.println("Drew chopper triangles");
 	}
 
 	public void drawOutlines(float[] mvpMatrix)
@@ -673,7 +672,6 @@ public class StigChopper extends Base3D
         {
             GLES20.glDisableVertexAttribArray(mColorHandle);
         }
-		System.out.println("Drew chopper outlines");
 	}
 
 	public void drawLines(float[] mvpMatrix)
@@ -741,7 +739,6 @@ public class StigChopper extends Base3D
         {
             GLES20.glDisableVertexAttribArray(mColorHandle);
         }
-		System.out.println("Drew chopper lines");
 	}
 
 	public void drawMainRotor(float[] mvpMatrix)
@@ -809,7 +806,6 @@ public class StigChopper extends Base3D
         {
             GLES20.glDisableVertexAttribArray(mColorHandle);
         }
-		System.out.println("Drew chopper main rotor");
 	}
 	
 	public void drawTailRotor(float[] mvpMatrix)
@@ -877,7 +873,6 @@ public class StigChopper extends Base3D
         {
             GLES20.glDisableVertexAttribArray(mColorHandle);
         }
-		System.out.println("Drew chopper tail rotor");
 	}
 
     public void draw(float[] myMatrix) { // pass in the calculated transformation matrix
