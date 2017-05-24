@@ -95,18 +95,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // TODO: Add intents to replace argument parsing from java main
 
         //RelativeLayout layout = (RelativeLayout) findViewById(R.id.mainLayout);
-        masterLayout = LayoutTools.addLL(LayoutTools.MP,LayoutTools.MP,LayoutTools.getNextViewID(),LinearLayout.VERTICAL,null,this);
+        masterLayout = LayoutTools.addLL(LayoutTools.getNextViewID(),LinearLayout.VERTICAL,this);
 		setContentView(masterLayout);
-        btnLayout = LayoutTools.addLL(LayoutTools.WC,LayoutTools.MP,LayoutTools.getNextViewID(),LinearLayout.HORIZONTAL,masterLayout,this);
-		glLayout = LayoutTools.addLL(LayoutTools.WC,LayoutTools.MP,LayoutTools.getNextViewID(), LinearLayout.HORIZONTAL,masterLayout,this);
+        btnLayout = LayoutTools.addLL(1.0f,LayoutTools.getNextViewID(),LinearLayout.HORIZONTAL,masterLayout,this);
+		glLayout = LayoutTools.addLL(10.0f,LayoutTools.getNextViewID(), LinearLayout.HORIZONTAL,masterLayout,this);
         btnLayout.setGravity(Gravity.TOP);
-		nextChopper = LayoutTools.addWidget(new Button(this),1.0f,LayoutTools.MP, LayoutTools.WC,0,btnLayout);
+		nextChopper = LayoutTools.addWidget(new Button(this),1.0f,LayoutTools.getNextViewID(),btnLayout);
         nextChopper.setText(R.string.btn_nxtChop);
         nextChopper.setOnClickListener(this);
-		nextCamera = LayoutTools.addWidget(new Button(this),1.0f, LayoutTools.MP, LayoutTools.WC,0,btnLayout);
+		nextCamera = LayoutTools.addWidget(new Button(this),1.0f, LayoutTools.getNextViewID(),btnLayout);
         nextCamera.setText(R.string.btn_nxtCam);
         nextCamera.setOnClickListener(this);
-		pauseResume = LayoutTools.addWidget(new Button(this), 1.0f, LayoutTools.MP, LayoutTools.WC,0,btnLayout);
+		pauseResume = LayoutTools.addWidget(new Button(this), 1.0f, LayoutTools.getNextViewID(),btnLayout);
 		pauseResume.setText(R.string.btn_pause);
 		pauseResume.setOnClickListener(this);
 		/* 
@@ -122,10 +122,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 		camOut = LayoutTools.addWidget(new Button(this), 1.0f, LayoutTools.MP, LayoutTools.WC,0,btnLayout);
 		camOut.setText(R.string.btn_camOut);
 		camOut.setOnClickListener(this); */
-		wireFrame = LayoutTools.addWidget(new Button(this), 1.0f, LayoutTools.MP, LayoutTools.WC,0,btnLayout);
+		wireFrame = LayoutTools.addWidget(new Button(this), 1.0f, LayoutTools.getNextViewID(),btnLayout);
 		wireFrame.setText(R.string.btn_togWF);
 		wireFrame.setOnClickListener(this);
-		exit = LayoutTools.addWidget(new Button(this), 1.0f, LayoutTools.MP, LayoutTools.WC,0,btnLayout);
+		exit = LayoutTools.addWidget(new Button(this), 1.0f, LayoutTools.getNextViewID(),btnLayout);
 		exit.setText(R.string.btn_exit);
 		exit.setOnClickListener(this);
         try {
@@ -137,12 +137,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             // Do nothing at this time
         }
 		
-		mGLView = new HeliGLSurfaceView(this, mWorld);
-		mGLView = LayoutTools.addWidget(new HeliGLSurfaceView(this, mWorld), 1.0f,LayoutTools.getNextViewID(),glLayout);
-		panelLayout = LayoutTools.addLL(LayoutTools.MP,LayoutTools.WC,LayoutTools.getNextViewID(),LinearLayout.VERTICAL,glLayout,this);
+		//mGLView = new HeliGLSurfaceView(this, mWorld);
+		mGLView = LayoutTools.addWidget(new HeliGLSurfaceView(this, mWorld), 10.0f,LayoutTools.getNextViewID(),glLayout);
+		panelLayout = LayoutTools.addLL(1.0f,LayoutTools.getNextViewID(),LinearLayout.VERTICAL,glLayout,this);
 		// TODO: Make panelLayout want to be wider
-		chopPanels[0] = new ChopperPanel(this,panelLayout);
-		chopPanels[1] = new ChopperPanel(this,panelLayout);
+		//LayoutTools.addWidget(new TextView(this), 1.0f, LayoutTools.getNextViewID(),glLayout);
+		//LayoutTools.addWidget(new TextView(this), 1.0f, LayoutTools.getNextViewID(),glLayout);
+		
+		chopPanels[0] = LayoutTools.addWidget(new ChopperPanel(this,panelLayout), 1.0f, LayoutTools.getNextViewID(),glLayout);
+		chopPanels[1] = LayoutTools.addWidget(new ChopperPanel(this,panelLayout), 1.0f, LayoutTools.getNextViewID(),glLayout);
 		mWorld.setSurface(mGLView);
 		
 		//mGLView.requestRender();

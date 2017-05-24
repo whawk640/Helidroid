@@ -4,10 +4,10 @@ import android.app.*;
 import android.view.*;
 import android.widget.*;
 
-public class ChopperPanel
+public class ChopperPanel extends View
 {
-	Activity mainAct = null;
-	LinearLayout mainLay = null;
+	//Activity mainAct = null;
+	//LinearLayout mainLay = null;
 	LinearLayout row1Lay = null;
 	TextView altLabel;
 	TextView altDisplay;
@@ -21,12 +21,13 @@ public class ChopperPanel
 	
 	public ChopperPanel(Activity act, LinearLayout par)
 	{
-		mainLay = par;
-		mainAct = act;
-		row1Lay = LayoutTools.addLL(LayoutTools.WC, LayoutTools.MP, LayoutTools.getNextViewID(), LinearLayout.HORIZONTAL,mainLay,mainAct);
-		altLabel = LayoutTools.addWidget(new TextView(mainAct.getApplicationContext()),0.5f, LayoutTools.getNextViewID(),row1Lay);
+		super(act.getApplicationContext());
+		//mainLay = par;
+		//mainAct = act;
+		row1Lay = LayoutTools.addLL(1.0f,LayoutTools.getNextViewID(), LinearLayout.HORIZONTAL,par,act);
+		altLabel = LayoutTools.addWidget(new TextView(act),0.5f, LayoutTools.getNextViewID(),row1Lay);
 		altLabel.setText(R.string.label_alt);
-		altDisplay = LayoutTools.addWidget(new TextView(mainAct.getApplicationContext()),1.0f,LayoutTools.getNextViewID(),row1Lay);
+		altDisplay = LayoutTools.addWidget(new TextView(act),1.0f,LayoutTools.getNextViewID(),row1Lay);
 		altDisplay.setText("0.0 m");
 	}
 	

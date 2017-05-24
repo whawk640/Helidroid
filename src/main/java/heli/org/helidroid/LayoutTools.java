@@ -20,7 +20,7 @@ public class LayoutTools
   static public final int WC = RelativeLayout.LayoutParams.WRAP_CONTENT;
   static public final int MP = RelativeLayout.LayoutParams.MATCH_PARENT;
   static public final int LMP = LL_Pars.MATCH_PARENT;
-  static public int nextViewID = 0;
+  static public int nextViewID = 0x1000;
 
   static public class RL_Pars extends RelativeLayout.LayoutParams
   {
