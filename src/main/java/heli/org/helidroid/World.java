@@ -60,7 +60,6 @@ public class World
     private boolean chaseCam = true;
 	private boolean wireFrame = false;
 	private double camDistance = 50.0;
-	private MainActivity mainAct = null;
 	private LinearLayout panelLay = null;
 
     static protected final int ROW_START = 0;
@@ -126,12 +125,6 @@ public class World
      */
     private ArrayList<Point3D> allPackageLocs;
 
-	void setPanels(ChopperPanel[] pan)
-	{
-		panelCount = pan.length;
-		panels = pan;
-	}
-	
     static public String mName()
     {
         try
@@ -381,15 +374,6 @@ public class World
 
 	public void createChoppers(GL10 gl, EGLConfig cfg)
 	{
-		myChoppers = new HashMap<Integer, ChopperAggregator>();
-
-        //inserting choppers
-        Apachi apChop = new Apachi(requestNextChopperID(),this);
-        insertChopper(apChop);
-
-        Danook myChopper = new Danook(requestNextChopperID(), this);
-        insertChopper(myChopper);
-
 		Iterator it = myChoppers.entrySet().iterator();
         while (it.hasNext())
         {
@@ -440,15 +424,9 @@ public class World
     public void insertChopper(StigChopper chap)
     {
         int chopperID = chap.getId();
-		if (chopperID < panelCount)
-		{
-			chap.setPanel(panels[chopperID]);
-		}
         Point3D startPos = getStartingPosition(chopperID);
         ChopperInfo chopInfo = new ChopperInfo(this, chap, chopperID, startPos, 0.0);
-		ChopperPanel toAdd = null;
-		toAdd = mainAct.getChopperPanel(chopperID);
-        ChopperAggregator myAggregator = new ChopperAggregator(chap, chopInfo,toAdd);
+        ChopperAggregator myAggregator = new ChopperAggregator(chap, chopInfo);
         myChoppers.put(chopperID, myAggregator);
 		StigChopper thisChopper = getChopper(chopperID);
 		thisChopper.setColor(0.0f, 1.0f - 0.50f * chopperID, 0.50f * chopperID, 1.0f);
@@ -555,14 +533,33 @@ public class World
         return success;
     }
 
+	/* Clean this up!  Right now, this must be called after the
+	 * contructor and before createObjects -- complicated!
+	 */
+	public void setPanelLayout(LinearLayout lay)
+	{
+		panelLay = lay;
+		Iterator it = myChoppers.entrySet().iterator();
+        while (it.hasNext())
+        {
+            Map.Entry<Integer, ChopperAggregator> pairs = (Map.Entry)it.next();
+            int id = pairs.getKey();
+            ChopperAggregator locData = pairs.getValue();
+            if (locData != null)
+            {
+                StigChopper theChopper = locData.getChopper();
+				ChopperPanel newPanel = LayoutTools.addWidget(new ChopperPanel(panelLay),1.0f, LayoutTools.getNextViewID(),panelLay);
+				theChopper.setPanel(newPanel);
+			}
+		}			
+	}
+	
     // TODO: Replace args functionality
     /**
      * @throws Exception
      */
-    public World(Activity act, LinearLayout panLay) throws Exception
+    public World() throws Exception
     {
-		mainAct = (MainActivity)act;
-		panelLay = panLay;
         /*
         for (String thisArg: args)
         {
@@ -633,6 +630,14 @@ public class World
                 }
             }
         } */
+		myChoppers = new HashMap<Integer, ChopperAggregator>();
+
+        //inserting choppers
+        Apachi apChop = new Apachi(requestNextChopperID(),this);
+        insertChopper(apChop);
+
+        Danook myChopper = new Danook(requestNextChopperID(), this);
+        insertChopper(myChopper);
 		worldPaused = false;
     }
 
@@ -832,6 +837,7 @@ public class World
         return resultVector;
     }
 
+	/*
     public void addPanels()
     {
         //for all choppers
@@ -843,9 +849,9 @@ public class World
             if (locData != null)
             {
                 StigChopper theChopper = locData.getChopper();
-				ChopperPanel newPanel = new ChopperPanel(mainAct,panelLay);
+				ChopperPanel newPanel = new ChopperPanel(panelLay);
 				theChopper.setPanel(newPanel);
             }
         }
-    }
+    } */
 }

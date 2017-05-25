@@ -27,12 +27,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 	boolean worldPaused = false;
 	boolean panelsCreated = false;
 
-	private final int NUM_CHOPPERS = 2;
     private HeliGLSurfaceView mGLView = null;
     private World mWorld = null;
-	private ChopperPanel[] chopPanels = {
-		null, null
-	};
 	
     private final Handler handler = new Handler();
 
@@ -128,8 +124,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 		exit = LayoutTools.addWidget(new Button(this), 1.0f, LayoutTools.getNextViewID(),btnLayout);
 		exit.setText(R.string.btn_exit);
 		exit.setOnClickListener(this);
-        try {
-            mWorld = new World(this,panelLayout);
+        try
+		{
+            mWorld = new World();
 			Toast.makeText(this,"World Created...",Toast.LENGTH_SHORT);
         } catch(Exception e)
         {
@@ -137,27 +134,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             // Do nothing at this time
         }
 		
-		//mGLView = new HeliGLSurfaceView(this, mWorld);
-		mGLView = LayoutTools.addWidget(new HeliGLSurfaceView(this, mWorld), 10.0f,LayoutTools.getNextViewID(),glLayout);
+		mGLView = LayoutTools.addWidget(new HeliGLSurfaceView(this, mWorld), 5.0f,LayoutTools.getNextViewID(),glLayout);
 		panelLayout = LayoutTools.addLL(1.0f,LayoutTools.getNextViewID(),LinearLayout.VERTICAL,glLayout,this);
-		
-		chopPanels[0] = LayoutTools.addWidget(new ChopperPanel(this,panelLayout), 1.0f, LayoutTools.getNextViewID(),glLayout);
-		chopPanels[1] = LayoutTools.addWidget(new ChopperPanel(this,panelLayout), 1.0f, LayoutTools.getNextViewID(),glLayout);
+		mWorld.setPanelLayout(panelLayout);		
 		mWorld.setSurface(mGLView);
-		mWorld.setPanels(chopPanels);
         timer = new Timer();
     }
 
-	public ChopperPanel getChopperPanel(int which)
-	{
-		ChopperPanel result = null;
-		if (which >= 0 && which < NUM_CHOPPERS)
-		{
-			result = chopPanels[which];
-		}
-		return result;
-	}
-	
     public void initializeTimerTask()
     {
         System.out.println("Starting Timer Task...");

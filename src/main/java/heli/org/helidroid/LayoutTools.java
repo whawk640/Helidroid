@@ -79,8 +79,29 @@ public class LayoutTools
     return res;
   }
   
-  static public LinearLayout addLL(int height, int width, int id, int dir, ViewGroup par, Activity act)
-  {
+	static public LinearLayout addLL(int height, int width, int id, int dir, ViewGroup par, Context cxt)
+	{
+		LinearLayout res = null;
+		//res = (LinearLayout)act.findViewById(id);
+		if(res == null)
+		{
+			res = new LinearLayout(cxt);
+		}
+		res.setOrientation(dir);
+		LL_Pars pars = new LL_Pars(LMP,LMP);
+		pars.height = height;
+		pars.width = width;
+		//act.addContentView(res,pars);
+		res.setId(id);
+		if (par != null)
+		{
+			par.addView(res,pars);
+		}
+		return res;
+	}
+	
+	static public LinearLayout addLL(int height, int width, int id, int dir, ViewGroup par, Activity act)
+    {
     LinearLayout res = null;
     //res = (LinearLayout)act.findViewById(id);
     if(res == null)
@@ -108,7 +129,12 @@ public class LayoutTools
     return addLL(LMP,LMP,id,dir,null,act);
   }
 
-  static public LinearLayout addLLLoc(int height, int width, int id, int dir, Activity act)
+	static public LinearLayout addLL(int id, int dir, Context cxt)
+	{
+		return addLL(LMP,LMP,id,dir,null,cxt);
+	}
+
+	static public LinearLayout addLLLoc(int height, int width, int id, int dir, Activity act)
   {
     LinearLayout res = null;
     //res = (LinearLayout)act.findViewById(id);
@@ -148,6 +174,25 @@ public class LayoutTools
     return res;
   }
 
+	static public LinearLayout addLL(float weight, int height, int width, int id, int dir, LinearLayout par,Context cxt)
+	{
+		LinearLayout res = null;
+		//res = (LinearLayout)act.findViewById(id);
+		if(res == null)
+		{
+			res = new LinearLayout(cxt);
+		}
+		res.setOrientation(dir);
+		res.setId(id);
+		LL_Pars pars = new LL_Pars(LMP,LMP);
+		pars.weight = weight;
+		pars.height = height;
+		pars.width = width;
+		pars.setMargins(1,1,1,1);
+		par.addView(res,pars);
+		return res;
+	}
+
   static public LinearLayout addLL(float weight, int id, int dir, LinearLayout par,Activity act)
   {
     boolean o = par.getOrientation() == LinearLayout.HORIZONTAL;
@@ -156,7 +201,15 @@ public class LayoutTools
     return addLL(weight,h,w,id,dir,par,act);
   }
 
-  public static <T extends View> T addWidget(T res, float we, int h, int w, int id, LinearLayout par)
+	static public LinearLayout addLL(float weight, int id, int dir, LinearLayout par,Context cxt)
+	{
+		boolean o = par.getOrientation() == LinearLayout.HORIZONTAL;
+		int w = o?0:LMP;
+		int h = o?LMP:0;
+		return addLL(weight,h,w,id,dir,par,cxt);
+	}
+
+	public static <T extends View> T addWidget(T res, float we, int h, int w, int id, LinearLayout par)
   {
 	if (id == 0)
 	{
@@ -174,7 +227,18 @@ public class LayoutTools
     return res;
   }
 
-  public static <T extends View> T addWidget(T res, float we, int id, LinearLayout par)
+	public static <T extends View> T addWidget(T res, float we, int h, int w, LinearLayout par)
+	{
+		res.setId(getNextViewID());
+		LL_Pars p = new LL_Pars(LMP,LMP);
+		p.weight = we;
+		p.height = h;
+		p.width = w;
+		par.addView(res,p);
+		return res;
+	}
+
+	public static <T extends View> T addWidget(T res, float we, int id, LinearLayout par)
   {
     boolean o = par.getOrientation() == LinearLayout.HORIZONTAL;
     int w = o?0:LMP;
@@ -182,7 +246,15 @@ public class LayoutTools
     return addWidget(res,we,h,w,id,par);
   }
 
-  public static void update(int id, boolean o, Activity act)
+	public static <T extends View> T addWidget(T res, float we, LinearLayout par)
+	{
+		boolean o = par.getOrientation() == LinearLayout.HORIZONTAL;
+		int w = o?0:LMP;
+		int h = o?LMP:0;
+		return addWidget(res,we,h,w,par);
+	}
+
+	public static void update(int id, boolean o, Activity act)
   {
     update(act.findViewById(id),o);
   }

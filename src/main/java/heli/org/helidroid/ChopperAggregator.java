@@ -24,7 +24,8 @@ public class ChopperAggregator
 
     public static final double ITEM_WEIGHT = 10.0;
 
-    public ChopperAggregator(StigChopper chop, ChopperInfo inf, ChopperPanel pan) {
+    public ChopperAggregator(StigChopper chop, ChopperInfo inf)
+	{
         theChopper = chop;
         chopInfo = inf;
     }

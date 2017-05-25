@@ -45,11 +45,13 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer
     private volatile float mAngle;
     private Context mContext;
 
-    public boolean isSurfaceCreated() {
+    public boolean isSurfaceCreated()
+	{
         return surfaceCreated;
     }
 
-    float getAngle() {
+    float getAngle()
+	{
         return mAngle;
     }
 
@@ -58,7 +60,8 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer
         camDistance = dist;
     }
 
-    public HeliGLRenderer(Context context, World wrld) {
+    public HeliGLRenderer(Context context, World wrld)
+	{
         super();
 		theWorld = wrld;
         mContext = context;

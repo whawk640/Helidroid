@@ -358,7 +358,8 @@ public class StigChopper extends Base3D
     final int mTextureCoordinateDataSize = 2;
     private int mTextureUniformHandle;
 	private float lineWidth = 3.0f;
-	private ChopperPanel myPanel = null;
+	protected ChopperPanel myPanel = null;
+	private boolean buffersCreated = false;
 	
     final int COORDS_PER_VERTEX = 3;
     final int COLORS_PER_VERTEX = 4;
@@ -397,9 +398,16 @@ public class StigChopper extends Base3D
 
     protected ArrayList<Point3D> targetWaypoints;
 
+	protected void setupPanel()
+	{
+		// Base class does nothig... derived class
+		// can add their own widgets
+	}
+	
 	public void setPanel(ChopperPanel pan)
 	{
 		myPanel = pan;
+		setupPanel();
 	}
 	
 	public ChopperPanel getPanel()
@@ -411,10 +419,6 @@ public class StigChopper extends Base3D
     public StigChopper(int chopperID, World theWorld)
     {
 		super();
-		if (chopperProgram < 0)
-		{
-			chopperProgram = buildProgram(StigChopper.vertexColor, StigChopper.textures);
-		}
 		System.out.println("Creating StigChopper ID: " + chopperID);
         id = chopperID;
         world = theWorld;
@@ -425,6 +429,7 @@ public class StigChopper extends Base3D
         landed = true;
         homeBase = null;
         targetWaypoints = new ArrayList<>();
+		createBuffers();
 
 		System.out.println("StigChopper " + id + " created -- fuel capacity: " + fuelCapacity);
     }
@@ -494,7 +499,11 @@ public class StigChopper extends Base3D
 
 	public void onSurfaceCreated(GL10 gl, EGLConfig cfg)
 	{
-		createBuffers();
+		if (chopperProgram < 0)
+		{
+			chopperProgram = buildProgram(StigChopper.vertexColor, StigChopper.textures);
+		}
+		//createBuffers();
 	}
 	
 	public void createBuffers()
@@ -510,6 +519,7 @@ public class StigChopper extends Base3D
 		mainRotorDrawListBuffer = BufferUtils.getIB(mainRotorDrawOrder);
 		tailRotorVertexBuffer = BufferUtils.getFB(tailRotorCoords);
 		tailRotorDrawListBuffer = BufferUtils.getIB(tailRotorDrawOrder);
+		buffersCreated = true;
 	}
 	
 	// TODO: Re-enable textures when added here
@@ -882,7 +892,13 @@ public class StigChopper extends Base3D
         }
 	}
 
-    public void draw(float[] myMatrix) { // pass in the calculated transformation matrix
+    public void draw(float[] myMatrix)
+	{ // pass in the calculated transformation matrix
+		if (buffersCreated == false)
+		{
+			System.out.println("No buffers yet?");
+			return;
+		}
 		ChopperInfo myInfo = world.getChopInfo(id);
 		Point3D myPos = myInfo.getPosition();
 		double headingDeg = myInfo.getHeading();

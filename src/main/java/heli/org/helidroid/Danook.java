@@ -1,6 +1,7 @@
 package heli.org.helidroid;
 
-import java.util.ArrayList;
+import android.widget.*;
+import java.util.*;
 
 public class Danook extends StigChopper
 {
@@ -10,6 +11,11 @@ public class Danook extends StigChopper
     public static final int PANEL_RATE = 10;
     public int panelUpdater;
 
+	private LinearLayout[] rowLayouts = null;
+	private TextView[] rowLabels = null;
+	private TextView[] rowValues = null;
+	private static final int ROW_COUNT = 3;
+	
     private DanookController myThread;
 
     public Danook(int id, World world)
@@ -17,10 +23,21 @@ public class Danook extends StigChopper
         super(id,world);
         myThread = new DanookController(this,world);
         myThread.start();
-        //createPanel();
         panelUpdater = 0;
     }
 
+	public void setupPanel()
+	{
+		if (myPanel != null)
+		{
+			LinearLayout topLay = myPanel.getMainLayout();
+			for (int i = 0; i < ROW_COUNT; ++i)
+			{
+				// Need Activity, Sasha said that sucks... now what?
+				//rowLayouts[i] = LayoutTools.addLL(1.0f,LayoutTools.getNextViewID(),LinearLayout.HORIZONTAL,topLay);
+			}
+		}
+	}
     /* public void createPanel()
     {
         m_info.setLayout(new BoxLayout(m_info, BoxLayout.PAGE_AXIS));
