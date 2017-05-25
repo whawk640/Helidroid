@@ -140,15 +140,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 		//mGLView = new HeliGLSurfaceView(this, mWorld);
 		mGLView = LayoutTools.addWidget(new HeliGLSurfaceView(this, mWorld), 10.0f,LayoutTools.getNextViewID(),glLayout);
 		panelLayout = LayoutTools.addLL(1.0f,LayoutTools.getNextViewID(),LinearLayout.VERTICAL,glLayout,this);
-		// TODO: Make panelLayout want to be wider
-		//LayoutTools.addWidget(new TextView(this), 1.0f, LayoutTools.getNextViewID(),glLayout);
-		//LayoutTools.addWidget(new TextView(this), 1.0f, LayoutTools.getNextViewID(),glLayout);
 		
 		chopPanels[0] = LayoutTools.addWidget(new ChopperPanel(this,panelLayout), 1.0f, LayoutTools.getNextViewID(),glLayout);
 		chopPanels[1] = LayoutTools.addWidget(new ChopperPanel(this,panelLayout), 1.0f, LayoutTools.getNextViewID(),glLayout);
 		mWorld.setSurface(mGLView);
-		
-		//mGLView.requestRender();
+		mWorld.setPanels(chopPanels);
         timer = new Timer();
     }
 

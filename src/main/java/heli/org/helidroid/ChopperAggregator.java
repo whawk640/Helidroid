@@ -15,7 +15,6 @@ public class ChopperAggregator
 {
     private StigChopper theChopper;
     private ChopperInfo chopInfo;
-	private ChopperPanel chopPanel;
 
     // Define constants in here that are needed in both StigChopper and ChopperInfo
     public static final double BASE_MASS = 100.0; // kg
@@ -28,11 +27,8 @@ public class ChopperAggregator
     public ChopperAggregator(StigChopper chop, ChopperInfo inf, ChopperPanel pan) {
         theChopper = chop;
         chopInfo = inf;
-		chopPanel = pan;
     }
 
-	public ChopperPanel getPanel() { return chopPanel; }
-	
     public StigChopper getChopper() { return theChopper; }
 
     public ChopperInfo getInfo() { return chopInfo; }

@@ -105,6 +105,10 @@ public class World
 	private static final double MAX_CAM_DISTANCE = 1000.0;
 	
 	private static final double VERTICAL_CAM_STEP = 10.0;
+
+	private ChopperPanel panels[] = null;
+	
+	private int panelCount = 0;
 	
 	private HeliGLSurfaceView glSurface = null;
 
@@ -122,6 +126,12 @@ public class World
      */
     private ArrayList<Point3D> allPackageLocs;
 
+	void setPanels(ChopperPanel[] pan)
+	{
+		panelCount = pan.length;
+		panels = pan;
+	}
+	
     static public String mName()
     {
         try
@@ -430,6 +440,10 @@ public class World
     public void insertChopper(StigChopper chap)
     {
         int chopperID = chap.getId();
+		if (chopperID < panelCount)
+		{
+			chap.setPanel(panels[chopperID]);
+		}
         Point3D startPos = getStartingPosition(chopperID);
         ChopperInfo chopInfo = new ChopperInfo(this, chap, chopperID, startPos, 0.0);
 		ChopperPanel toAdd = null;
@@ -733,21 +747,14 @@ public class World
                 ChopperAggregator locData = pairs.getValue();
                 if (locData != null)
                 {
+					StigChopper actChop = locData.getChopper();
                     ChopperInfo chopInfo = locData.getInfo();
-					ChopperPanel chopPanel = locData.getPanel();
                     if (chopInfo != null)
 					{
                         chopInfo.fly(curTimeStamp, TICK_TIME);
                         locData.setInfo(chopInfo);
                         myChoppers.put(id, locData);
-						StigChopper myChopper = locData.getChopper();
-						if (myChopper != null)
-						{
-							if (chopPanel != null)
-							{
-								chopPanel.update(chopInfo);
-							}
-						}
+						actChop.updatePanel(chopInfo);
                     }
                 }
              }
