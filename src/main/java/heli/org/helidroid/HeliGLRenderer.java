@@ -34,9 +34,12 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer
 {
     private Camera mCamera = null;
     private double camDistance;
+	private static boolean firstSurfaceCreated = false;
     private boolean surfaceCreated;
     private World theWorld = null;
-
+	private int camMode = HeliGLSurfaceView.MODE_OVERVIEW;
+	private int chopper = 0;
+	
     // mMVPMatrix is an abbreviation for "Model View Projection Matrix"
     private final float[] mMVPMatrix = new float[16];
     private final float[] mProjectionMatrix = new float[16];
@@ -45,6 +48,16 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer
     private volatile float mAngle;
     private Context mContext;
 
+	public void setChopper(int which)
+	{
+		chopper = which;
+	}
+	
+	public void setMode(int cameraMode)
+	{
+		camMode = cameraMode;
+		
+	}
     public boolean isSurfaceCreated()
 	{
         return surfaceCreated;
@@ -72,7 +85,8 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer
 
     // For now, I'm rotating the camera about the Z axis
     // by the specified amount.
-    public void setAngle(float angle) {
+    public void setAngle(float angle)
+	{
         mAngle = angle;
     }
 
@@ -83,7 +97,6 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer
 			Point3D newSrc = mCamera.source.add(deltaCam);
 			mCamera.setSource(newSrc);
 		}
-		
 	}
 	
     @Override
@@ -95,31 +108,37 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);
         mCamera = new Camera();
         // TODO: adjust eye position based on world size
-        mCamera.setSource(495.0, 450.0, 15.0);
+        mCamera.setSource(100.0, 100.0, 150.0);
         mCamera.setTarget(500.0, 500.0, 0.0);
         mCamera.setUp(0.0, 0.0, 1.0);
-		theWorld.createObjects(mContext,gl,config);
+		if (!firstSurfaceCreated)
+		{
+			theWorld.createObjects(mContext,gl,config);
+			firstSurfaceCreated = true;
+		}
 
         surfaceCreated = true;
     }
 
     @Override
-    public void onDrawFrame(GL10 gl) {
+    public void onDrawFrame(GL10 gl)
+	{
         // Redraw background color
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
         // Set the camera position (View matrix)
         //mCamera.source.m_x += 0.016f;
 		//mCamera.source.m_y += 0.001;
 		//mCamera.source.m_z -= 0.002;
-		Point3D chopPosition = theWorld.gps(theWorld.getVisibleChopper());
-        if (theWorld.getChaseCam()) {
+		Point3D chopPosition = theWorld.gps(chopper);
+        if (camMode == HeliGLSurfaceView.MODE_CHASE)
+		{
             mCamera.chase(chopPosition, theWorld.getCamDistance());
         }
         else
         {
 			// TODO: Respect camera distance change
-            mCamera.setTarget(chopPosition);
-            mCamera.orbit(60);
+            mCamera.setTarget(theWorld.getCenter());
+            mCamera.orbit(120);
         }
         Matrix.setLookAtM(mViewMatrix, 0,
                 (float) mCamera.source.x(), (float) mCamera.source.y(), (float) mCamera.source.z(),

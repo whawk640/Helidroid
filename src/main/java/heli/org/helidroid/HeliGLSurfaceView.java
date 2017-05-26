@@ -8,12 +8,33 @@ import android.view.MotionEvent;
  * Created by Daniel A. LaFuze on 5/4/2017.
  */
 
-public class HeliGLSurfaceView extends GLSurfaceView {
+public class HeliGLSurfaceView extends GLSurfaceView
+{
     private final HeliGLRenderer mRenderer;
 
-    private int chopperID = 0;
-    private int camMode = 0;
-    public HeliGLSurfaceView(Context context, World wrld){
+	static public final int MODE_OVERVIEW = 0;
+	static public final int MODE_CHASE = 1;
+	
+	public void setCameraMode(int newMode)
+	{
+		if (mRenderer != null)
+		{
+			mRenderer.setMode(newMode);
+			requestRender();
+		}
+	}
+	
+	public void setChopper(int newChopper)
+	{
+		if (mRenderer != null)
+		{
+			mRenderer.setChopper(newChopper);
+		}
+		requestRender();
+	}
+	
+    public HeliGLSurfaceView(Context context, World wrld)
+	{
         super(context);
 
         // Create an OpenGL ES 2.0 context
@@ -45,8 +66,10 @@ public class HeliGLSurfaceView extends GLSurfaceView {
         float x = e.getX();
         float y = e.getY();
 
-        switch (e.getAction()) {
-            case MotionEvent.ACTION_MOVE: {
+        switch (e.getAction())
+		{
+            case MotionEvent.ACTION_MOVE:
+				{
 
                 float dx = x - mPreviousX;
                 float dy = y - mPreviousY;

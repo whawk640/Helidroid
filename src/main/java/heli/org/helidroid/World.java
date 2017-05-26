@@ -105,17 +105,17 @@ public class World
 	
 	private static final double VERTICAL_CAM_STEP = 10.0;
 
-	private ChopperPanel panels[] = null;
-	
-	private int panelCount = 0;
-	
-	private HeliGLSurfaceView glSurface = null;
+	//private HeliGLSurfaceView glSurface = null;
 
+	private ArrayList<HeliGLSurfaceView> glSurfaces = null;
+	
     private double maxTime = 10000.0;
 
     private ArrayList<Object3D> worldState;
 	
 	private ArrayList<BullsEye> targets;
+	
+	private Point3D worldCenter = null;
 
     private Map<Integer, ChopperAggregator> myChoppers;
 
@@ -260,12 +260,20 @@ public class World
         {
             visibleChopper = 0;
         }
-        if (glSurface != null)
-        {
-            glSurface.requestRender();
-        }
+		requestRender();
     }
 
+	public void requestRender()
+	{
+		for (HeliGLSurfaceView glSurface : glSurfaces)
+		{
+			if (glSurface != null)
+			{
+				glSurface.requestRender();
+			}
+		}
+	}
+	
     public void toggleChaseCam()
     {
         if (chaseCam == true)
@@ -276,10 +284,7 @@ public class World
         {
             chaseCam = true;
         }
-        if (glSurface != null)
-        {
-            glSurface.requestRender();
-        }
+		requestRender();
     }
 
     public void toggleWireFrame()
@@ -292,10 +297,7 @@ public class World
         {
             wireFrame = true;
         }
-        if (glSurface != null)
-        {
-            glSurface.requestRender();
-        }
+		requestRender();
     }
 
 	public void boundsCheckCamDistance()
@@ -312,44 +314,48 @@ public class World
 
 	public void cameraUp()
 	{
+		/* These methods don't make sense at the moment
 		if (glSurface != null)
 		{
 			Point3D newPoint = new Point3D(0.0, 0.0, VERTICAL_CAM_STEP);
 			HeliGLRenderer rend = glSurface.getRenderer();
 			rend.moveCamera(newPoint);
 			glSurface.requestRender();
-		}
+		} */
 	}
 
 	public void cameraDown()
 	{
+		/*
 		if (glSurface != null)
 		{
 			Point3D newPoint = new Point3D(0.0, 0.0, -1.0 * VERTICAL_CAM_STEP);
 			HeliGLRenderer rend = glSurface.getRenderer();
 			rend.moveCamera(newPoint);
 			glSurface.requestRender();
-		}
+		} */
 	}
 
 	public void cameraCloser()
 	{
+		/*
 		camDistance *= 0.90;
 		boundsCheckCamDistance();
         if (glSurface != null)
         {
             glSurface.requestRender();
-        }
+        } */
 	}
 
 	public void cameraFarther()
 	{
+		/*
 		camDistance *= 1.11;
 		boundsCheckCamDistance();
         if (glSurface != null)
         {
             glSurface.requestRender();
-        }
+        } */
 	}
 
     public int getVisibleChopper()
@@ -378,7 +384,6 @@ public class World
         while (it.hasNext())
         {
             Map.Entry<Integer, ChopperAggregator> pairs = (Map.Entry)it.next();
-            int id = pairs.getKey();
             ChopperAggregator locData = pairs.getValue();
             if (locData != null)
             {
@@ -630,8 +635,11 @@ public class World
                 }
             }
         } */
+		worldCenter = new Point3D(500.0,500.0,0.0);
 		myChoppers = new HashMap<Integer, ChopperAggregator>();
 
+		glSurfaces = new ArrayList<HeliGLSurfaceView>();
+		
         //inserting choppers
         Apachi apChop = new Apachi(requestNextChopperID(),this);
         insertChopper(apChop);
@@ -641,6 +649,11 @@ public class World
 		worldPaused = false;
     }
 
+	public Point3D getCenter()
+	{
+		return worldCenter;
+	}
+	
 	public void pause()
 	{
 		worldPaused = true;
@@ -651,9 +664,9 @@ public class World
 		worldPaused = false;
 	}
 	
-	public void setSurface(HeliGLSurfaceView surf)
+	public void addSurface(HeliGLSurfaceView surf)
 	{
-		glSurface = surf;
+		glSurfaces.add(surf);
 	}
 	
     public ArrayList<Object3D> getObjects()
@@ -736,10 +749,7 @@ public class World
     {
 		if (worldPaused)
 		{
-			if (glSurface != null)
-			{
-				glSurface.requestRender();
-			}
+			requestRender();
 			return;
 		}
         synchronized(this)
@@ -766,14 +776,7 @@ public class World
          }
 		 if (tickCount % m_rtToRndRatio == 0)
 		 {
-			 if (glSurface != null)
-			 {
-				 glSurface.requestRender();
-			 }
-			 else
-			 {
-				 System.out.println("glSurface not set... can't draw the world. " + curTimeStamp);
-			 }
+			 requestRender();
 		 }
          curTimeStamp += TICK_TIME;
 		 ++tickCount;

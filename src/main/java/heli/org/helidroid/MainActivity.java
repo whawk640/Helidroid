@@ -27,7 +27,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 	boolean worldPaused = false;
 	boolean panelsCreated = false;
 
-    private HeliGLSurfaceView mGLView = null;
+    private HeliGLSurfaceView mainGLView = null;
+	private HeliGLSurfaceView apGLView = null;
+	private HeliGLSurfaceView danGLView = null;
+	
     private World mWorld = null;
 	
     private final Handler handler = new Handler();
@@ -134,11 +137,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             // Do nothing at this time
         }
 		
-		mGLView = LayoutTools.addWidget(new HeliGLSurfaceView(this, mWorld), 5.0f,LayoutTools.getNextViewID(),glLayout);
+		mainGLView = LayoutTools.addWidget(new HeliGLSurfaceView(this, mWorld), 4.0f,LayoutTools.getNextViewID(),glLayout);
 		panelLayout = LayoutTools.addLL(1.0f,LayoutTools.getNextViewID(),LinearLayout.VERTICAL,glLayout,this);
+		apGLView = LayoutTools.addWidget(new HeliGLSurfaceView(this, mWorld), 1.0f, LayoutTools.getNextViewID(),panelLayout);
+		danGLView = LayoutTools.addWidget(new HeliGLSurfaceView(this, mWorld), 1.0f, LayoutTools.getNextViewID(),panelLayout);
+		
 		mWorld.setPanelLayout(panelLayout);		
-		mWorld.setSurface(mGLView);
-        timer = new Timer();
+		mWorld.addSurface(mainGLView);
+		apGLView.setCameraMode(HeliGLSurfaceView.MODE_CHASE);
+		danGLView.setCameraMode(HeliGLSurfaceView.MODE_CHASE);
+		apGLView.setChopper(0);
+		danGLView.setChopper(1);
+		mWorld.addSurface(apGLView);
+		mWorld.addSurface(danGLView);
+		timer = new Timer();
     }
 
     public void initializeTimerTask()
