@@ -13,6 +13,11 @@ public class MyApp extends Application
 		instance = this;
 	}
 	
+	public static Activity getActivity()
+	{
+		return instance.getActivity();
+	}
+	
 	public static Context getContext()
 	{
 		return instance;

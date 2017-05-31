@@ -28,8 +28,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 	boolean panelsCreated = false;
 
     private HeliGLSurfaceView mainGLView = null;
-	private HeliGLSurfaceView apGLView = null;
-	private HeliGLSurfaceView danGLView = null;
 	
     private World mWorld = null;
 	
@@ -139,17 +137,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 		
 		mainGLView = LayoutTools.addWidget(new HeliGLSurfaceView(this, mWorld), 4.0f,LayoutTools.getNextViewID(),glLayout);
 		panelLayout = LayoutTools.addLL(1.0f,LayoutTools.getNextViewID(),LinearLayout.VERTICAL,glLayout,this);
-		apGLView = LayoutTools.addWidget(new HeliGLSurfaceView(this, mWorld), 1.0f, LayoutTools.getNextViewID(),panelLayout);
-		danGLView = LayoutTools.addWidget(new HeliGLSurfaceView(this, mWorld), 1.0f, LayoutTools.getNextViewID(),panelLayout);
 		
-		mWorld.setPanelLayout(panelLayout);		
+		mWorld.setPanelLayout(panelLayout);
+		mainGLView.setCameraMode(HeliGLSurfaceView.MODE_CHASE);
+		mainGLView.setChopper(0);
 		mWorld.addSurface(mainGLView);
-		apGLView.setCameraMode(HeliGLSurfaceView.MODE_CHASE);
-		danGLView.setCameraMode(HeliGLSurfaceView.MODE_CHASE);
-		apGLView.setChopper(0);
-		danGLView.setChopper(1);
-		mWorld.addSurface(apGLView);
-		mWorld.addSurface(danGLView);
 		timer = new Timer();
     }
 

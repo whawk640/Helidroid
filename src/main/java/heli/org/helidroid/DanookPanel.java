@@ -7,29 +7,9 @@ import android.icu.text.*;
 
 public class DanookPanel extends ChopperPanel
 {
-	LinearLayout mainLay = null;
-	LinearLayout row1Lay = null;
-	TextView altLabel;
-	TextView altDisplay;
-	LinearLayout row2Lay = null;
-	TextView headLabel;
-	TextView headDisplay;
-	LinearLayout row3Lay = null;
-	TextView fuelLabel;
-	TextView fuelDisplay;
-
 	public void update(ChopperInfo info)
 	{
-		Point3D myPosition = info.getPosition();
-		String altitudeString = myPosition.Z() + " m";
-		setAltitude(altitudeString);
-		DecimalFormat df1 = new DecimalFormat("#.#");
-		double heading = info.getHeading();
-		String headString = df1.format(heading) + " deg";
-		setHeading(headString);
-		double fuel = info.getFuelRemaining();
-		String fuelString = df1.format(fuel) + " kg";
-		setFuel(fuelString);
+		super.update(info);
 	}
 
 	public LinearLayout getMainLayout()

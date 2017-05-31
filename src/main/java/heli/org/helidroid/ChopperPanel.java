@@ -1,11 +1,10 @@
 package heli.org.helidroid;
 
-import android.app.*;
-import android.view.*;
-import android.widget.*;
+import android.graphics.drawable.*;
 import android.icu.text.*;
+import android.widget.*;
 
-public class ChopperPanel extends View
+public class ChopperPanel extends LinearLayout
 {
 	LinearLayout mainLay = null;
 	LinearLayout row1Lay = null;
@@ -17,6 +16,15 @@ public class ChopperPanel extends View
 	LinearLayout row3Lay = null;
 	TextView fuelLabel;
 	TextView fuelDisplay;
+	LinearLayout row4Lay = null;
+	TextView invLabel;
+	TextView invDisplay;
+
+	public void setInventory(int itemCount)
+	{
+		String itemString = String.format("%d packages",itemCount);
+		setInventory(itemString);
+	}	
 	
 	public void update(ChopperInfo info)
 	{
@@ -25,10 +33,10 @@ public class ChopperPanel extends View
 		setAltitude(altitudeString);
 		DecimalFormat df1 = new DecimalFormat("#.#");
 		double heading = info.getHeading();
-		String headString = df1.format(heading) + " deg";
+		String headString = String.format("%2.1f deg",heading);
 		setHeading(headString);
 		double fuel = info.getFuelRemaining();
-		String fuelString = df1.format(fuel) + " kg";
+		String fuelString = String.format("%2.1f kg",fuel);
 		setFuel(fuelString);
 	}
 
@@ -41,7 +49,15 @@ public class ChopperPanel extends View
 	public ChopperPanel(LinearLayout par)
 	{
 		super(MyApp.getContext());
-		mainLay = par;
+		GradientDrawable border = new GradientDrawable();
+		border.setColor(0xffffffff); // AARRGGBB
+		border.setCornerRadius(3.0f);
+		border.setStroke(2,0x80000080); // AARRGGBB
+		setBackground(border);
+		setOrientation(LinearLayout.VERTICAL);
+		//mainLay = LayoutTools.addLLLoc(LayoutTools.getNextViewID(),LinearLayout.VERTICAL,MyApp.getActivity());
+		mainLay = this;
+		//this.setLayoutDirection(LinearLayout.VERTICAL);
 		row1Lay = LayoutTools.addLL(1.0f,LayoutTools.getNextViewID(),LinearLayout.HORIZONTAL,mainLay,MyApp.getContext());
 		altLabel = LayoutTools.addWidget(new TextView(MyApp.getContext()), 1.0f,row1Lay);
 		altDisplay = LayoutTools.addWidget(new TextView(MyApp.getContext()), 1.0f, row1Lay);
@@ -55,21 +71,30 @@ public class ChopperPanel extends View
 		fuelLabel = LayoutTools.addWidget(new TextView(MyApp.getContext()),1.0f,row3Lay);
 		fuelDisplay = LayoutTools.addWidget(new TextView(MyApp.getContext()),1.0f,row3Lay);
 		fuelLabel.setText(R.string.label_fuel);
+		row4Lay = LayoutTools.addLL(1.0f,LayoutTools.getNextViewID(),LinearLayout.HORIZONTAL,mainLay,MyApp.getContext());
+		invLabel = LayoutTools.addWidget(new TextView(MyApp.getContext()),1.0f,row4Lay);
+		invDisplay = LayoutTools.addWidget(new TextView(MyApp.getContext()),1.0f,row4Lay);
+		invLabel.setText(R.string.label_inv);
+		
 	}
 	
-	public void setAltitude(String newAlt)
+	protected void setAltitude(String newAlt)
 	{
 		altDisplay.setText(newAlt);
 	}
 	
-	public void setHeading(String newHead)
+	protected void setHeading(String newHead)
 	{
 		headDisplay.setText(newHead);
 	}
 	
-	public void setFuel(String newFuel)
+	protected void setFuel(String newFuel)
 	{
 		fuelDisplay.setText(newFuel);
 	}
 
+	protected void setInventory(String invString)
+	{
+		invDisplay.setText(invString);
+	}
 }

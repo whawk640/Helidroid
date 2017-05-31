@@ -265,10 +265,16 @@ public class World
 
 	public void requestRender()
 	{
+		boolean firstSurface = true;
 		for (HeliGLSurfaceView glSurface : glSurfaces)
 		{
 			if (glSurface != null)
 			{
+				if (firstSurface)
+				{
+					glSurface.setChopper(visibleChopper);
+					firstSurface = false;
+				}
 				glSurface.requestRender();
 			}
 		}
@@ -525,7 +531,7 @@ public class World
                     if (object.distanceXY(myPos) < 5.0)
                     {
                         allPackageLocs.remove(object);
-                        success = true;
+                        success = chop.deliverItem();
                         break;
                     }
                 }

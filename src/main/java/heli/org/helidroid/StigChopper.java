@@ -54,6 +54,7 @@ public class StigChopper extends Base3D
 	{
 		if (myPanel != null)
 		{
+			myPanel.setInventory(inventory);
 			myPanel.update(inf);
 		}
 	}

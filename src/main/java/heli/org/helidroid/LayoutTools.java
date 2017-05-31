@@ -124,6 +124,11 @@ public class LayoutTools
     return res;
   }
 
+  	static public LinearLayout addLL(int id, int dir, ViewGroup par, Activity act)
+    {
+		return addLL(LMP,LMP,id,dir,par,act);
+	}
+	
   static public LinearLayout addLL(int id, int dir, Activity act)
   {
     return addLL(LMP,LMP,id,dir,null,act);
