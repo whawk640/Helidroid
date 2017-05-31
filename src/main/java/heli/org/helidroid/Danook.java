@@ -26,37 +26,6 @@ public class Danook extends StigChopper
         panelUpdater = 0;
     }
 
-	public void setupPanel()
-	{
-		if (myPanel != null)
-		{
-			LinearLayout topLay = myPanel.getMainLayout();
-			for (int i = 0; i < ROW_COUNT; ++i)
-			{
-				// Need Activity, Sasha said that sucks... now what?
-				//rowLayouts[i] = LayoutTools.addLL(1.0f,LayoutTools.getNextViewID(),LinearLayout.HORIZONTAL,topLay);
-			}
-		}
-	}
-    /* public void createPanel()
-    {
-        m_info.setLayout(new BoxLayout(m_info, BoxLayout.PAGE_AXIS));
-        destLabel = new JLabel("Dest: (NULL)");
-        m_info.add(destLabel);
-        pcLabel = new JLabel("Packages: 10");
-        m_info.add(pcLabel);
-        posLabel = new JLabel("Position: (NULL)");
-        m_info.add(posLabel);
-        velLabel = new JLabel("Velocity: (NULL)");
-        m_info.add(velLabel);
-        accLabel = new JLabel("Acceleration: (NULL)");
-        m_info.add(accLabel);
-        stateLabel = new JLabel("State: UNKNOWN");
-        m_info.add(stateLabel);
-        fuelRemaining = new DanookHUD(fuelCapacity);
-        m_info.add(fuelRemaining);
-    } */
-
     synchronized public double getCurrentTilt_Degrees()
     {
         return world.transformations(id).m_y;
@@ -108,14 +77,19 @@ public class Danook extends StigChopper
         }
     } */
 
-    public void updatePanel()
+    public void updatePanel(ChopperInfo inf)
     {
+		super.updatePanel(inf);
         Point3D dest = myThread.getDestination();
         Point3D pos = myThread.getPosition();
         Point3D vel = myThread.getVelocity();
         Point3D acc = myThread.getAcceleration();
-        int packageCount = targetWaypoints.size();
         String controlState = myThread.getControlState();
+		if (myPanel != null)
+		{
+			
+			((DanookPanel)myPanel).setState(controlState);
+		}
         //stateLabel.setText("State: " + controlState);
         if (dest == null)
         {

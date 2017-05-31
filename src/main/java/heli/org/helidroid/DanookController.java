@@ -36,8 +36,6 @@ public class DanookController extends Thread
 
     private static final double HORZ_DECEL_SPEED = 1.9;
 
-    private static final int MAX_FAIL_COUNT = 40;
-
     private Danook myChopper;
     private World myWorld;
     private int myState = STATE_LANDED;

@@ -16,4 +16,5 @@
 	<string name="label_inv">Inventory:</string>
 	<string name="label_head">Heading:</string>
 	<string name="label_fuel">Fuel:"</string>
+	<string name="label_state">State:"</string>
 </resources>

@@ -50,14 +50,6 @@ public class StigChopper extends Base3D
 		0,1,2,3
 	};
 	
-	protected void updatePanel(ChopperInfo inf)
-	{
-		if (myPanel != null)
-		{
-			myPanel.setInventory(inventory);
-			myPanel.update(inf);
-		}
-	}
 	public float mainRotorCoords[] = {
 		-1.50f, 1.00f, 3.00f, // 0
 		1.50f, 1.00f, 3.00f, // 1
@@ -405,6 +397,15 @@ public class StigChopper extends Base3D
 		// can add their own widgets
 	}
 	
+	protected void updatePanel(ChopperInfo inf)
+	{
+		if (myPanel != null)
+		{
+			myPanel.setInventory(inventory);
+			myPanel.update(inf);
+		}
+	}
+
 	public void setPanel(ChopperPanel pan)
 	{
 		myPanel = pan;

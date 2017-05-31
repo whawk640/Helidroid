@@ -559,8 +559,16 @@ public class World
             if (locData != null)
             {
                 StigChopper theChopper = locData.getChopper();
-				ChopperPanel newPanel = LayoutTools.addWidget(new ChopperPanel(panelLay),1.0f, LayoutTools.getNextViewID(),panelLay);
-				theChopper.setPanel(newPanel);
+				if (id == 0) // Apachi
+				{
+					ChopperPanel newPanel = LayoutTools.addWidget(new ChopperPanel(panelLay),1.0f, LayoutTools.getNextViewID(),panelLay);
+					theChopper.setPanel(newPanel);
+				}
+				else if (id == 1) // Danook
+				{
+					DanookPanel newPanel = LayoutTools.addWidget(new DanookPanel(panelLay),1.0f, LayoutTools.getNextViewID(),panelLay);
+					theChopper.setPanel(newPanel);
+				}
 			}
 		}			
 	}
