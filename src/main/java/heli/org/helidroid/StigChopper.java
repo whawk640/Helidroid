@@ -1,11 +1,13 @@
 package heli.org.helidroid;
 
+import android.opengl.*;
+import android.widget.*;
 import java.nio.*;
 import java.util.*;
-import javax.microedition.khronos.egl.EGLConfig;
+import javax.microedition.khronos.egl.*;
 import javax.microedition.khronos.opengles.*;
-import android.opengl.*;
 
+import javax.microedition.khronos.egl.EGLConfig;
 
 /** This class represents our chopper and its capabilities
  *  Derive from this class if you want special features.
@@ -391,12 +393,6 @@ public class StigChopper extends Base3D
 
     protected ArrayList<Point3D> targetWaypoints;
 
-	protected void setupPanel()
-	{
-		// Base class does nothig... derived class
-		// can add their own widgets
-	}
-	
 	protected void updatePanel(ChopperInfo inf)
 	{
 		if (myPanel != null)
@@ -406,10 +402,9 @@ public class StigChopper extends Base3D
 		}
 	}
 
-	public void setPanel(ChopperPanel pan)
+	public void createPanel(LinearLayout par)
 	{
-		myPanel = pan;
-		setupPanel();
+		myPanel = LayoutTools.addWidget(new ChopperPanel(par),1.0f,LayoutTools.getNextViewID(),par);
 	}
 	
 	public ChopperPanel getPanel()

@@ -11,11 +11,6 @@ public class Danook extends StigChopper
     public static final int PANEL_RATE = 10;
     public int panelUpdater;
 
-	private LinearLayout[] rowLayouts = null;
-	private TextView[] rowLabels = null;
-	private TextView[] rowValues = null;
-	private static final int ROW_COUNT = 3;
-	
     private DanookController myThread;
 
     public Danook(int id, World world)
@@ -51,32 +46,11 @@ public class Danook extends StigChopper
         return pointFound;
     }
 
-    /*
-    @Override
-    public void render(GLAutoDrawable drawable, double actHeading, double actTilt, double rotorPos, double tailRotorPos)
-    {
-        super.render(drawable, actHeading, actTilt, rotorPos, tailRotorPos);
-        GL2 gl = drawable.getGL().getGL2();
-        Point3D myTarget = myThread.getDestination();
-        if (myTarget != null)
-        {
-            gl.glBegin(gl.GL_TRIANGLE_STRIP);
-            gl.glColor4d(1.0, 0.25, 0.25, 0.5);
-            gl.glVertex3d(myTarget.m_x - 5.0, myTarget.m_y - 5.0, myTarget.m_z);
-            gl.glVertex3d(myTarget.m_x - 5.0, myTarget.m_y + 5.0, myTarget.m_z);
-            gl.glVertex3d(myTarget.m_x, myTarget.m_y, myTarget.m_z + 75.0);
-            gl.glVertex3d(myTarget.m_x + 5.0, myTarget.m_y + 5.0, myTarget.m_z);
-            gl.glVertex3d(myTarget.m_x + 5.0, myTarget.m_y - 5.0, myTarget.m_z);
-            gl.glVertex3d(myTarget.m_x - 5.0, myTarget.m_y - 5.0, myTarget.m_z);
-            gl.glEnd();
-        }
-        if (++panelUpdater > PANEL_RATE)
-        {
-            updatePanel();
-            panelUpdater = 0;
-        }
-    } */
-
+	public void createPanel(LinearLayout par)
+	{
+		myPanel = LayoutTools.addWidget(new DanookPanel(par), 1.0f, LayoutTools.getNextViewID(),par);
+	}
+	
     public void updatePanel(ChopperInfo inf)
     {
 		super.updatePanel(inf);
@@ -87,7 +61,6 @@ public class Danook extends StigChopper
         String controlState = myThread.getControlState();
 		if (myPanel != null)
 		{
-			
 			((DanookPanel)myPanel).setState(controlState);
 		}
         //stateLabel.setText("State: " + controlState);
