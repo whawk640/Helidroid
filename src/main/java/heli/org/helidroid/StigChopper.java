@@ -404,7 +404,7 @@ public class StigChopper extends Base3D
 
 	public void createPanel(LinearLayout par)
 	{
-		myPanel = LayoutTools.addWidget(new ChopperPanel(par),1.0f,LayoutTools.getNextViewID(),par);
+		myPanel = LayoutTools.addWidget(new ChopperPanel(),1.0f,LayoutTools.getNextViewID(),par);
 	}
 	
 	public ChopperPanel getPanel()

@@ -19,5 +19,7 @@
 	<string name="label_state">State:"</string>
 	<string name="label_tilt">Tilt:"</string>
 	<string name="label_pos">Pos:</string>
-	<string name="label_dest">Dest:</string>	
+	<string name="label_dest">Dest:</string>
+	<string name="label_vel">Vel:</string>
+	<string name="label_acc">Acc:</string>	
 </resources>

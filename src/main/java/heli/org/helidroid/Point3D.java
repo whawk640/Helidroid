@@ -267,38 +267,89 @@ public class Point3D implements Comparable<Point3D>
         return String.format("(%.3f,%.3f,%.3f) t:%.4f",m_x,m_y,m_z,m_t);
     }
 
+	/** This method prevents negative 0 from showing up
+	  * if the double is formatted as a string.
+	  * For example, -0.03 formatted as a one digit string
+	  * would show up as -0.0.  This method will return return
+	  * 0.01 in that case to prevent that.
+	  */
+	public double formatCheck(double inVal, int digits)
+	{
+		double outVal = inVal;
+		double targetValue = 0.5 / Math.pow(10.0,digits);
+		if (Math.abs(inVal) < targetValue)
+		{
+			outVal = 0.2*targetValue;
+		}
+		return outVal;
+	}
+
     public String xyzInfo()
     {
-        return String.format("(%.3f,%.3f,%.3f)",m_x,m_y,m_z);
+		double xOut = formatCheck(m_x,3);
+		double yOut = formatCheck(m_y,3);
+		double zOut = formatCheck(m_z,3);
+        return String.format("(%.3f,%.3f,%.3f)",xOut,yOut,zOut);
     }
 
+	public String xyzInfo(int digits)
+	{
+		double xOut = formatCheck(m_x,digits);
+		double yOut = formatCheck(m_y,digits);
+		double zOut = formatCheck(m_z,digits);
+		switch(digits)
+		{
+			case 0:
+			{
+				return String.format("(%d,%d,%d)",X(),Y(),Z());
+			}
+			case 1:
+			{
+				return String.format("(%.1f,%.1f,%.1f)",xOut,yOut,zOut);
+			}
+			case 2:
+			{
+				return String.format("(%.2f,%.2f,%.2f)",xOut,yOut,zOut);
+			}
+			case 3: // Intentional drop-through
+			default:
+			{
+				return xyzInfo();
+			}
+		}
+	}
+	
     public String xyInfo()
     {
-        return String.format("(%.3f,%.3f)",m_x,m_y);
+		double xOut = formatCheck(m_x,3);
+		double yOut = formatCheck(m_y,3);
+        return String.format("(%.3f,%.3f)",xOut,yOut);
     }
 
     public String xyInfo(int digits)
     {
+		double xOut = m_x;
+		double yOut = m_y;
 		switch(digits)
 		{
-			case 3:
-			{
-				return String.format("(%.3f,%.3f)",m_x,m_y);
-			}
-			case 2:
-			{
-				return String.format("(%.2f,%.2f)",m_x,m_y);
-			}
-			case 1:
-			{
-				return String.format("(%.1f,%.1f)",m_x,m_y);
-			}
 			case 0:
 			{
 				return String.format("(%d,%d)",X(),Y());
 			}
+			case 1:
+			{
+				return String.format("(%.1f,%.1f)",xOut,yOut);
+			}
+			case 2:
+			{
+				return String.format("(%.2f,%.2f)",xOut,yOut);
+			}
+			case 3: // Intentional drop-through
+			default:
+			{
+				return xyInfo();
+			}
 		}
-		return new String("");
     }
 
     public String infoI()

@@ -48,7 +48,7 @@ public class Danook extends StigChopper
 
 	public void createPanel(LinearLayout par)
 	{
-		myPanel = LayoutTools.addWidget(new DanookPanel(par), 1.0f, LayoutTools.getNextViewID(),par);
+		myPanel = LayoutTools.addWidget(new DanookPanel(), 1.0f, LayoutTools.getNextViewID(),par);
 	}
 	
     public void updatePanel(ChopperInfo inf)
@@ -64,25 +64,9 @@ public class Danook extends StigChopper
 			DanookPanel danPanel = (DanookPanel)myPanel;
 			danPanel.setState(controlState);
 			danPanel.setPos(pos);
+			danPanel.setVel(vel);
+			danPanel.setAcc(acc);
 			danPanel.setDest(dest);
 		}
-        //stateLabel.setText("State: " + controlState);
-        if (vel == null)
-        {
-            //velLabel.setText("Velocity: Unknown");
-        }
-        else
-        {
-            //velLabel.setText("Velocity: " + vel.xyzInfo());
-        }
-        if (acc == null)
-        {
-            //accLabel.setText("Acceleration: Unknown");
-        }
-        else
-        {
-            //accLabel.setText("Acceleration: " + acc.xyzInfo());
-        }
-        //fuelRemaining.setFuelLevel(world.getFuelRemaining(id));
     }
 }

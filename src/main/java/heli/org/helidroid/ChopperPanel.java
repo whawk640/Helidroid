@@ -29,14 +29,10 @@ public class ChopperPanel extends LinearLayout
 	public void update(ChopperInfo info)
 	{
 		Point3D myPosition = info.getPosition();
-		String altitudeString = myPosition.Z() + " m";
-		setAltitude(altitudeString);
-		DecimalFormat df1 = new DecimalFormat("#.#");
-		double heading = info.getHeading();
-		String headString = String.format("%2.1f deg",heading);
-		setHeading(headString);
+		setAltitude(myPosition.z());
+		setHeading(info.getHeading());
 		double fuel = info.getFuelRemaining();
-		String fuelString = String.format("%2.1f kg",fuel);
+		String fuelString = String.format("%.1f kg",fuel);
 		setFuel(fuelString);
 	}
 
@@ -46,7 +42,7 @@ public class ChopperPanel extends LinearLayout
 		return mainLay;
 	}
 	
-	public ChopperPanel(LinearLayout par)
+	public ChopperPanel()
 	{
 		super(MyApp.getContext());
 		GradientDrawable border = new GradientDrawable();
@@ -60,27 +56,36 @@ public class ChopperPanel extends LinearLayout
 		//this.setLayoutDirection(LinearLayout.VERTICAL);
 		row1Lay = LayoutTools.addLL(1.0f,LayoutTools.getNextViewID(),LinearLayout.HORIZONTAL,mainLay,MyApp.getContext());
 		altLabel = LayoutTools.addWidget(new TextView(MyApp.getContext()), 1.0f,row1Lay);
-		altDisplay = LayoutTools.addWidget(new TextView(MyApp.getContext()), 1.0f, row1Lay);
+		altDisplay = LayoutTools.addWidget(new TextView(MyApp.getContext()), 2.0f, row1Lay);
 		altLabel.setText(R.string.label_alt);
 		altDisplay.setText("0.0 m");
 		row2Lay = LayoutTools.addLL(1.0f,LayoutTools.getNextViewID(),LinearLayout.HORIZONTAL,mainLay,MyApp.getContext());
 		headLabel = LayoutTools.addWidget(new TextView(MyApp.getContext()),1.0f,row2Lay);
-		headDisplay = LayoutTools.addWidget(new TextView(MyApp.getContext()),1.0f,row2Lay);
+		headDisplay = LayoutTools.addWidget(new TextView(MyApp.getContext()),2.0f,row2Lay);
 		headLabel.setText(R.string.label_head);
 		row3Lay = LayoutTools.addLL(1.0f,LayoutTools.getNextViewID(),LinearLayout.HORIZONTAL,mainLay,MyApp.getContext());
 		fuelLabel = LayoutTools.addWidget(new TextView(MyApp.getContext()),1.0f,row3Lay);
-		fuelDisplay = LayoutTools.addWidget(new TextView(MyApp.getContext()),1.0f,row3Lay);
+		fuelDisplay = LayoutTools.addWidget(new TextView(MyApp.getContext()),2.0f,row3Lay);
 		fuelLabel.setText(R.string.label_fuel);
 		row4Lay = LayoutTools.addLL(1.0f,LayoutTools.getNextViewID(),LinearLayout.HORIZONTAL,mainLay,MyApp.getContext());
 		invLabel = LayoutTools.addWidget(new TextView(MyApp.getContext()),1.0f,row4Lay);
-		invDisplay = LayoutTools.addWidget(new TextView(MyApp.getContext()),1.0f,row4Lay);
+		invDisplay = LayoutTools.addWidget(new TextView(MyApp.getContext()),2.0f,row4Lay);
 		invLabel.setText(R.string.label_inv);
-		
+	}
+	
+	protected void setAltitude(double newAlt)
+	{
+		altDisplay.setText(String.format("%.1f m",newAlt));
 	}
 	
 	protected void setAltitude(String newAlt)
 	{
 		altDisplay.setText(newAlt);
+	}
+
+	protected void setHeading(double newHead)
+	{
+		headDisplay.setText(String.format("%.1f deg",newHead));
 	}
 	
 	protected void setHeading(String newHead)

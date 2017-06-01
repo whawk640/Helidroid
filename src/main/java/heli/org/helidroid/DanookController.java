@@ -17,8 +17,8 @@ public class DanookController extends Thread
     private static final int FINDING_HEADING = 2;
     private static final int APPROACHING = 3;
 
-    private static final double VERT_CONTROL_FACTOR = 2.5;
-    private static final double HORZ_CONTROL_FACTOR = 0.15;
+    private static final double VERT_CONTROL_FACTOR = 2.75;
+    private static final double HORZ_CONTROL_FACTOR = 0.12;
 
     private static final double MAX_VERT_VELOCITY = 2.5;
 
@@ -28,9 +28,9 @@ public class DanookController extends Thread
 
     private static final double MAX_HORZ_ACCEL = 0.4;
 
-    private static final double DECEL_DISTANCE_VERT = 10.0;
+    private static final double DECEL_DISTANCE_VERT = 9.0;
 
-    private static final double DECEL_DISTANCE_HORZ = 14.0;
+    private static final double DECEL_DISTANCE_HORZ = 15.0;
 
     private static final double VERT_DECEL_SPEED = 0.45;
 
