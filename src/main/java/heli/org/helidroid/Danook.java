@@ -61,26 +61,12 @@ public class Danook extends StigChopper
         String controlState = myThread.getControlState();
 		if (myPanel != null)
 		{
-			((DanookPanel)myPanel).setState(controlState);
+			DanookPanel danPanel = (DanookPanel)myPanel;
+			danPanel.setState(controlState);
+			danPanel.setPos(pos);
+			danPanel.setDest(dest);
 		}
         //stateLabel.setText("State: " + controlState);
-        if (dest == null)
-        {
-            //destLabel.setText("Dest: None");
-        }
-        else
-        {
-            //destLabel.setText("Dest: " + dest.xyzInfo());
-        }
-        //pcLabel.setText("Packages: " + packageCount);
-        if (pos == null)
-        {
-            //posLabel.setText("Position: Unknown");
-        }
-        else
-        {
-            //posLabel.setText("Position: " + pos.xyzInfo());
-        }
         if (vel == null)
         {
             //velLabel.setText("Velocity: Unknown");

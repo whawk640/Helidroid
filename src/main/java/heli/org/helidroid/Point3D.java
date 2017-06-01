@@ -272,6 +272,35 @@ public class Point3D implements Comparable<Point3D>
         return String.format("(%.3f,%.3f,%.3f)",m_x,m_y,m_z);
     }
 
+    public String xyInfo()
+    {
+        return String.format("(%.3f,%.3f)",m_x,m_y);
+    }
+
+    public String xyInfo(int digits)
+    {
+		switch(digits)
+		{
+			case 3:
+			{
+				return String.format("(%.3f,%.3f)",m_x,m_y);
+			}
+			case 2:
+			{
+				return String.format("(%.2f,%.2f)",m_x,m_y);
+			}
+			case 1:
+			{
+				return String.format("(%.1f,%.1f)",m_x,m_y);
+			}
+			case 0:
+			{
+				return String.format("(%d,%d)",X(),Y());
+			}
+		}
+		return new String("");
+    }
+
     public String infoI()
     {
         return "(" + X() + "," + Y() + "," + Z() + ") time: " + m_t;

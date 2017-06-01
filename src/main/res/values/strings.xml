@@ -17,5 +17,7 @@
 	<string name="label_head">Heading:</string>
 	<string name="label_fuel">Fuel:"</string>
 	<string name="label_state">State:"</string>
-	<string name="label_tilt">Tilt:"</string>		
+	<string name="label_tilt">Tilt:"</string>
+	<string name="label_pos">Pos:</string>
+	<string name="label_dest">Dest:</string>	
 </resources>

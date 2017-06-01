@@ -13,6 +13,12 @@ public class DanookPanel extends ChopperPanel
 	protected LinearLayout tiltLay = null;
 	protected TextView tiltLabel = null;
 	protected TextView tiltDisplay = null;
+	protected LinearLayout posLay = null;
+	protected TextView posLabel = null;
+	protected TextView posDisplay = null;
+	protected LinearLayout destLay = null;
+	protected TextView destLabel = null;
+	protected TextView destDisplay = null;
 	
 	public void update(ChopperInfo info)
 	{
@@ -38,6 +44,14 @@ public class DanookPanel extends ChopperPanel
 		tiltLabel = LayoutTools.addWidget(new TextView(MyApp.getContext()),1.0f,tiltLay);
 		tiltDisplay = LayoutTools.addWidget(new TextView(MyApp.getContext()),1.0f,tiltLay);
 		tiltLabel.setText(R.string.label_tilt);
+		posLay = LayoutTools.addLL(1.0f,LayoutTools.getNextViewID(),LinearLayout.HORIZONTAL,mainLay,MyApp.getContext());
+		posLabel = LayoutTools.addWidget(new TextView(MyApp.getContext()),1.0f,posLay);
+		posDisplay = LayoutTools.addWidget(new TextView(MyApp.getContext()),1.0f,posLay);
+		posLabel.setText(R.string.label_pos);
+		destLay = LayoutTools.addLL(1.0f,LayoutTools.getNextViewID(),LinearLayout.HORIZONTAL,mainLay,MyApp.getContext());
+		destLabel = LayoutTools.addWidget(new TextView(MyApp.getContext()),1.0f,destLay);
+		destDisplay = LayoutTools.addWidget(new TextView(MyApp.getContext()),1.0f,destLay);
+		destLabel.setText(R.string.label_dest);
 	}
 
 	public void setState(String newState)
@@ -58,5 +72,39 @@ public class DanookPanel extends ChopperPanel
 		}
 		String tiltString = String.format("%3.1f",newTilt);
 		tiltDisplay.setText(tiltString);
+	}
+	
+	public void setPos(String newPos)
+	{
+		posDisplay.setText(newPos);
+	}
+	
+	public void setPos(Point3D newPos)
+	{
+		if (newPos == null)
+		{
+			posDisplay.setText("Unknown");
+		}
+		else
+		{
+			posDisplay.setText(newPos.xyInfo(1));
+		}
+	}
+
+	public void setDest(String newDest)
+	{
+		destDisplay.setText(newDest);
+	}
+
+	public void setDest(Point3D newDest)
+	{
+		if (newDest == null)
+		{
+			destDisplay.setText("No Dest");
+		}
+		else
+		{
+			destDisplay.setText(newDest.xyInfo(1));
+		}
 	}
 }
