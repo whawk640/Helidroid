@@ -55,7 +55,6 @@ public class BullsEye extends Base3D {
 		int drawListEntries = VERTICES_PER_RING * NUM_RINGS;
 		int vertexEntries = COORDS_PER_VERTEX * drawListEntries;
 		int colorEntries = COLORS_PER_VERTEX * drawListEntries;
-		System.out.println("DrawList: " + drawListEntries + ", vertices: " + vertexEntries + ", colors: " + colorEntries);
 		circleCoords = new float[vertexEntries];
 		circleColors = new float[colorEntries];
 		drawOrder = new int[drawListEntries];

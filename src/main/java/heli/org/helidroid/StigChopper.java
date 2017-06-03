@@ -498,7 +498,9 @@ public class StigChopper extends Base3D
 	{
 		if (chopperProgram < 0)
 		{
+            System.out.println("Building chopper program...");
 			chopperProgram = buildProgram(StigChopper.vertexColor, StigChopper.textures);
+            System.out.println("*** DONE Building chopper program...");
 		}
 		//createBuffers();
 	}

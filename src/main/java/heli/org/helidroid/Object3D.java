@@ -87,29 +87,29 @@ public class Object3D extends Base3D {
 	
     public static final float uvs[] = {
             0.0f, 0.0f, // First Face
-            0.0f, 1.0f,
-            1.0f, 1.0f,
-            1.0f, 0.0f,
+            0.0f, 0.1f,
+            0.1f, 0.1f,
+            0.1f, 0.0f,
             0.0f, 0.0f, // Second Face
-            0.0f, 1.0f,
-            1.0f, 1.0f,
-            1.0f, 0.0f,
+            0.0f, 0.1f,
+            0.1f, 0.1f,
+            0.1f, 0.0f,
             0.0f, 0.0f, // Third Face
-            0.0f, 1.0f,
-            1.0f, 1.0f,
-            1.0f, 0.0f,
+            0.0f, 0.1f,
+            0.1f, 0.1f,
+            0.1f, 0.0f,
             0.0f, 0.0f, // Fourth Face
-            0.0f, 1.0f,
-            1.0f, 1.0f,
-            1.0f, 0.0f,
+            0.0f, 0.1f,
+            0.1f, 0.1f,
+            0.1f, 0.0f,
             0.0f, 0.0f, // Fifth Face
-            0.0f, 1.0f,
-            1.0f, 1.0f,
-            1.0f, 0.0f,
+            0.0f, 0.1f,
+            0.1f, 0.1f,
+            0.1f, 0.0f,
             0.0f, 0.0f, // Sixth Face
-            0.0f, 1.0f,
-            1.0f, 1.0f,
-            1.0f, 0.0f
+            0.0f, 0.1f,
+            0.1f, 0.1f,
+            0.1f, 0.0f
     };
 
 	private static final int NUM_TEXTURES = 2;
@@ -118,6 +118,10 @@ public class Object3D extends Base3D {
     public static final int vertexCount = cubeCoords.length / COORDS_PER_VERTEX;
     static private final int vertexStride = COORDS_PER_VERTEX * 4; // 4 bytes per coordinate
     static private final int colorStride = COLORS_PER_VERTEX * 4; // 4 bytes per RGBA
+    static private final int NUM_FRAMES = 9;
+    static private final int FRAME_DELAY = 10;
+    static int curFrame = 0;
+    static int frameDelay = 0;
 
     private Boolean overrideTextures = null;
 
@@ -146,7 +150,7 @@ public class Object3D extends Base3D {
 				GL10.GL_TEXTURE_ENV,
 				GL10.GL_TEXTURE_ENV_MODE,
 				GL10.GL_REPLACE);
-            int resID = R.drawable.helipad_256;
+            int resID = R.drawable.text_atlas;
             InputStream in = context.getResources().openRawResource(resID);
             Bitmap image;
             try {
@@ -219,6 +223,7 @@ public class Object3D extends Base3D {
 		 System.out.println("Texture is 0...");
 		 }
 		 }
+		 onSurfaceCreated();
     }
 
     boolean testTextureOverride()
@@ -388,7 +393,7 @@ public class Object3D extends Base3D {
         int error = GLES20.glGetError();
         if (error != GLES20.GL_NO_ERROR)
         {
-            System.out.println("Object3d: Use Program Error: " + error);
+            System.out.println("Object3d: Use Program Error: " + error + " on program " + mProgram);
         }
 
         // get handle to vertex shader's vPosition member
@@ -431,6 +436,24 @@ public class Object3D extends Base3D {
 		
 		if (useTextures && (useWireframeOnly == false))
 		{
+            mFrameHandle = GLES20.glGetUniformLocation(mProgram, "fNumber");
+            GLES20.glUniform1f(mFrameHandle,0.1f * (float)curFrame);
+            if (frameDelay < FRAME_DELAY)
+            {
+                ++frameDelay;
+            }
+            else
+            {
+                frameDelay = 0;
+                if (curFrame < NUM_FRAMES)
+                {
+                    ++curFrame;
+                }
+                else
+                {
+                    curFrame = 0;
+                }
+            }
         	mTextureUniformHandle = GLES20.glGetUniformLocation(mProgram, "u_texture");
         	if (mTextureUniformHandle < 0)
         	{

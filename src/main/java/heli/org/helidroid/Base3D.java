@@ -18,6 +18,7 @@ public class Base3D
 
     static protected int mPositionHandle;
     static protected int mColorHandle;
+	static protected int mFrameHandle;
     static protected int mTextureCoordinateHandle;
     static protected int mTextureUniformHandle;
 	// Use to access and set the view transformation
@@ -31,16 +32,21 @@ public class Base3D
 
 	public Base3D()
 	{
+		// Intentionally empty
+	}
+
+	static public void onSurfaceCreated()
+	{
 		if (mProgram < 0)
 		{
 			boolean useVColor = useVertexColor;
-			boolean useText = testTextureOverride();
+			boolean useText = useTextures;
 			String vertexCode = buildVertexCode(useVColor, useText);
 			int vertexShader = HeliGLRenderer.loadShader(GLES20.GL_VERTEX_SHADER,
-														 vertexCode);
+					vertexCode);
 			String fragmentCode = buildFragmentCode(useVColor, useText);
 			int fragmentShader = HeliGLRenderer.loadShader(GLES20.GL_FRAGMENT_SHADER,
-														   fragmentCode);
+					fragmentCode);
 			if (vertexShader > 0 && fragmentShader > 0) {
 				// create empty OpenGL ES Program
 				mProgram = GLES20.glCreateProgram();
@@ -53,21 +59,20 @@ public class Base3D
 
 				// creates OpenGL ES program executables
 				GLES20.glLinkProgram(mProgram);
-				System.out.println("Object3D Shaders created, vtx: " + vertexShader + ", fragment: " +
-								   fragmentShader + ", program ID: " + mProgram);
+				System.out.println("Base3D Shaders created, vtx: " + vertexShader + ", fragment: " +
+						fragmentShader + ", program ID: " + mProgram);
 			}
 			else
 			{
-				System.out.println("Object3D Failed to load shader program -- vertex: " + vertexShader +
-								   ", fragment: " + fragmentShader);
+				System.out.println("Base3D Failed to load shader program -- vertex: " + vertexShader +
+						", fragment: " + fragmentShader);
 			}
 		}
 	}
-
 	/* Derived classes can build programs to respect their vertex
 	and texture rules.
 	*/
-	protected int buildProgram(boolean vColor, boolean useText)
+	static protected int buildProgram(boolean vColor, boolean useText)
 	{
 		int programID = -1;
 		String vertexCode = buildVertexCode(vColor, useText);
@@ -88,12 +93,20 @@ public class Base3D
 
 			// creates OpenGL ES program executables
 			GLES20.glLinkProgram(programID);
-			System.out.println("Base3D Shaders created, vtx: " + vertexShader + ", fragment: " +
-							   fragmentShader + ", program ID: " + mProgram);
+			int[] linkStatus = new int[1];
+			GLES20.glGetProgramiv(programID, GLES20.GL_LINK_STATUS, linkStatus, 0);
+			if (linkStatus[0] != GLES20.GL_TRUE) {
+				GLES20.glDeleteProgram(programID);
+				throw new RuntimeException("Could not link program: "
+						+ GLES20.glGetProgramInfoLog(programID));
+			}
+
+			System.out.println("User Shaders created, vtx: " + vertexShader + ", fragment: " +
+							   fragmentShader + ", program ID: " + programID);
 		}
 		else
 		{
-			System.out.println("Base3D Failed to load shader program -- vertex: " + vertexShader +
+			System.out.println("User Failed to load shader program -- vertex: " + vertexShader +
 							   ", fragment: " + fragmentShader);
 		}
 		return programID;
@@ -109,10 +122,11 @@ public class Base3D
         return useText;
     }
 
-	protected String buildVertexCode(boolean vertexColor, boolean enableTextures)
+	static protected String buildVertexCode(boolean vertexColor, boolean enableTextures)
 	{
 		String vertexString = 
 			"uniform mat4 uMVPMatrix;" +
+			//"uniform float fNumber;" +
 			"attribute vec4 vPosition;";
 		if (vertexColor)
 		{
@@ -120,6 +134,7 @@ public class Base3D
 		}
 		if (enableTextures)
 		{
+			vertexString += "uniform float fNumber;";
 			vertexString += "attribute vec2 a_texCoordinate;";
 			vertexString += "varying vec2 v_texCoordinate;";
 		}
@@ -131,7 +146,8 @@ public class Base3D
 		vertexString += "  gl_Position = uMVPMatrix * vPosition;";
 		if (enableTextures)
 		{
-			vertexString += "  v_texCoordinate = a_texCoordinate;";
+			vertexString += "  v_texCoordinate[0] = a_texCoordinate[0] + fNumber;";
+			vertexString += "  v_texCoordinate[1] = a_texCoordinate[1];";
 		}
 		if (vertexColor)
 		{
@@ -141,7 +157,7 @@ public class Base3D
 		return vertexString;
 	}
 
-	protected String buildFragmentCode(boolean vertexColor, boolean enableTextures)
+	static protected String buildFragmentCode(boolean vertexColor, boolean enableTextures)
 	{
 		String fragmentString = "precision mediump float;";
 		if (vertexColor == false)
@@ -161,6 +177,7 @@ public class Base3D
 		fragmentString += "void main() {";
 		if (enableTextures && vertexColor)
 		{
+			//fragmentString += "  u_texture[0] = u_texture[0] + 0.1 * fNumber;";
 			fragmentString += "  gl_FragColor = fColor * texture2D( u_texture, v_texCoordinate);";
 		}
 		else if (enableTextures)
