@@ -76,6 +76,9 @@ public class World
     int[] dos = new int[OBJECT_COUNT * Object3D.drawOrder.length];
 	int[] lineDos = new int[OBJECT_COUNT * Object3D.lineDrawOrder.length];
 	boolean worldPaused;
+	LinearLayout timeLayout = null;
+	TextView timeLabel = null;
+	TextView timeDisplay = null;
 	
     private static final double FULL_BLOCK_SIZE = 100.0;
 
@@ -550,6 +553,10 @@ public class World
 	public void setPanelLayout(LinearLayout lay)
 	{
 		panelLay = lay;
+		timeLayout = LayoutTools.addLL(1.0f, LayoutTools.getNextViewID(),LinearLayout.HORIZONTAL,panelLay, MyApp.getContext());
+		timeLabel = LayoutTools.addWidget(new TextView(MyApp.getContext()),1.0f,timeLayout);
+		timeDisplay = LayoutTools.addWidget(new TextView(MyApp.getContext()), 2.0f, timeLayout);
+		timeLabel.setText(R.string.label_time);
 		Iterator it = myChoppers.entrySet().iterator();
         while (it.hasNext())
         {
@@ -559,11 +566,11 @@ public class World
             if (locData != null)
             {
                 StigChopper theChopper = locData.getChopper();
-				theChopper.createPanel(panelLay);
+				theChopper.createPanel(panelLay,10.0f);
 			}
-		}			
+		}
 	}
-	
+
     // TODO: Replace args functionality
     /**
      * @throws Exception
@@ -653,6 +660,18 @@ public class World
         insertChopper(myChopper);
 		worldPaused = false;
     }
+
+	public void updateTime(double newTime)
+	{
+		if (panelLay != null)
+		{
+			if (timeDisplay != null)
+			{
+				String timeString = String.format("%2.1f",curTimeStamp);
+				timeDisplay.setText(timeString);
+			}
+		}
+	}
 
 	public Point3D getCenter()
 	{
@@ -777,6 +796,7 @@ public class World
 						actChop.updatePanel(chopInfo);
                     }
                 }
+				updateTime(curTimeStamp);
              }
          }
 		 if (tickCount % m_rtToRndRatio == 0)

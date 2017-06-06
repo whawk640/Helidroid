@@ -47,7 +47,8 @@ public class Apachi extends StigChopper
 
     }
 	
-	public void draw(int textDataHandle, float[] myMatrix) { // pass in the calculated transformation matrix
+	public void draw(float[] myMatrix)
+	{ // pass in the calculated transformation matrix
 		int slow = 70;
         double wts = world.getTimestamp();
         if(wts > 30 && wts < slow)
@@ -69,6 +70,7 @@ public class Apachi extends StigChopper
 		
 		super.draw(myMatrix);
 	}
+	
     /** This method renders a chopper.  We'll get the position from the world.
      * We need to get information about the chopper's orientation from the
      * world object that is in charge of the choppers Orientation.

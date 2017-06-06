@@ -17,25 +17,27 @@ public class DanookController extends Thread
     private static final int FINDING_HEADING = 2;
     private static final int APPROACHING = 3;
 
-    private static final double VERT_CONTROL_FACTOR = 2.75;
-    private static final double HORZ_CONTROL_FACTOR = 0.12;
+    private static final double VERT_CONTROL_FACTOR = 2.5;
+    private static final double HORZ_CONTROL_FACTOR = 0.1;
 
-    private static final double MAX_VERT_VELOCITY = 2.5;
+    private static final double MAX_VERT_VELOCITY = 2.25;
 
-    private static final double MAX_HORZ_VELOCITY = 2.5;
+    private static final double MAX_HORZ_VELOCITY = 2.25;
 
-    private static final double MAX_VERT_ACCEL = 0.4;
+    private static final double MAX_VERT_ACCEL = 0.35;
 
-    private static final double MAX_HORZ_ACCEL = 0.4;
+    private static final double MAX_HORZ_ACCEL = 0.35;
 
     private static final double DECEL_DISTANCE_VERT = 9.0;
 
     private static final double DECEL_DISTANCE_HORZ = 15.0;
 
-    private static final double VERT_DECEL_SPEED = 0.45;
+    private static final double VERT_DECEL_SPEED = 0.40;
 
-    private static final double HORZ_DECEL_SPEED = 1.9;
+    private static final double HORZ_DECEL_SPEED = 1.8;
 
+	private static final double DIR_ERROR_WARN = 1.0;
+	
     private Danook myChopper;
     private World myWorld;
     private int myState = STATE_LANDED;
@@ -43,6 +45,8 @@ public class DanookController extends Thread
     private double desMainRotorSpeed_RPM = 0.0;
     private double desTailRotorSpeed_RPM = 0.0;
     private double desTilt_Degrees = 0.0;
+	private int sleepTime_ms = 5;
+	private int sleepTime_ns = 0;
 
     private Point3D estimatedAcceleration;
     private Point3D estimatedVelocity;
@@ -128,6 +132,22 @@ public class DanookController extends Thread
         }
     }
 
+	protected void pickDestination()
+	{
+		if (currentDestination == null)
+		{
+			currentDestination = findClosestDestination();
+			if (currentDestination != null)
+			{
+				World.dbg(TAG,"Got a destination: " + currentDestination.info(),DC_DBG);
+			}
+			else
+			{
+				//currentDestination = new Point3D(myWorld.getCenter());
+			}
+		}
+	}
+	
     public synchronized Point3D getVelocity()
     {
         if (estimatedVelocity != null)
@@ -168,31 +188,18 @@ public class DanookController extends Thread
         Point3D lastPosition = null;
         double currTime = 0.0;
         double lastTime = 0.0;
-        double worldDivider = myWorld.timeRatio();
-        long deltaTime = Math.round(20.0 / worldDivider);
         while (true)
         {
             try
             {
                 // Do smart stuff...
-                Thread.sleep(deltaTime);
+                Thread.sleep(sleepTime_ms,sleepTime_ns);
                 synchronized(myWorld)
                 {
                     actualPosition = myWorld.gps(myChopper.getId());
                 }
                 currTime = actualPosition.t();
-                if (currentDestination == null)
-                {
-                    currentDestination = findClosestDestination();
-                    if (currentDestination != null)
-                    {
-                        World.dbg(TAG,"Got a destination: " + currentDestination.info(),DC_DBG);
-                    }
-                    else
-                    {
-                        // GO HOME!
-                    }
-                }
+				pickDestination();
                 if (lastPosition != null && lastTime < currTime)
                 {
                     boolean updated = estimatePhysics(currTime, lastPosition, lastTime);
@@ -203,7 +210,7 @@ public class DanookController extends Thread
                         {
                             double oldDistance = lastPosition.distanceXY(currentDestination);
                             double newDistance = actualPosition.distanceXY(currentDestination);
-                            if (newDistance > (oldDistance + 0.5)) // Allow some slow movement away
+                            if (newDistance > (oldDistance + 0.75)) // Allow some slow movement away
                             {
                                 closer = false;
                                 World.dbg(TAG,"DC: Wrong way -- now: " + newDistance + " then: " + oldDistance,DC_DBG);
@@ -227,6 +234,15 @@ public class DanookController extends Thread
         }
     }
 
+	protected void adjustSleepTime(boolean sleepLonger)
+	{
+		double sleepTime_sec = sleepTime_ms / 1000.0 + sleepTime_ns / 1000000000.0;
+		sleepTime_sec *= (sleepLonger?1.1:0.9);
+		sleepTime_ms = (int)(1000.0 * sleepTime_sec);
+		sleepTime_sec -= sleepTime_ms / 1000.0;
+		sleepTime_ns = (int)Math.round(1000000000.0 * sleepTime_sec);
+	}
+	
     /** This method attempts to update estimated physics based on what we learn
      * from the world.  It requires a reasonable amount of time to have passed
      * @param currTime Time stamp of our most current position reading
@@ -411,13 +427,23 @@ public class DanookController extends Thread
         double deltaAcceleration = Math.sqrt(deltaXAcceleration * deltaXAcceleration + deltaYAcceleration * deltaYAcceleration);
         // check heading
         double accelHeading = Math.toDegrees(Math.atan2(deltaXAcceleration,deltaYAcceleration));
+		double velHeading = Math.toDegrees(Math.atan2(estimatedVelocity.m_x,estimatedVelocity.m_y));
         double moveHeading = Math.toDegrees(Math.atan2(deltaVector.m_x, deltaVector.m_y));
+		//checkAngles(moveHeading, velHeading, accelHeading);
         double deltaAngle = Math.abs(accelHeading - moveHeading);
-        if (deltaAngle > 90) // We're going backwards
+        if (deltaAngle > 90.0) // We're going backwards
         {
             deltaAcceleration *= -1.0;
         }
         desTilt_Degrees += deltaAcceleration * HORZ_CONTROL_FACTOR;
+		if (Math.abs(desTilt_Degrees) > 5.01)
+		{
+            System.out.println("Warning -- acc heading: " + accelHeading + ", move: " + moveHeading + ", acc wanted " + targetXAcceleration + ","
+					  + targetYAcceleration + ") act (" + estimatedAcceleration.m_x + ","
+					  + estimatedAcceleration.m_y + ") vel wanted (" + targetXVelocity + ","
+					  + targetYVelocity + ") act (" + estimatedVelocity.m_x + ","
+					  + estimatedVelocity.m_y + ") des tilt: " + desTilt_Degrees);
+		}
         myWorld.requestSettings(myChopper.getId(), desMainRotorSpeed_RPM, desTilt_Degrees, desTailRotorSpeed_RPM);
         if (justStop == true)
         {
@@ -438,6 +464,22 @@ public class DanookController extends Thread
         return success;
     }
 
+	public void checkAngles(double posDir, double velDir, double accDir)
+	{
+		if (Math.abs(posDir - velDir) > DIR_ERROR_WARN)
+		{
+			System.out.println("Warning -- Time: " + myWorld.getTimestamp() + ", velocity and heading differ: " + posDir + ", vel: " + velDir);
+		}
+		if (Math.abs(posDir - accDir) > DIR_ERROR_WARN)
+		{
+			System.out.println("Warning -- Time: " + myWorld.getTimestamp() + ", Accel and heading differ: " + posDir + ", acc: " + accDir);
+		}
+		if (Math.abs(velDir - accDir) > DIR_ERROR_WARN)
+		{
+			System.out.println("Warning -- Time: " + myWorld.getTimestamp() + ", Accel and velocity differ: " + velDir + ", acc: " + accDir);
+		}
+	}
+	
     public int controlAltitude(int inState) throws Exception
     {
         int outState = inState;
@@ -592,7 +634,7 @@ public class DanookController extends Thread
         {
             deltaHeading -= 360.0;
         }
-        if (Math.abs(deltaHeading) < 0.05)
+        if (Math.abs(deltaHeading) < 0.01)
         {
             desTailRotorSpeed_RPM = ChopperInfo.STABLE_TAIL_ROTOR_SPEED;
             // TODO: Future optimization -- don't do this every tick?

@@ -438,22 +438,7 @@ public class Object3D extends Base3D {
 		{
             mFrameHandle = GLES20.glGetUniformLocation(mProgram, "fNumber");
             GLES20.glUniform1f(mFrameHandle,0.1f * (float)curFrame);
-            if (frameDelay < FRAME_DELAY)
-            {
-                ++frameDelay;
-            }
-            else
-            {
-                frameDelay = 0;
-                if (curFrame < NUM_FRAMES)
-                {
-                    ++curFrame;
-                }
-                else
-                {
-                    curFrame = 0;
-                }
-            }
+            
         	mTextureUniformHandle = GLES20.glGetUniformLocation(mProgram, "u_texture");
         	if (mTextureUniformHandle < 0)
         	{
@@ -513,8 +498,21 @@ public class Object3D extends Base3D {
 		{
 			GLES20.glDisableVertexAttribArray(mColorHandle);
 		}
+		updateFrame();
     }
 
+	static public void updateFrame()
+	{
+		if (frameDelay < FRAME_DELAY)
+		{
+			++frameDelay;
+		}
+		else
+		{
+			frameDelay = 0;
+			curFrame = (++curFrame) % NUM_FRAMES;
+		}
+	}
     public void drawSingle(int textDataHandle, float[] mvpMatrix) { // pass in the calculated transformation matrix
         // Add program to OpenGL ES environment
         GLES20.glUseProgram(mProgram);

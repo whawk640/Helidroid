@@ -33,6 +33,14 @@ public class Point3D implements Comparable<Point3D>
         m_t = t;
     }
 
+	public Point3D(Point3D src)
+	{
+		m_x = src.m_x;
+		m_y = src.m_y;
+		m_z = src.m_z;
+		m_t = src.m_t;
+	}
+	
     public Point3D copy()
     {
         Point3D res = new Point3D();

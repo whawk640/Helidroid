@@ -46,9 +46,9 @@ public class Danook extends StigChopper
         return pointFound;
     }
 
-	public void createPanel(LinearLayout par)
+	public void createPanel(LinearLayout par, float stretch)
 	{
-		myPanel = LayoutTools.addWidget(new DanookPanel(), 1.0f, LayoutTools.getNextViewID(),par);
+		myPanel = LayoutTools.addWidget(new DanookPanel(), stretch, LayoutTools.getNextViewID(),par);
 	}
 	
     public void updatePanel(ChopperInfo inf)

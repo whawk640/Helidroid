@@ -21,5 +21,6 @@
 	<string name="label_pos">Pos:</string>
 	<string name="label_dest">Dest:</string>
 	<string name="label_vel">Vel:</string>
-	<string name="label_acc">Acc:</string>	
+	<string name="label_acc">Acc:</string>
+	<string name="label_time">Time:</string>
 </resources>
