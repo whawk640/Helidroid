@@ -395,10 +395,24 @@ public class Point3D implements Comparable<Point3D>
     public Point3D normalized()
     {
         double l = length();
-        if ( l > 0 )
+        if ( l > 0.0 )
         {
-            double k = 1/l; // scale factor
+            double k = 1.0/l; // scale factor
             return new Point3D(k*x(),k*y(),k*z(),t());
+        }
+        else
+        {
+            return new Point3D(x(),y(),z(),t());
+        }
+    }
+
+    public Point3D normalized2D()
+    {
+        double l = xyLength();
+        if ( l > 0.0 )
+        {
+            double k = 1.0/l; // scale factor
+            return new Point3D(k*x(),k*y(),z(),t());
         }
         else
         {

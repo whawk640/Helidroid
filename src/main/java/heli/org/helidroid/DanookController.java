@@ -45,7 +45,7 @@ public class DanookController extends Thread
     private double desMainRotorSpeed_RPM = 0.0;
     private double desTailRotorSpeed_RPM = 0.0;
     private double desTilt_Degrees = 0.0;
-	private int sleepTime_ms = 5;
+	private int sleepTime_ms = 10;
 	private int sleepTime_ns = 0;
 
     private Point3D estimatedAcceleration;
@@ -384,7 +384,22 @@ public class DanookController extends Thread
         {
             targetXVelocity = computeDesiredVelocity(actualPosition.m_x,actualDestination.m_x,false);
         }
+        // Repeat for Y
+        double targetYVelocity = 0.0;
+        if (justStop == false)
+        {
+            targetYVelocity = computeDesiredVelocity(actualPosition.m_y,actualDestination.m_y,false);
+        }
+		Point3D normVel = estimatedVelocity.normalized2D();
+		if (normVel.xyLength() > 0.5)
+		{
+			targetXVelocity *= (normVel.x()>0?normVel.x():-normVel.x());
+			targetYVelocity *= (normVel.y()>0?normVel.y():-normVel.y());
+		}
+		Point3D wantVel = new Point3D(targetXVelocity,targetYVelocity,0.0);
         double targetXAcceleration = computeDesiredAcceleration(estimatedVelocity.m_x, targetXVelocity,false);
+        double targetYAcceleration = computeDesiredAcceleration(estimatedVelocity.m_y, targetYVelocity,false);
+		Point3D wantAccel = new Point3D(targetXAcceleration,targetYAcceleration,0.0);
         double xMultiplier = 1.0;
         double deltaXAcceleration = targetXAcceleration - estimatedAcceleration.m_x;
         if (deltaXAcceleration > MAX_HORZ_ACCEL)
@@ -395,13 +410,6 @@ public class DanookController extends Thread
         {
             xMultiplier = (-MAX_HORZ_ACCEL) / deltaXAcceleration;
         }
-        // Repeat for Y
-        double targetYVelocity = 0.0;
-        if (justStop == false)
-        {
-            targetYVelocity = computeDesiredVelocity(actualPosition.m_y,actualDestination.m_y,false);
-        }
-        double targetYAcceleration = computeDesiredAcceleration(estimatedVelocity.m_y, targetYVelocity,false);
         double yMultiplier = 1.0;
         double deltaYAcceleration = targetYAcceleration - estimatedAcceleration.m_y;
         if (deltaYAcceleration > MAX_HORZ_ACCEL)
@@ -412,6 +420,11 @@ public class DanookController extends Thread
         {
             yMultiplier = (-MAX_HORZ_ACCEL) / deltaYAcceleration;
         }
+		Point3D multMagnitude = new Point3D(xMultiplier, yMultiplier, 0.0);
+		if (myWorld.getTimestamp() - (int)myWorld.getTimestamp() < 0.1)
+		{
+			System.out.println(myWorld.getTimestamp() + ", Vel: " + estimatedVelocity.xyInfo(1) + ", want: " + wantVel.xyInfo(1) + ", Acc: " + estimatedAcceleration.xyInfo(1) + ", want: " + wantAccel.xyInfo(1) + ", Mult: " + multMagnitude.xyInfo(1));
+		}
         // Limit the size of the vector but do NOT change the proportion!
         if (xMultiplier < yMultiplier)
         {
@@ -427,7 +440,6 @@ public class DanookController extends Thread
         double deltaAcceleration = Math.sqrt(deltaXAcceleration * deltaXAcceleration + deltaYAcceleration * deltaYAcceleration);
         // check heading
         double accelHeading = Math.toDegrees(Math.atan2(deltaXAcceleration,deltaYAcceleration));
-		double velHeading = Math.toDegrees(Math.atan2(estimatedVelocity.m_x,estimatedVelocity.m_y));
         double moveHeading = Math.toDegrees(Math.atan2(deltaVector.m_x, deltaVector.m_y));
 		//checkAngles(moveHeading, velHeading, accelHeading);
         double deltaAngle = Math.abs(accelHeading - moveHeading);
@@ -436,14 +448,6 @@ public class DanookController extends Thread
             deltaAcceleration *= -1.0;
         }
         desTilt_Degrees += deltaAcceleration * HORZ_CONTROL_FACTOR;
-		if (Math.abs(desTilt_Degrees) > 5.01)
-		{
-            System.out.println("Warning -- acc heading: " + accelHeading + ", move: " + moveHeading + ", acc wanted " + targetXAcceleration + ","
-					  + targetYAcceleration + ") act (" + estimatedAcceleration.m_x + ","
-					  + estimatedAcceleration.m_y + ") vel wanted (" + targetXVelocity + ","
-					  + targetYVelocity + ") act (" + estimatedVelocity.m_x + ","
-					  + estimatedVelocity.m_y + ") des tilt: " + desTilt_Degrees);
-		}
         myWorld.requestSettings(myChopper.getId(), desMainRotorSpeed_RPM, desTilt_Degrees, desTailRotorSpeed_RPM);
         if (justStop == true)
         {
