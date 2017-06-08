@@ -18,23 +18,23 @@ public class DanookController extends Thread
     private static final int APPROACHING = 3;
 
     private static final double VERT_CONTROL_FACTOR = 2.5;
-    private static final double HORZ_CONTROL_FACTOR = 0.1;
+    private static final double HORZ_CONTROL_FACTOR = 0.4;
 
     private static final double MAX_VERT_VELOCITY = 2.25;
 
     private static final double MAX_HORZ_VELOCITY = 2.25;
 
-    private static final double MAX_VERT_ACCEL = 0.35;
+    private static final double MAX_VERT_ACCEL = 0.30;
 
-    private static final double MAX_HORZ_ACCEL = 0.35;
+    private static final double MAX_HORZ_ACCEL = 0.6;
 
-    private static final double DECEL_DISTANCE_VERT = 9.0;
+    private static final double DECEL_DISTANCE_VERT = 12.0;
 
-    private static final double DECEL_DISTANCE_HORZ = 15.0;
+    private static final double DECEL_DISTANCE_HORZ = 24.0;
 
     private static final double VERT_DECEL_SPEED = 0.40;
 
-    private static final double HORZ_DECEL_SPEED = 1.8;
+    private static final double HORZ_DECEL_SPEED = 1.0;
 
 	private static final double DIR_ERROR_WARN = 1.0;
 	
@@ -380,25 +380,43 @@ public class DanookController extends Thread
             actualDestination = actualPosition.copy();
         }
         double targetXVelocity = 0.0;
-        if (justStop == false)
-        {
-            targetXVelocity = computeDesiredVelocity(actualPosition.m_x,actualDestination.m_x,false);
-        }
-        // Repeat for Y
         double targetYVelocity = 0.0;
-        if (justStop == false)
-        {
-            targetYVelocity = computeDesiredVelocity(actualPosition.m_y,actualDestination.m_y,false);
-        }
-		Point3D normVel = estimatedVelocity.normalized2D();
+		double headingRadians = Math.toRadians(desiredHeading);
+		Point3D normVel = new Point3D(Math.sin(headingRadians),Math.cos(headingRadians), 0.0);
+		//Point3D normVel = estimatedVelocity.normalized2D();
+		double xDecelDist = DECEL_DISTANCE_HORZ;
+		double yDecelDist = DECEL_DISTANCE_HORZ;
+		double xDecelSpd = HORZ_DECEL_SPEED;
+		double yDecelSpd = HORZ_DECEL_SPEED;
 		if (normVel.xyLength() > 0.5)
 		{
-			targetXVelocity *= (normVel.x()>0?normVel.x():-normVel.x());
-			targetYVelocity *= (normVel.y()>0?normVel.y():-normVel.y());
+			xDecelDist *= Math.abs(normVel.x());
+			yDecelDist *= Math.abs(normVel.y());
+			xDecelSpd *= Math.abs(normVel.x());
+			yDecelSpd *= Math.abs(normVel.y());
+		}
+        if (justStop == false)
+        {
+            targetXVelocity = computeDesiredVelocity(actualPosition.m_x,actualDestination.m_x,false,xDecelDist);
+        }
+        // Repeat for Y
+        if (justStop == false)
+        {
+            targetYVelocity = computeDesiredVelocity(actualPosition.m_y,actualDestination.m_y,false,yDecelDist);
+        }
+		if (normVel.xyLength() > 0.5)
+		{
+			targetXVelocity *= Math.abs(normVel.x());
+			targetYVelocity *= Math.abs(normVel.y());
 		}
 		Point3D wantVel = new Point3D(targetXVelocity,targetYVelocity,0.0);
-        double targetXAcceleration = computeDesiredAcceleration(estimatedVelocity.m_x, targetXVelocity,false);
-        double targetYAcceleration = computeDesiredAcceleration(estimatedVelocity.m_y, targetYVelocity,false);
+        double targetXAcceleration = computeDesiredAcceleration(estimatedVelocity.m_x, targetXVelocity,false,xDecelSpd);
+        double targetYAcceleration = computeDesiredAcceleration(estimatedVelocity.m_y, targetYVelocity,false,yDecelSpd);
+		if (normVel.xyLength() > 0.5)
+		{
+			targetXAcceleration *= Math.abs(normVel.x());
+			targetYAcceleration *= Math.abs(normVel.y());
+		}
 		Point3D wantAccel = new Point3D(targetXAcceleration,targetYAcceleration,0.0);
         double xMultiplier = 1.0;
         double deltaXAcceleration = targetXAcceleration - estimatedAcceleration.m_x;
@@ -412,6 +430,7 @@ public class DanookController extends Thread
         }
         double yMultiplier = 1.0;
         double deltaYAcceleration = targetYAcceleration - estimatedAcceleration.m_y;
+		/*
         if (deltaYAcceleration > MAX_HORZ_ACCEL)
         {
             yMultiplier = MAX_HORZ_ACCEL / deltaYAcceleration;
@@ -420,12 +439,13 @@ public class DanookController extends Thread
         {
             yMultiplier = (-MAX_HORZ_ACCEL) / deltaYAcceleration;
         }
-		Point3D multMagnitude = new Point3D(xMultiplier, yMultiplier, 0.0);
+		Point3D multMagnitude = new Point3D(xMultiplier, yMultiplier, 0.0); */
 		if (myWorld.getTimestamp() - (int)myWorld.getTimestamp() < 0.1)
 		{
-			System.out.println(myWorld.getTimestamp() + ", Vel: " + estimatedVelocity.xyInfo(1) + ", want: " + wantVel.xyInfo(1) + ", Acc: " + estimatedAcceleration.xyInfo(1) + ", want: " + wantAccel.xyInfo(1) + ", Mult: " + multMagnitude.xyInfo(1));
+			System.out.println(String.format("%2.1f dist: %2.1f",myWorld.getTimestamp(),deltaVector.xyLength()) + ", norm: " + normVel.xyInfo(1) + ", Pos: " + deltaVector.xyInfo(1) + " Vel: " + estimatedVelocity.xyInfo(2) + ", want: " + wantVel.xyInfo(2) + ", Acc: " + estimatedAcceleration.xyInfo(2) + ", want: " + wantAccel.xyInfo(2) + String.format(", tilt: %2.2f",desTilt_Degrees));
 		}
         // Limit the size of the vector but do NOT change the proportion!
+		/*
         if (xMultiplier < yMultiplier)
         {
             deltaXAcceleration = deltaXAcceleration * yMultiplier;
@@ -435,7 +455,7 @@ public class DanookController extends Thread
         {
             deltaXAcceleration = deltaXAcceleration * xMultiplier;
             deltaYAcceleration = deltaYAcceleration * xMultiplier;
-        }
+        } */
         // Compute magnitude of acceleration
         double deltaAcceleration = Math.sqrt(deltaXAcceleration * deltaXAcceleration + deltaYAcceleration * deltaYAcceleration);
         // check heading
@@ -545,9 +565,9 @@ public class DanookController extends Thread
                 outState = FINDING_HEADING;
             }
         }
-        double targetVerticalVelocity = computeDesiredVelocity(actualPosition.m_z,desiredAltitude,true);
+        double targetVerticalVelocity = computeDesiredVelocity(actualPosition.m_z,desiredAltitude,true, DECEL_DISTANCE_VERT);
         double deltaVelocity = targetVerticalVelocity - estimatedVelocity.m_z;
-        double targetVerticalAcceleration = computeDesiredAcceleration(estimatedVelocity.m_z, targetVerticalVelocity,true);
+        double targetVerticalAcceleration = computeDesiredAcceleration(estimatedVelocity.m_z, targetVerticalVelocity,true,VERT_DECEL_SPEED);
         double deltaAcceleration = targetVerticalAcceleration - estimatedAcceleration.m_z;
         if (deltaAcceleration > MAX_VERT_ACCEL)
         {
@@ -572,14 +592,13 @@ public class DanookController extends Thread
         return outState;
     }
 
-    public double computeDesiredVelocity(double actAlt, double desAlt, boolean doVertical)
+    public double computeDesiredVelocity(double actAlt, double desAlt, boolean doVertical, double DECEL_DISTANCE)
     {
-        double targetVelocity = (doVertical?MAX_VERT_VELOCITY:MAX_HORZ_VELOCITY);
+        double targetVelocity = doVertical?MAX_VERT_VELOCITY:MAX_HORZ_VELOCITY;
         double deltaValue = Math.abs(desAlt - actAlt);
-        final double DECEL_DISTANCE = (doVertical?DECEL_DISTANCE_VERT:DECEL_DISTANCE_HORZ);
         if (deltaValue < DECEL_DISTANCE)
         {
-            targetVelocity = deltaValue / DECEL_DISTANCE;
+            targetVelocity *= (deltaValue / DECEL_DISTANCE);
         }
         if (actAlt > desAlt)
         {
@@ -588,14 +607,13 @@ public class DanookController extends Thread
         return targetVelocity;
     }
 
-    public double computeDesiredAcceleration(double actVel, double desVel, boolean doVertical)
+    public double computeDesiredAcceleration(double actVel, double desVel, boolean doVertical, double DECEL_SPEED)
     {
         double targetAccel = (doVertical?MAX_VERT_ACCEL:MAX_HORZ_ACCEL);
         double deltaValue = Math.abs(desVel - actVel);
-        final double DECEL_SPEED = (doVertical?VERT_DECEL_SPEED:HORZ_DECEL_SPEED);
         if (deltaValue < DECEL_SPEED)
         {
-            targetAccel = deltaValue / DECEL_SPEED;
+            targetAccel *= (deltaValue / DECEL_SPEED);
         }
         if (actVel > desVel)
         {
@@ -624,7 +642,7 @@ public class DanookController extends Thread
             deltaY = estimatedVelocity.y();
             deltaX = estimatedVelocity.x();
         }
-        double desiredHeading = Math.toDegrees(Math.atan2(deltaX,deltaY));
+        desiredHeading = Math.toDegrees(Math.atan2(deltaX,deltaY));
         if (desiredHeading < 0.0) // NOTE, returns -180 to +180
         {
             desiredHeading += 360.0;
