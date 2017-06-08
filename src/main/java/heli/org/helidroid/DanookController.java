@@ -38,6 +38,10 @@ public class DanookController extends Thread
 
 	private static final double DIR_ERROR_WARN = 1.0;
 	
+	private static final double DEADBAND_DIST = 0.6;
+	
+	private static final double STOPPED_CHECK = 0.015;
+	
     private Danook myChopper;
     private World myWorld;
     private int myState = STATE_LANDED;
@@ -404,6 +408,12 @@ public class DanookController extends Thread
         {
             targetYVelocity = computeDesiredVelocity(actualPosition.m_y,actualDestination.m_y,false,yDecelDist);
         }
+		if (deltaVector.xyLength() < DEADBAND_DIST && estimatedVelocity.xyLength() < STOPPED_CHECK)
+		{
+			desTilt_Degrees = 0.0;
+			myWorld.requestSettings(myChopper.getId(), desMainRotorSpeed_RPM, desTilt_Degrees, desTailRotorSpeed_RPM);
+			return true;
+		}
 		if (normVel.xyLength() > 0.5)
 		{
 			targetXVelocity *= Math.abs(normVel.x());
@@ -430,32 +440,6 @@ public class DanookController extends Thread
         }
         double yMultiplier = 1.0;
         double deltaYAcceleration = targetYAcceleration - estimatedAcceleration.m_y;
-		/*
-        if (deltaYAcceleration > MAX_HORZ_ACCEL)
-        {
-            yMultiplier = MAX_HORZ_ACCEL / deltaYAcceleration;
-        }
-        if (deltaYAcceleration < (-MAX_HORZ_ACCEL))
-        {
-            yMultiplier = (-MAX_HORZ_ACCEL) / deltaYAcceleration;
-        }
-		Point3D multMagnitude = new Point3D(xMultiplier, yMultiplier, 0.0); */
-		if (myWorld.getTimestamp() - (int)myWorld.getTimestamp() < 0.1)
-		{
-			System.out.println(String.format("%2.1f dist: %2.1f",myWorld.getTimestamp(),deltaVector.xyLength()) + ", norm: " + normVel.xyInfo(1) + ", Pos: " + deltaVector.xyInfo(1) + " Vel: " + estimatedVelocity.xyInfo(2) + ", want: " + wantVel.xyInfo(2) + ", Acc: " + estimatedAcceleration.xyInfo(2) + ", want: " + wantAccel.xyInfo(2) + String.format(", tilt: %2.2f",desTilt_Degrees));
-		}
-        // Limit the size of the vector but do NOT change the proportion!
-		/*
-        if (xMultiplier < yMultiplier)
-        {
-            deltaXAcceleration = deltaXAcceleration * yMultiplier;
-            deltaYAcceleration = deltaYAcceleration * yMultiplier;
-        }
-        else
-        {
-            deltaXAcceleration = deltaXAcceleration * xMultiplier;
-            deltaYAcceleration = deltaYAcceleration * xMultiplier;
-        } */
         // Compute magnitude of acceleration
         double deltaAcceleration = Math.sqrt(deltaXAcceleration * deltaXAcceleration + deltaYAcceleration * deltaYAcceleration);
         // check heading
@@ -463,10 +447,16 @@ public class DanookController extends Thread
         double moveHeading = Math.toDegrees(Math.atan2(deltaVector.m_x, deltaVector.m_y));
 		//checkAngles(moveHeading, velHeading, accelHeading);
         double deltaAngle = Math.abs(accelHeading - moveHeading);
+		boolean backwardsDetected = false;
         if (deltaAngle > 90.0) // We're going backwards
         {
             deltaAcceleration *= -1.0;
+			backwardsDetected = true;
         }
+		if (myWorld.getTimestamp() - (int)myWorld.getTimestamp() < 0.1)
+		{
+			System.out.println(String.format("%2.1f dist: %2.1f",myWorld.getTimestamp(),deltaVector.xyLength()) + ", bkg: " + backwardsDetected + ", norm: " + normVel.xyInfo(1) + ", Pos: " + deltaVector.xyInfo(1) + " Vel: " + estimatedVelocity.xyInfo(2) + ", want: " + wantVel.xyInfo(2) + ", Acc: " + estimatedAcceleration.xyInfo(2) + ", want: " + wantAccel.xyInfo(2) + String.format(", tilt: %2.2f",desTilt_Degrees));
+		}
         desTilt_Degrees += deltaAcceleration * HORZ_CONTROL_FACTOR;
         myWorld.requestSettings(myChopper.getId(), desMainRotorSpeed_RPM, desTilt_Degrees, desTailRotorSpeed_RPM);
         if (justStop == true)
@@ -488,22 +478,6 @@ public class DanookController extends Thread
         return success;
     }
 
-	public void checkAngles(double posDir, double velDir, double accDir)
-	{
-		if (Math.abs(posDir - velDir) > DIR_ERROR_WARN)
-		{
-			System.out.println("Warning -- Time: " + myWorld.getTimestamp() + ", velocity and heading differ: " + posDir + ", vel: " + velDir);
-		}
-		if (Math.abs(posDir - accDir) > DIR_ERROR_WARN)
-		{
-			System.out.println("Warning -- Time: " + myWorld.getTimestamp() + ", Accel and heading differ: " + posDir + ", acc: " + accDir);
-		}
-		if (Math.abs(velDir - accDir) > DIR_ERROR_WARN)
-		{
-			System.out.println("Warning -- Time: " + myWorld.getTimestamp() + ", Accel and velocity differ: " + velDir + ", acc: " + accDir);
-		}
-	}
-	
     public int controlAltitude(int inState) throws Exception
     {
         int outState = inState;
