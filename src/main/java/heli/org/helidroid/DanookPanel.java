@@ -80,11 +80,11 @@ public class DanookPanel extends ChopperPanel
 	
 	public void setTilt(double newTilt)
 	{
-		if (Math.abs(newTilt) < 0.05)
+		if (Math.abs(newTilt) < 0.005)
 		{
-			newTilt = 0.01; // Prevent negative 0
+			newTilt = 0.001; // Prevent negative 0
 		}
-		String tiltString = String.format("%3.1f",newTilt);
+		String tiltString = String.format("%3.2f",newTilt);
 		tiltDisplay.setText(tiltString);
 	}
 	
@@ -101,7 +101,7 @@ public class DanookPanel extends ChopperPanel
 		}
 		else
 		{
-			posDisplay.setText(newPos.xyInfo(1));
+			posDisplay.setText(newPos.xyInfo(2));
 		}
 	}
 
@@ -118,7 +118,7 @@ public class DanookPanel extends ChopperPanel
 		}
 		else
 		{
-			velDisplay.setText(newVel.xyzInfo(1));
+			velDisplay.setText(newVel.xyzInfo(2));
 		}
 	}
 
@@ -135,7 +135,7 @@ public class DanookPanel extends ChopperPanel
 		}
 		else
 		{
-			accDisplay.setText(newAcc.xyzInfo(1));
+			accDisplay.setText(newAcc.xyzInfo(2));
 		}
 	}
 
@@ -152,7 +152,7 @@ public class DanookPanel extends ChopperPanel
 		}
 		else
 		{
-			destDisplay.setText(newDest.xyInfo(1));
+			destDisplay.setText(newDest.xyInfo(2));
 		}
 	}
 }

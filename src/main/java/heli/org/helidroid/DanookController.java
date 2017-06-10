@@ -18,29 +18,29 @@ public class DanookController extends Thread
     private static final int APPROACHING = 3;
 
     private static final double VERT_CONTROL_FACTOR = 2.5;
-    private static final double HORZ_CONTROL_FACTOR = 0.4;
+    private static final double HORZ_CONTROL_FACTOR = 0.35;
 
-    private static final double MAX_VERT_VELOCITY = 2.25;
+    private static final double MAX_VERT_VELOCITY = 3.0;
 
-    private static final double MAX_HORZ_VELOCITY = 2.25;
+    private static final double MAX_HORZ_VELOCITY = 3.0;
 
-    private static final double MAX_VERT_ACCEL = 0.30;
+    private static final double MAX_VERT_ACCEL = 0.6;
 
-    private static final double MAX_HORZ_ACCEL = 0.6;
+    private static final double MAX_HORZ_ACCEL = 1.0;
 
     private static final double DECEL_DISTANCE_VERT = 12.0;
 
-    private static final double DECEL_DISTANCE_HORZ = 24.0;
+    private static final double DECEL_DISTANCE_HORZ = 30.0;
 
-    private static final double VERT_DECEL_SPEED = 0.40;
+    private static final double VERT_DECEL_SPEED = 0.5;
 
-    private static final double HORZ_DECEL_SPEED = 1.0;
+    private static final double HORZ_DECEL_SPEED = 1.2;
 
 	private static final double DIR_ERROR_WARN = 1.0;
 	
-	private static final double DEADBAND_DIST = 0.6;
+	private static final double DEADBAND_DIST = 0.75;
 	
-	private static final double STOPPED_CHECK = 0.015;
+	private static final double STOPPED_CHECK = 0.0125;
 	
     private Danook myChopper;
     private World myWorld;
@@ -385,6 +385,8 @@ public class DanookController extends Thread
         }
         double targetXVelocity = 0.0;
         double targetYVelocity = 0.0;
+		// The chopper gets lighter as time goes on (HACK -- improve this)
+		double controlMultiplier = 1.0 - 0.00012 * myWorld.getTimestamp();
 		double headingRadians = Math.toRadians(desiredHeading);
 		Point3D normVel = new Point3D(Math.sin(headingRadians),Math.cos(headingRadians), 0.0);
 		//Point3D normVel = estimatedVelocity.normalized2D();
@@ -457,7 +459,7 @@ public class DanookController extends Thread
 		{
 			System.out.println(String.format("%2.1f dist: %2.1f",myWorld.getTimestamp(),deltaVector.xyLength()) + ", bkg: " + backwardsDetected + ", norm: " + normVel.xyInfo(1) + ", Pos: " + deltaVector.xyInfo(1) + " Vel: " + estimatedVelocity.xyInfo(2) + ", want: " + wantVel.xyInfo(2) + ", Acc: " + estimatedAcceleration.xyInfo(2) + ", want: " + wantAccel.xyInfo(2) + String.format(", tilt: %2.2f",desTilt_Degrees));
 		}
-        desTilt_Degrees += deltaAcceleration * HORZ_CONTROL_FACTOR;
+        desTilt_Degrees += deltaAcceleration * HORZ_CONTROL_FACTOR * controlMultiplier;
         myWorld.requestSettings(myChopper.getId(), desMainRotorSpeed_RPM, desTilt_Degrees, desTailRotorSpeed_RPM);
         if (justStop == true)
         {

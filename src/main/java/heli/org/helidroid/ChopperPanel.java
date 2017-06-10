@@ -75,7 +75,7 @@ public class ChopperPanel extends LinearLayout
 	
 	protected void setAltitude(double newAlt)
 	{
-		altDisplay.setText(String.format("%.1f m",newAlt));
+		altDisplay.setText(String.format("%.2f m",newAlt));
 	}
 	
 	protected void setAltitude(String newAlt)
@@ -85,7 +85,7 @@ public class ChopperPanel extends LinearLayout
 
 	protected void setHeading(double newHead)
 	{
-		headDisplay.setText(String.format("%.1f deg",newHead));
+		headDisplay.setText(String.format("%.2f deg",newHead));
 	}
 	
 	protected void setHeading(String newHead)
