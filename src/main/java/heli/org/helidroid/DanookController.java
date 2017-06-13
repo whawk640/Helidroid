@@ -15,26 +15,27 @@ public class DanookController extends Thread
     private static final int STATE_LANDED = 0;
     private static final int STOP_NOW = 1;
     private static final int FINDING_HEADING = 2;
-    private static final int APPROACHING = 3;
+	private static final int RADAR_CHECK = 3;
+    private static final int APPROACHING = 4;
 
     private static final double VERT_CONTROL_FACTOR = 2.5;
     private static final double HORZ_CONTROL_FACTOR = 0.35;
 
-    private static final double MAX_VERT_VELOCITY = 3.0;
+    private static final double MAX_VERT_VELOCITY = 3.15;
 
-    private static final double MAX_HORZ_VELOCITY = 3.0;
+    private static final double MAX_HORZ_VELOCITY = 5.1;
 
-    private static final double MAX_VERT_ACCEL = 0.6;
+    private static final double MAX_VERT_ACCEL = 0.65;
 
-    private static final double MAX_HORZ_ACCEL = 1.0;
+    private static final double MAX_HORZ_ACCEL = 1.04;
 
-    private static final double DECEL_DISTANCE_VERT = 12.0;
+    private static final double DECEL_DISTANCE_VERT = 11.8;
 
-    private static final double DECEL_DISTANCE_HORZ = 30.0;
+    private static final double DECEL_DISTANCE_HORZ = 56.5;
 
     private static final double VERT_DECEL_SPEED = 0.5;
 
-    private static final double HORZ_DECEL_SPEED = 1.2;
+    private static final double HORZ_DECEL_SPEED = 1.25;
 
 	private static final double DIR_ERROR_WARN = 1.0;
 	
@@ -81,6 +82,11 @@ public class DanookController extends Thread
                 returnState = "Turning";
                 break;
             }
+            case RADAR_CHECK:
+				{
+					returnState = "Radar Check";
+					break;
+				}
             case APPROACHING:
             {
                 returnState = "Approaching";
@@ -331,10 +337,28 @@ public class DanookController extends Thread
                 if (headingOK)
                 {
                     // Ensure we run through approaching at least once
-                    nextState = APPROACHING;
+                    nextState = RADAR_CHECK;
                 }
                 break;
             }
+			case RADAR_CHECK:
+			{
+				if (actualPosition.Z() > 25)
+				{
+					nextState = APPROACHING;
+				}
+				//int nearestObj = myWorld.radar(actualPosition, desiredHeading);
+				//if (nearestObj > 400)
+				//{
+				//	nextState = APPROACHING;
+				//	System.out.println(String.format("%2.1f",myWorld.getTimestamp()) + ", pos: " + actualPosition.xyzInfo(1) + " No close contacts!");
+				//}
+				//else
+				//{
+				//	System.out.println(String.format("%2.1f",myWorld.getTimestamp()) + ", pos: " + actualPosition.xyzInfo(1) + " avoiding object at distance: " + nearestObj);
+				//}
+				break;
+			}
             case APPROACHING:
             {
                 approachTarget(false);
@@ -455,10 +479,10 @@ public class DanookController extends Thread
             deltaAcceleration *= -1.0;
 			backwardsDetected = true;
         }
-		if (myWorld.getTimestamp() - (int)myWorld.getTimestamp() < 0.1)
-		{
-			System.out.println(String.format("%2.1f dist: %2.1f",myWorld.getTimestamp(),deltaVector.xyLength()) + ", bkg: " + backwardsDetected + ", norm: " + normVel.xyInfo(1) + ", Pos: " + deltaVector.xyInfo(1) + " Vel: " + estimatedVelocity.xyInfo(2) + ", want: " + wantVel.xyInfo(2) + ", Acc: " + estimatedAcceleration.xyInfo(2) + ", want: " + wantAccel.xyInfo(2) + String.format(", tilt: %2.2f",desTilt_Degrees));
-		}
+		//if (myWorld.getTimestamp() - (int)myWorld.getTimestamp() < 0.1)
+		//{
+		//	System.out.println(String.format("%2.1f dist: %2.1f",myWorld.getTimestamp(),deltaVector.xyLength()) + ", bkg: " + backwardsDetected + ", norm: " + normVel.xyInfo(1) + ", Pos: " + deltaVector.xyInfo(1) + " Vel: " + estimatedVelocity.xyInfo(2) + ", want: " + wantVel.xyInfo(2) + ", Acc: " + estimatedAcceleration.xyInfo(2) + ", want: " + wantAccel.xyInfo(2) + String.format(", tilt: %2.2f",desTilt_Degrees));
+		//}
         desTilt_Degrees += deltaAcceleration * HORZ_CONTROL_FACTOR * controlMultiplier;
         myWorld.requestSettings(myChopper.getId(), desMainRotorSpeed_RPM, desTilt_Degrees, desTailRotorSpeed_RPM);
         if (justStop == true)
@@ -675,6 +699,7 @@ public class DanookController extends Thread
             desiredAltitude = 2.0 + 98.0 * (Math.floor(myWorld.getTimestamp() / 100.0)%2);
         }
     }
+	
     synchronized public Point3D findClosestDestination()
     {
         Point3D resultPoint = null;

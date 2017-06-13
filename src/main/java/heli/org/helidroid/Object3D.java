@@ -125,6 +125,11 @@ public class Object3D extends Base3D {
 
     private Boolean overrideTextures = null;
 
+	public double getHeight()
+	{
+		return position.m_z + size.m_z/2.0;
+	}
+	
     static public void initImage(final Context context, GL10 gl) {
         mTextureDataHandle = new int[NUM_TEXTURES];
         gl.glGenTextures(NUM_TEXTURES, mTextureDataHandle, 0);
@@ -256,6 +261,16 @@ public class Object3D extends Base3D {
         commonConstructor(thePos, theSize);
     }
 
+	boolean testValue(int thisMin, int thisMax, int otherPos)
+	{
+		boolean overlaps = false;
+        if ((thisMin < otherPos) && (thisMax > otherPos))
+        {
+            overlaps = true;
+        }
+		return overlaps;
+	}
+	
     boolean testValues(int thisMin, int thisMax, int otherMin, int otherMax)
     {
         boolean overlaps = false;
@@ -269,6 +284,24 @@ public class Object3D extends Base3D {
         return overlaps;
     }
 
+	public boolean collidesWith(Point3D other)
+	{
+		boolean doesItCollide = false;
+        boolean zOverlaps = testValue(position.Z() - size.Z(), position.Z() + size.Z(),
+                                       other.Z());
+        if (zOverlaps)
+        {
+            boolean yOverlaps = testValue(position.Y() - size.Y(), position.Y() + size.Y(),
+										   other.Y());
+            if (yOverlaps)
+            {
+                doesItCollide = testValue(position.X() - size.X(), position.X() + size.X(),
+										   other.X());
+            }
+        }
+		return doesItCollide;
+	}
+	
     public boolean collidesWith(Object3D other)
     {
         boolean doesItCollide = false;

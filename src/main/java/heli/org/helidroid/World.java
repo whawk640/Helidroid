@@ -52,7 +52,7 @@ public class World
     static public final long WORLD_DBG = 0x10000000;
     static public int m_camToFollow = 0;
     private int nextChopperID = 0;
-    private int m_rtToRndRatio = 5;
+    private int m_rtToRndRatio = 12;
     private double curTimeStamp = 0.0;
     private static final double TICK_TIME = 1.0 / 50.0;
 	private int tickCount = 0;
@@ -107,12 +107,14 @@ public class World
 	private static final double MAX_CAM_DISTANCE = 1000.0;
 	
 	private static final double VERTICAL_CAM_STEP = 10.0;
+	
+	private static final double RADAR_STEP = 5.0;
 
 	//private HeliGLSurfaceView glSurface = null;
 
 	private ArrayList<HeliGLSurfaceView> glSurfaces = null;
 	
-    private double maxTime = 10000.0;
+    private double maxTime = 20000.0;
 
     private ArrayList<Object3D> worldState;
 	
@@ -253,6 +255,50 @@ public class World
 		createChoppers(gl,cfg);
     }
 
+	/** Returns the distance to the nearest object along the specified heading.
+	  * or 99999 if no object is impeding the radar.
+	  */
+	public int radar(Point3D location, double heading)
+	{
+		int nearestDistance = 99999;
+		double headingRadians = Math.toRadians(heading);
+		Point3D testPoint = location.copy();
+		ArrayList relevantObjects = findObjectsTallerThan(location.m_z);
+		double deltaX = RADAR_STEP * Math.sin(headingRadians);
+		double deltaY = RADAR_STEP * Math.cos(headingRadians);
+		for (double distance = 5.0; distance < nearestDistance; distance += 5.0)
+		{
+			testPoint.m_x += deltaX;
+			testPoint.m_y += deltaY;
+			for (Object3D testObj : relevantObjects)
+			{
+				if (testObj.collidesWith(testPoint))
+				{
+					Point3D delta = Point3D.diff(location, testPoint);
+					nearestDistance = (int)delta.xyLength();
+					break;
+				}
+			}
+		}
+		return nearestDistance;
+	}
+
+	/** This method iterates over all objects and finds thoe that are taller
+	  * than the passed in height.
+	  */
+	public ArrayList<Object3D> findObjectsTallerThan(double height)
+	{
+		ArrayList<Object3D> resultList = new ArrayList<Object3D>();
+		for (Object3D obj : worldState)
+		{
+			if (obj.getHeight() > height)
+			{
+				resultList.add(obj);
+			}
+		}
+		return resultList;	
+	}
+	
     public void nextChopper()
     {
         if (visibleChopper < (nextChopperID - 1))
