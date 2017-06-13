@@ -32,7 +32,7 @@ public class DanookController extends Thread
 
     private static final double DECEL_DISTANCE_VERT = 12.5;
 
-    private static final double DECEL_DISTANCE_HORZ = 65.0;
+    private static final double DECEL_DISTANCE_HORZ = 75.0;
 
     private static final double VERT_DECEL_SPEED = 0.52;
 
@@ -580,9 +580,16 @@ public class DanookController extends Thread
         else
         {
             if (inState == STATE_LANDED)
-            {
-                outState = FINDING_HEADING;
-            }
+			{
+				if (currentDestination != null)
+            	{
+                	outState = FINDING_HEADING;
+            	}
+				else
+				{
+					outState = DONE;
+				}
+			}
         }
         double targetVerticalVelocity = computeDesiredVelocity(actualPosition.m_z,desiredAltitude,true, DECEL_DISTANCE_VERT);
         double deltaVelocity = targetVerticalVelocity - estimatedVelocity.m_z;
