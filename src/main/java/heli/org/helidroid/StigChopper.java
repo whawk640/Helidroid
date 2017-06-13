@@ -670,7 +670,7 @@ public class StigChopper extends Base3D
         else
         {
             mColorHandle = GLES20.glGetUniformLocation(chopperProgram, "vColor");
-			GLES20.glUniform4f(mColorHandle,color[0]*0.9f,color[1]*0.9f,color[2]*0.9f,color[3]);
+			GLES20.glUniform4f(mColorHandle,color[0]*0.8f,color[1]*0.8f,color[2]*0.8f,color[3]);
         }
 
 		GLES20.glLineWidth(lineWidth);
@@ -734,7 +734,7 @@ public class StigChopper extends Base3D
         else
         {
             mColorHandle = GLES20.glGetUniformLocation(chopperProgram, "vColor");
-			GLES20.glUniform4f(mColorHandle,color[0],color[1],color[2],color[3]);
+			GLES20.glUniform4f(mColorHandle,color[0] * 0.9f,color[1] * 0.9f,color[2] * 0.9f,color[3]);
         }
 
         // Pass the projection and view transformation to the shader
@@ -908,7 +908,7 @@ public class StigChopper extends Base3D
 		Matrix.setIdentityM(transMatrix,0);
 		Matrix.translateM(transMatrix,0,(float)myPos.m_x, (float)myPos.m_y, (float)myPos.m_z);
 		Matrix.rotateM(transMatrix, 0, (float)headingDeg, 0.0f, 0.0f, -1.0f);
-		Matrix.rotateM(transMatrix, 0, (float)tiltDeg, 1.0f, 0.0f, 1.0f);
+		Matrix.rotateM(transMatrix, 0, 2.0f * (float)tiltDeg, -1.0f, 0.0f, 1.0f);
 		// Save a copies of myMatrix for rotors before messing with it
 		float[] mainRotorMatrix = myMatrix.clone();
 		float[] tailRotorMatrix = myMatrix.clone();
@@ -921,7 +921,7 @@ public class StigChopper extends Base3D
 		// OK, first, move the main rotor with the chopper
 		Matrix.translateM(mainRotorTransMatrix,0,(float)myPos.m_x, (float)myPos.m_y,(float)myPos.m_z);
 		Matrix.rotateM(mainRotorTransMatrix, 0, (float)headingDeg, 0.0f, 0.0f, -1.0f);
-		Matrix.rotateM(mainRotorTransMatrix, 0, (float)tiltDeg, 1.0f, 0.0f, 1.0f);
+		Matrix.rotateM(mainRotorTransMatrix, 0, 2.0f * (float)tiltDeg, -1.0f, 0.0f, 1.0f);
 		// Now move the origin to the position of the center of the rotor
 		Matrix.translateM(mainRotorTransMatrix,0,0.0f, 1.0f,0.0f);
 		Matrix.rotateM(mainRotorTransMatrix,0,(float)mainRotorDeg, 0.0f, 0.0f, -1.0f);
@@ -934,7 +934,7 @@ public class StigChopper extends Base3D
 		// OK, first, move the tail rotor with the chopper
 		Matrix.translateM(tailRotorTransMatrix,0,(float)myPos.m_x, (float)myPos.m_y,(float)myPos.m_z);
 		Matrix.rotateM(tailRotorTransMatrix, 0, (float)headingDeg, 0.0f, 0.0f, -1.0f);
-		Matrix.rotateM(tailRotorTransMatrix, 0, (float)tiltDeg, 1.0f, 0.0f, 1.0f);
+		Matrix.rotateM(tailRotorTransMatrix, 0, 2.0f * (float)tiltDeg, -1.0f, 0.0f, 1.0f);
 		// Now move the origin to the position of the center of the tail rotor
 		Matrix.translateM(tailRotorTransMatrix,0,0.0f, -2.0f,1.5f);
 		Matrix.rotateM(tailRotorTransMatrix,0,(float)tailRotorDeg, 1.0f, 0.0f, 0.0f);

@@ -24,15 +24,15 @@ public class DanookController extends Thread
 
     private static final double MAX_VERT_VELOCITY = 3.16;
 
-    private static final double MAX_HORZ_VELOCITY = 5.2;
+    private static final double MAX_HORZ_VELOCITY = 5.35;
 
     private static final double MAX_VERT_ACCEL = 0.65;
 
-    private static final double MAX_HORZ_ACCEL = 1.04;
+    private static final double MAX_HORZ_ACCEL = 1.03;
 
-    private static final double DECEL_DISTANCE_VERT = 11.7;
+    private static final double DECEL_DISTANCE_VERT = 11.5;
 
-    private static final double DECEL_DISTANCE_HORZ = 56.3;
+    private static final double DECEL_DISTANCE_HORZ = 58.5;
 
     private static final double VERT_DECEL_SPEED = 0.5;
 
@@ -51,7 +51,7 @@ public class DanookController extends Thread
     private double desMainRotorSpeed_RPM = 0.0;
     private double desTailRotorSpeed_RPM = 0.0;
     private double desTilt_Degrees = 0.0;
-	private int sleepTime_ms = 10;
+	private int sleepTime_ms = 18;
 	private int sleepTime_ns = 0;
 
     private Point3D estimatedAcceleration;
