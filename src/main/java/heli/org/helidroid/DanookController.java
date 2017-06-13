@@ -17,21 +17,22 @@ public class DanookController extends Thread
     private static final int FINDING_HEADING = 2;
 	private static final int RADAR_CHECK = 3;
     private static final int APPROACHING = 4;
+	private static final int DONE = 5;
 
-    private static final double VERT_CONTROL_FACTOR = 2.5;
-    private static final double HORZ_CONTROL_FACTOR = 0.35;
+    private static final double VERT_CONTROL_FACTOR = 2.55;
+    private static final double HORZ_CONTROL_FACTOR = 0.36;
 
-    private static final double MAX_VERT_VELOCITY = 3.15;
+    private static final double MAX_VERT_VELOCITY = 3.16;
 
-    private static final double MAX_HORZ_VELOCITY = 5.1;
+    private static final double MAX_HORZ_VELOCITY = 5.2;
 
     private static final double MAX_VERT_ACCEL = 0.65;
 
     private static final double MAX_HORZ_ACCEL = 1.04;
 
-    private static final double DECEL_DISTANCE_VERT = 11.8;
+    private static final double DECEL_DISTANCE_VERT = 11.7;
 
-    private static final double DECEL_DISTANCE_HORZ = 56.5;
+    private static final double DECEL_DISTANCE_HORZ = 56.3;
 
     private static final double VERT_DECEL_SPEED = 0.5;
 
@@ -56,6 +57,7 @@ public class DanookController extends Thread
     private Point3D estimatedAcceleration;
     private Point3D estimatedVelocity;
     private Point3D actualPosition;
+	private Point3D homeBase;
 
     public double desiredHeading;
     public double desiredAltitude;
@@ -92,6 +94,11 @@ public class DanookController extends Thread
                 returnState = "Approaching";
                 break;
             }
+			case DONE:
+			{
+				returnState = "Done";
+				break;
+			}
             default:
             {
                 returnState = "Unknown";
@@ -112,6 +119,7 @@ public class DanookController extends Thread
         estimatedAcceleration = new Point3D();
         estimatedVelocity = new Point3D();
         actualPosition = new Point3D();
+		homeBase = myWorld.gps(myChopper.getId());
         desiredHeading = 0.0;
         desiredAltitude = 0.0;
 
@@ -364,6 +372,14 @@ public class DanookController extends Thread
                 approachTarget(false);
                 break;
             }
+			case DONE:
+			{
+				desTilt_Degrees = 0.0;
+				desMainRotorSpeed_RPM = 0.0;
+				desTailRotorSpeed_RPM = 0.0;
+				myWorld.requestSettings(myChopper.getId(),desMainRotorSpeed_RPM, desTilt_Degrees, desTailRotorSpeed_RPM);
+				break;
+			}
             default:
             {
                 Exception e = new Exception("Hey STUPID -- your state is: " + myState + " which is not allowed.");
@@ -656,7 +672,7 @@ public class DanookController extends Thread
         {
             deltaHeading -= 360.0;
         }
-        if (Math.abs(deltaHeading) < 0.01)
+        if (Math.abs(deltaHeading) < 0.008)
         {
             desTailRotorSpeed_RPM = ChopperInfo.STABLE_TAIL_ROTOR_SPEED;
             // TODO: Future optimization -- don't do this every tick?
@@ -667,13 +683,13 @@ public class DanookController extends Thread
         {
             // Anything over 10 degrees off gets max rotor speed
             double deltaRotor = (deltaHeading / 10.0) * 20.0;
-            if (deltaRotor > 5.0)
+            if (deltaRotor > 5.5)
             {
-                deltaRotor = 5.0;
+                deltaRotor = 5.5;
             }
-            else if (deltaRotor < -5.0)
+            else if (deltaRotor < -5.5)
             {
-                deltaRotor = -5.0;
+                deltaRotor = -5.5;
             }
             desTailRotorSpeed_RPM = ChopperInfo.STABLE_TAIL_ROTOR_SPEED + deltaRotor;
             myWorld.requestSettings(myChopper.getId(), desMainRotorSpeed_RPM, desTilt_Degrees, desTailRotorSpeed_RPM);
@@ -687,7 +703,7 @@ public class DanookController extends Thread
         {
             if (actualPosition.distanceXY(currentDestination) > 5.0)
             {
-                desiredAltitude = 110.0; // High enough to clear buildings
+                desiredAltitude = 105.0; // High enough to clear buildings
             }
             else
             {
@@ -705,15 +721,22 @@ public class DanookController extends Thread
         Point3D resultPoint = null;
         ArrayList<Point3D> targetWaypoints = myChopper.getWaypoints();
         double minDistance = 10000.0;
-        for(Point3D testPoint: targetWaypoints)
-        {
-            double curDistance = actualPosition.distanceXY(testPoint);
-            if (curDistance < minDistance)
-            {
-                resultPoint = testPoint;
-                minDistance = curDistance;
-            }
-        }
+		if (targetWaypoints.isEmpty())
+		{
+			resultPoint = homeBase.copy();
+		}
+		else
+		{
+        	for(Point3D testPoint: targetWaypoints)
+        	{
+            	double curDistance = actualPosition.distanceXY(testPoint);
+            	if (curDistance < minDistance)
+            	{
+                	resultPoint = testPoint;
+                	minDistance = curDistance;
+            	}
+        	}
+		}
         return resultPoint;
     }
 
