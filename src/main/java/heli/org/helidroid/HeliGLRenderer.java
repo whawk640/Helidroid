@@ -68,6 +68,16 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer
         return mAngle;
     }
 
+	public void rotateCameraXY(double angleDeg)
+	{
+		mCamera.rotateXY(angleDeg);
+	}
+	
+	public void adjustCameraHeight(double deltaZ)
+	{
+		mCamera.adjustHeight(deltaZ);
+	}
+	
     public void setCamDistance(double dist)
     {
         camDistance = dist;

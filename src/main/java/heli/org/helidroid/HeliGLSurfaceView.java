@@ -48,7 +48,8 @@ public class HeliGLSurfaceView extends GLSurfaceView
         setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
     }
 
-    private final float TOUCH_SCALE_FACTOR = 180.0f / 320;
+    private final double H_TOUCH_SCALE_FACTOR = 20.0;
+    private final double V_TOUCH_SCALE_FACTOR = 2.0;
     private float mPreviousX;
     private float mPreviousY;
 
@@ -69,25 +70,24 @@ public class HeliGLSurfaceView extends GLSurfaceView
         switch (e.getAction())
 		{
             case MotionEvent.ACTION_MOVE:
-				{
-
-                float dx = x - mPreviousX;
-                float dy = y - mPreviousY;
+			{
+                double dx = x - mPreviousX;
+                double dy = y - mPreviousY;
 
                 // reverse direction of rotation above the mid-line
-                if (y > getHeight() / 2) {
+                if (y > getHeight() / 2)
+				{
                     dx = dx * -1;
                 }
 
                 // reverse direction of rotation to left of the mid-line
-                if (x < getWidth() / 2) {
+                if (x < getWidth() / 2)
+				{
                     dy = dy * -1;
                 }
 
-                mRenderer.setAngle(
-                        mRenderer.getAngle() +
-                                ((dx + dy) * TOUCH_SCALE_FACTOR));
-                //requestRender();
+				mRenderer.rotateCameraXY(dx * H_TOUCH_SCALE_FACTOR);
+				mRenderer.adjustCameraHeight(dy * V_TOUCH_SCALE_FACTOR);
             }
         }
 

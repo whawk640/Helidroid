@@ -52,7 +52,7 @@ public class World
     static public final long WORLD_DBG = 0x10000000;
     static public int m_camToFollow = 0;
     private int nextChopperID = 0;
-    private int m_rtToRndRatio = 24;
+    private int m_rtToRndRatio = 25;
     private double curTimeStamp = 0.0;
     private static final double TICK_TIME = 1.0 / 50.0;
 	private int tickCount = 0;

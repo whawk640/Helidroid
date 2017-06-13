@@ -24,17 +24,17 @@ public class DanookController extends Thread
 
     private static final double MAX_VERT_VELOCITY = 3.16;
 
-    private static final double MAX_HORZ_VELOCITY = 5.35;
+    private static final double MAX_HORZ_VELOCITY = 6.0;
 
     private static final double MAX_VERT_ACCEL = 0.65;
 
     private static final double MAX_HORZ_ACCEL = 1.03;
 
-    private static final double DECEL_DISTANCE_VERT = 11.5;
+    private static final double DECEL_DISTANCE_VERT = 12.5;
 
-    private static final double DECEL_DISTANCE_HORZ = 58.5;
+    private static final double DECEL_DISTANCE_HORZ = 65.0;
 
-    private static final double VERT_DECEL_SPEED = 0.5;
+    private static final double VERT_DECEL_SPEED = 0.52;
 
     private static final double HORZ_DECEL_SPEED = 1.25;
 
@@ -51,13 +51,13 @@ public class DanookController extends Thread
     private double desMainRotorSpeed_RPM = 0.0;
     private double desTailRotorSpeed_RPM = 0.0;
     private double desTilt_Degrees = 0.0;
-	private int sleepTime_ms = 18;
+	private int sleepTime_ms = 20;
 	private int sleepTime_ns = 0;
 
-    private Point3D estimatedAcceleration;
-    private Point3D estimatedVelocity;
-    private Point3D actualPosition;
-	private Point3D homeBase;
+    private Point3D estimatedAcceleration = null;
+    private Point3D estimatedVelocity = null;
+    private Point3D actualPosition = null;
+	private Point3D homeBase = null;
 
     public double desiredHeading;
     public double desiredAltitude;
@@ -119,7 +119,6 @@ public class DanookController extends Thread
         estimatedAcceleration = new Point3D();
         estimatedVelocity = new Point3D();
         actualPosition = new Point3D();
-		homeBase = myWorld.gps(myChopper.getId());
         desiredHeading = 0.0;
         desiredAltitude = 0.0;
 
@@ -215,6 +214,10 @@ public class DanookController extends Thread
                 synchronized(myWorld)
                 {
                     actualPosition = myWorld.gps(myChopper.getId());
+					if (homeBase == null && currentDestination != null)
+					{
+						homeBase = actualPosition.copy();
+					}
                 }
                 currTime = actualPosition.t();
 				pickDestination();

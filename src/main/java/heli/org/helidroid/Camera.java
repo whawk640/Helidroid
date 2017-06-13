@@ -156,17 +156,32 @@ public class Camera {
         return Math.sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
     }
 
-    public void approach(double approachPercent) {
+    public void approach(double approachPercent)
+	{
         double deltaZ = approachPercent / 100.0 * (source.z() - target.z());
         double deltaY = approachPercent / 100.0 * (source.y() - target.y());
         double deltaX = approachPercent / 100.0 * (source.x() - target.x());
-        double magnitude = Math.sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
         source.m_x = source.m_x - deltaX;
         source.m_y = source.m_y - deltaY;
         source.m_z = source.m_z - deltaZ;
     }
 
-    public void orbit(double ticksPerRevolution) {
+	public void adjustHeight(double deltaZ)
+	{
+		source.m_z += deltaZ;
+	}
+	
+	public void rotateXY(double angleDeg)
+	{
+		double angleRadians = Math.toRadians(angleDeg);
+		double orbitRad = computeCamDistance();
+		double deltaX = orbitRad * Math.sin(angleRadians);
+		double deltaY = orbitRad * Math.cos(angleRadians);
+		source = new Point3D(target.x() + deltaX, target.y() + deltaY, source.m_z);
+	}
+	
+    public void orbit(double ticksPerRevolution)
+	{
         if (ticksPerRevolution < 60.0)
         {
             ticksPerRevolution = 60.0;
@@ -191,35 +206,4 @@ public class Camera {
         System.out.println("Camera at: " + source.info());
         System.out.println("Camera Looking at: " + target.info());
     }
-
-    /* If these methods are necessary, find replacement for GLU...
-       didn't need it in Sudoku
-    public void tellGL(GL10 gl)
-    {
-        gl.glMatrixMode(gl.GL_PROJECTION);
-        gl.glLoadIdentity();
-
-        // Perspective
-        if (sceneHeight == 0) // paranoid div/0 check
-        {
-            sceneHeight = 1;
-        }
-        double aspectRatio = (double) sceneWidth / (double) sceneHeight;
-
-        GLU.gluPerspective(gl,(float)fovDegrees, (float)aspectRatio, (float)nearClip, (float)farClip);
-        GLU.gluLookAt(gl,(float)source.x(), (float)source.y(), (float)source.z(),
-                (float)(target.x()), (float)(target.y()), (float)(target.z()),
-                (float)(upUnit.x()), (float)(upUnit.y()), (float)(upUnit.z()));
-
-        gl.glMatrixMode(gl.GL_MODELVIEW);
-        gl.glLoadIdentity();
-    }
-
-    public void tellGL(GL10 gl, int w, int h)
-    {
-        sceneWidth = w;
-        sceneHeight = h;
-        tellGL(gl);
-    } */
-
 }
