@@ -178,7 +178,7 @@ public class HeliGLRenderer implements GLSurfaceView.Renderer
         // in the onDrawFrame() method
 
         // Reminder -- matrix, offset, low x, high x, low y, high y, near, far
-        Matrix.frustumM(mProjectionMatrix, 0, -ratio, ratio, -1.0f, 1.0f, 5.0f, 2000.0f);
+        Matrix.frustumM(mProjectionMatrix, 0, -ratio, ratio, -1.0f, 1.0f, 5.0f, 4000.0f);
     }
 
     static int loadShader(int type, String shaderCode) {

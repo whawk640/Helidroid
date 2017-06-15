@@ -213,9 +213,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         // World computes positions every 20ms of world time
 		// You'll accelerate time by using a shorter delay here
-        // We wait 2.5 seconds for world to be created etc.
+        // We wait 4 seconds for world to be created etc.
         //timer.schedule(timerTask, 1500, 16);
-        timer.schedule(timerTask, 5000, 4);
+        timer.schedule(timerTask, 4000, 4);
     }
 
     @Override

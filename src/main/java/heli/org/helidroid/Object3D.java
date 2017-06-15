@@ -118,8 +118,8 @@ public class Object3D extends Base3D {
     public static final int vertexCount = cubeCoords.length / COORDS_PER_VERTEX;
     static private final int vertexStride = COORDS_PER_VERTEX * 4; // 4 bytes per coordinate
     static private final int colorStride = COLORS_PER_VERTEX * 4; // 4 bytes per RGBA
-    static private final int NUM_FRAMES = 9;
-    static private final int FRAME_DELAY = 10;
+    static private final int NUM_FRAMES = 10;
+    static private final int FRAME_DELAY = 0;
     static int curFrame = 0;
     static int frameDelay = 0;
 
@@ -420,7 +420,8 @@ public class Object3D extends Base3D {
         return size;
     }
 
-    static public void draw(float[] mvpMatrix) { // pass in the calculated transformation matrix
+    static public void draw(float[] mvpMatrix, int vtxBuf, int colBuf, int txtBuf, int triBuf, int triCount, int lineBuf, int lineCount)
+	{ // pass in the calculated transformation matrix
         // Add program to OpenGL ES environment
         GLES20.glUseProgram(mProgram);
         int error = GLES20.glGetError();
@@ -443,10 +444,12 @@ public class Object3D extends Base3D {
         GLES20.glEnableVertexAttribArray(mPositionHandle);
 
         // Prepare the cube coordinate data
+		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,vtxBuf);
         GLES20.glVertexAttribPointer(mPositionHandle, COORDS_PER_VERTEX,
                 GLES20.GL_FLOAT, false,
-                vertexStride, vertexBuffer);
-
+                vertexStride, 0);
+		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,0);
+		
         // get handle to vertex shader's vColor member
 		if (useVertexColor)
 		{
@@ -457,8 +460,10 @@ public class Object3D extends Base3D {
 			}
 			GLES20.glEnableVertexAttribArray(mColorHandle);
 
+			GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,colBuf);
 			GLES20.glVertexAttribPointer(mColorHandle, COLORS_PER_VERTEX,
-										 GLES20.GL_FLOAT, false, colorStride, colBuffer);
+										 GLES20.GL_FLOAT, false, colorStride, 0);
+			GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,0);
 		}
 		else
 		{
@@ -486,8 +491,10 @@ public class Object3D extends Base3D {
         	GLES20.glEnableVertexAttribArray(mTextureCoordinateHandle);
 
         	// Prepare the uv coordinate data.
+			GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,txtBuf);
     	    GLES20.glVertexAttribPointer(mTextureCoordinateHandle, 2,
-                GLES20.GL_FLOAT, false, 8, uvBuffer);
+                GLES20.GL_FLOAT, false, 8, 0);
+			GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,0);
 
 	        // Set the active texture unit to texture unit 0.
         	GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
@@ -504,20 +511,23 @@ public class Object3D extends Base3D {
 
 		if (useWireframeOnly)
 		{
-			GLES20.glDrawElements(GLES20.GL_LINES, lineDrawListBuffer.capacity(),
-								  GLES20.GL_UNSIGNED_INT, lineDrawListBuffer);
+			GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER,lineBuf);
+			GLES20.glDrawElements(GLES20.GL_LINES, lineCount,
+								  GLES20.GL_UNSIGNED_INT, 0);
+			GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER,0);
 		}
 		else
 		{
-			GLES20.glDrawElements(GLES20.GL_TRIANGLES, drawListBuffer.capacity(),
-								  GLES20.GL_UNSIGNED_INT, drawListBuffer);
+			GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER,triBuf);
+			GLES20.glDrawElements(GLES20.GL_TRIANGLES, triCount,
+								  GLES20.GL_UNSIGNED_INT, 0);
+			GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER,0);
 		}
         int drawError = GLES20.glGetError();
         if (drawError != GLES20.GL_NO_ERROR)
         {
             System.out.println("Object3d: Draw Elements Error: " + drawError);
         }
-
 
 		if (useTextures)
 		{

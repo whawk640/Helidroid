@@ -33,12 +33,15 @@ package heli.org.helidroid;
 //
 //
 
-import android.app.*;
 import android.content.*;
+import android.opengl.*;
 import android.widget.*;
+import java.nio.*;
 import java.util.*;
 import javax.microedition.khronos.egl.*;
 import javax.microedition.khronos.opengles.*;
+
+import javax.microedition.khronos.egl.EGLConfig;
 
 /** World Class, for StigChoppers.  Defines the world.
  * Copyright 2015, Daniel A. LaFuze
@@ -52,7 +55,7 @@ public class World
     static public final long WORLD_DBG = 0x10000000;
     static public int m_camToFollow = 0;
     private int nextChopperID = 0;
-    private int m_rtToRndRatio = 25;
+    private int m_rtToRndRatio = 5;
     private double curTimeStamp = 0.0;
     private static final double TICK_TIME = 1.0 / 50.0;
 	private int tickCount = 0;
@@ -61,6 +64,7 @@ public class World
 	private boolean wireFrame = false;
 	private double camDistance = 50.0;
 	private LinearLayout panelLay = null;
+	private int drawCounter = 0;
 
     static protected final int ROW_START = 0;
     static protected final int BLOCK_ROWS = 10;
@@ -79,6 +83,18 @@ public class World
 	LinearLayout timeLayout = null;
 	TextView timeLabel = null;
 	TextView timeDisplay = null;
+	
+	private int VERTEX_BUFFER = 0;
+	private int COLOR_BUFFER = 1;
+	private int TEXTURE_BUFFER = 2;
+	private int TRIANGLE_BUFFER = 3;
+	private int LINE_BUFFER = 4;
+	private int BUFFER_COUNT = 5;
+	private int[] glBuffers = new int[BUFFER_COUNT];
+	int triIndexCount = 0;
+	int lineIndexCount = 0;
+	
+	private long startTime;
 	
     private static final double FULL_BLOCK_SIZE = 100.0;
 
@@ -247,11 +263,32 @@ public class World
                 }
             }
         }
-        Object3D.vertexBuffer = BufferUtils.getFB(vxs);
-        Object3D.colBuffer = BufferUtils.getFB(cls);
-        Object3D.uvBuffer = BufferUtils.getFB(texs);
-        Object3D.drawListBuffer = BufferUtils.getIB(dos);
-		Object3D.lineDrawListBuffer = BufferUtils.getIB(lineDos);
+		GLES20.glGenBuffers(BUFFER_COUNT,glBuffers,0);
+
+		FloatBuffer vtxBuffer = BufferUtils.getFB(vxs);
+		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,glBuffers[VERTEX_BUFFER]);
+		GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER,vtxBuffer.capacity() * 4, vtxBuffer,GLES20.GL_STATIC_DRAW);
+
+		FloatBuffer colBuffer = BufferUtils.getFB(cls);
+		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,glBuffers[COLOR_BUFFER]);
+		GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER,colBuffer.capacity() * 4,colBuffer,GLES20.GL_STATIC_DRAW);
+
+		FloatBuffer uvBuffer = BufferUtils.getFB(texs);
+		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,glBuffers[TEXTURE_BUFFER]);
+		GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER,uvBuffer.capacity() * 4,uvBuffer,GLES20.GL_STATIC_DRAW);
+		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,0);
+		
+		IntBuffer dlb = BufferUtils.getIB(dos);
+		triIndexCount = dlb.capacity();
+		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,glBuffers[TRIANGLE_BUFFER]);
+		GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER,triIndexCount * 4,dlb,GLES20.GL_STATIC_DRAW);
+
+		IntBuffer ldlb = BufferUtils.getIB(lineDos);
+		lineIndexCount = ldlb.capacity();
+		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,glBuffers[LINE_BUFFER]);
+		GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER,lineIndexCount * 4,ldlb,GLES20.GL_STATIC_DRAW);
+		GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER,0);
+		
 		createChoppers(gl,cfg);
     }
 
@@ -693,6 +730,7 @@ public class World
                 }
             }
         } */
+		startTime = System.nanoTime();
 		worldCenter = new Point3D(500.0,500.0,0.0);
 		myChoppers = new HashMap<Integer, ChopperAggregator>();
 
@@ -851,13 +889,24 @@ public class World
 		 }
          curTimeStamp += TICK_TIME;
 		 ++tickCount;
+		 if ((tickCount & 0x80) == 0x80)
+		 {
+			 long deltaTime_ns = System.nanoTime() - startTime;
+			 double deltaTime_s = deltaTime_ns / 1000000000.0;
+			 if (deltaTime_s < 0.01)
+			 {
+				 deltaTime_s = 0.01;
+			 }
+			 System.out.println(String.format("Frames (%d) per second (%2.1f): %2.1f",drawCounter,deltaTime_s,(drawCounter/deltaTime_s)));
+		 }
     }
 
     public void draw(float[] mvpMatrix)
     {
+		++drawCounter;
         // First, draw the static world
 		Object3D.useWireframeOnly = wireFrame;
-        Object3D.draw(mvpMatrix);
+        Object3D.draw(mvpMatrix,glBuffers[VERTEX_BUFFER], glBuffers[COLOR_BUFFER], glBuffers[TEXTURE_BUFFER], glBuffers[TRIANGLE_BUFFER], triIndexCount,glBuffers[LINE_BUFFER],lineIndexCount);
 		Iterator it = myChoppers.entrySet().iterator();
         while (it.hasNext())
         {
