@@ -9,7 +9,7 @@ public class Apachi extends StigChopper
     private ApachiAlt m_alt;
     private ApachiHeading m_heading;
     private ApachiSpeed m_speed;
-    private ApachiGL m_agl = new ApachiGL();
+    private ApachiControl m_ctrl;
 
     private double m_rotSpeedR = 0.0;
     private double m_tiltR = 0.0;
@@ -40,34 +40,22 @@ public class Apachi extends StigChopper
         m_speed = new ApachiSpeed(this, world);
         m_speed.setTarget(0.0,-1.0);
         m_speed.start();
+        
+        m_ctrl = new ApachiControl(this, world);
+        m_ctrl.start();
 
         hover(30);
         maintainHeading(315);
         inventory = 16;
 
     }
-	
+	synchronized public double getCurrentSpeed()
+  {
+    return m_curSpeed;
+  }
 	public void draw(float[] myMatrix)
-	{ // pass in the calculated transformation matrix
-		int slow = 70;
-        double wts = world.getTimestamp();
-        if(wts > 30 && wts < slow)
-        {
-            maintainAlt(90);
-            maintainSpeed(5.0,-1.0);
-        }
-
-        if(wts > slow && m_curSpeed > 0.05)
-        {
-            maintainSpeed(0.0,-1.0);
-        }
-
-        if(wts > slow && m_curSpeed < 0.049)
-        {
-            hover(-1.0);
-        }
-        //m_altJL.setText("Alt: " + Apachi.f(m_alt.m_lastAlt));
-		
+	{ 
+   // pass in the calculated transformation matrix	
 		super.draw(myMatrix);
 	}
 	
@@ -231,6 +219,17 @@ public class Apachi extends StigChopper
     public void maintainSpeed(double spd_ms, double time_sec)
     {
         m_speed.setTarget(spd_ms,time_sec);
+    }
+    
+    synchronized void shutdown()
+    {
+      maintainAlt(-1);
+      maintainSpeed(0,0);
+      m_alt.pause(true);
+      m_speed.pause(true);
+      setDesiredStabilizerSpeed(0);
+      setDesiredRotorSpeed(0);
+      setDesiredTilt(0);
     }
 
     synchronized public void turnIntoDOT(double dot)

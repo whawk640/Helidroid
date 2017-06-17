@@ -20,7 +20,7 @@ public class ApachiAlt extends Thread
     protected double m_target = 0.0;
     protected double m_altDist = 0.0;
     protected Apachi m_chopper;
-    protected double m_tol = 2.0; //meters
+    protected double m_tol = 1.0; //meters
     protected double m_inc = CHANGE_INC; //speed increment in rpm
 
     protected double m_lastAlt = -1.0;
@@ -30,6 +30,7 @@ public class ApachiAlt extends Thread
     protected double m_revs = 0.0;
     protected double m_lastRPM = -1.0;
     protected boolean m_up = true;
+    protected boolean m_pause = false;
 
     protected double m_rtToRndRatio = 1.0;
     protected int m_tick_ms = 200;
@@ -53,6 +54,19 @@ public class ApachiAlt extends Thread
     {
         while(true)
         {
+          if(m_pause)
+          {
+            m_chopper.setDesiredRotorSpeed(0);
+            m_chopper.setDesiredStabilizerSpeed(0);
+            try
+            {
+              Thread.sleep(m_tick_ms);
+            }
+            catch(Exception e)
+            {
+              //no prob
+            }
+          }
             //simple feedback loop
             Point3D pos = null;
             synchronized (m_world)
@@ -62,7 +76,7 @@ public class ApachiAlt extends Thread
             try
             {
                 long now = (long)(m_world.getTimestamp() * 1000.0);
-                double deltaT = (double)(now - m_lastTS);
+                double deltaT = (now - m_lastTS);
                 tS = deltaT * 0.001;
                 double alt = pos.m_z;
                 m_chopper.setCurrentAlt(alt);
@@ -168,6 +182,10 @@ public class ApachiAlt extends Thread
         }
     }
 
+    synchronized void pause(boolean what)
+    {
+      m_pause = what;
+    }
     synchronized void setTarget(double alt)
     {
         m_up = (alt > m_target)?true:false;

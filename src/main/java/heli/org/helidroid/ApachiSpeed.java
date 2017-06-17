@@ -24,6 +24,8 @@ public class ApachiSpeed extends Thread
     protected double m_targetTime = 0.0;
     protected double m_howLong = 0.0;
 
+    protected boolean m_pause = false;
+    
     protected int m_tick = RT_SLEEP;
 
     public ApachiSpeed(Apachi chop, World world)
@@ -34,6 +36,10 @@ public class ApachiSpeed extends Thread
         m_tick = (int)(RT_SLEEP / m_rtToRndRatio);
     }
 
+    synchronized public void pause(boolean what)
+    {
+      m_pause = what;
+    }
     @Override
     public void run()
     {
@@ -42,6 +48,8 @@ public class ApachiSpeed extends Thread
         {
             Point3D pos = null;
             double heading = 0.0;
+            if(!m_pause)
+            {
             synchronized (m_world)
             {
                 heading = m_world.transformations(m_chopper.getId()).m_x;
@@ -102,6 +110,11 @@ public class ApachiSpeed extends Thread
             catch(Exception e)
             {
                 World.dbg(TAG,"unable to get chooper info: " + e.toString(),DBG);
+            }
+            }
+            else
+            {
+              m_chopper.setDesiredTilt(0);  
             }
             try { Thread.sleep(m_tick);} catch(Exception e){}
         }
