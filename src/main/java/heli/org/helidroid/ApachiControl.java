@@ -25,7 +25,7 @@ public class ApachiControl extends Thread
     {
       pos = m_world.gps(m_chopper.getId());
     }
-    boolean landed = pos.z() < 0.3;
+    boolean landed = m_world.isAirborn(m_chopper.getId()) == 0;
     int slow = 70;
     double wts = m_world.getTimestamp();
     
@@ -48,7 +48,7 @@ public class ApachiControl extends Thread
 
     if(wts > slow && m_chopper.getCurrentSpeed() < 0.049)
     {
-      m_chopper.hover(4.0);
+      m_chopper.hover(0.0);
     }
     
   }

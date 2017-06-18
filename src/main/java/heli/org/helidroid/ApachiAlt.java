@@ -12,7 +12,7 @@ public class ApachiAlt extends Thread
     //TODO create neural network which learns rotor speed for alt
     public static final String TAG = "ApachiAlt";
     public static final long DBG = 0x10;
-    public static final double CHANGE_INC = 20.0;
+    public static final double CHANGE_INC = 10.0;
     public static final double HOLD_INC = 10.0;
     public static final double INIT_SPEED = 10.0;
     public static final int RT_SLEEP = 200;
@@ -20,7 +20,7 @@ public class ApachiAlt extends Thread
     protected double m_target = 0.0;
     protected double m_altDist = 0.0;
     protected Apachi m_chopper;
-    protected double m_tol = 1.0; //meters
+    protected double m_tol = .5; //meters
     protected double m_inc = CHANGE_INC; //speed increment in rpm
 
     protected double m_lastAlt = -1.0;
@@ -33,7 +33,7 @@ public class ApachiAlt extends Thread
     protected boolean m_pause = false;
 
     protected double m_rtToRndRatio = 1.0;
-    protected int m_tick_ms = 200;
+    protected int m_tick_ms = 50;
     protected double tS = 0.001 * m_tick_ms;
 
     public ApachiAlt(Apachi chop, World world)
@@ -200,16 +200,18 @@ public class ApachiAlt extends Thread
     void adjustToTarget(double alt, double howerSpeed, double inc)
     {
         double deltaAlt = Math.abs(alt - m_target);
-        inc = 0.9 * deltaAlt;
+        
         if(alt < m_target)
         {
+          inc = 0.9 * deltaAlt;
             //going up
             if(inc > CHANGE_INC) inc = CHANGE_INC;
             m_lastRPM = m_chopper.setDesiredRotorSpeed(howerSpeed + inc);
         }
         else
         {
-            if(inc > 0.5 * CHANGE_INC) inc = 0.5 * CHANGE_INC;
+          inc = 0.01 * deltaAlt;
+            //if(inc > 0.5 * CHANGE_INC) inc = 0.5 * CHANGE_INC;
             m_lastRPM = m_chopper.setDesiredRotorSpeed(howerSpeed - inc);
         }
     }
