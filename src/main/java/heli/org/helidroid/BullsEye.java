@@ -110,9 +110,9 @@ public class BullsEye extends Base3D {
 		drawListBuffer = BufferUtils.getIB(drawOrder);
 	}
 	
-	public void draw(float[] mvpMatrix) {
+	public void draw(int surfaceId, float[] mvpMatrix) {
         // Add program to OpenGL ES environment
-        GLES20.glUseProgram(mProgram);
+        GLES20.glUseProgram(mProgram[surfaceId]);
         int error = GLES20.glGetError();
         if (error != GLES20.GL_NO_ERROR)
         {
@@ -120,14 +120,14 @@ public class BullsEye extends Base3D {
         }
 
         // get handle to vertex shader's vPosition member
-        mPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
+        mPositionHandle = GLES20.glGetAttribLocation(mProgram[surfaceId], "vPosition");
         if (mPositionHandle < 0)
         {
             System.out.println("Failed to get mPositionHandle");
         }
 
         // get handle to shape's transformation matrix
-        mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
+        mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram[surfaceId], "uMVPMatrix");
 
         // Enable a handle to the cube vertices
         GLES20.glEnableVertexAttribArray(mPositionHandle);
@@ -140,7 +140,7 @@ public class BullsEye extends Base3D {
         // get handle to vertex shader's vColor member
         if (useVertexColor)
         {
-            mColorHandle = GLES20.glGetAttribLocation(mProgram, "vColor");
+            mColorHandle = GLES20.glGetAttribLocation(mProgram[surfaceId], "vColor");
             if (mColorHandle < 0)
             {
                 System.out.println("Failed to get vColor");
@@ -152,7 +152,7 @@ public class BullsEye extends Base3D {
         }
         else
         {
-            mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor");
+            mColorHandle = GLES20.glGetUniformLocation(mProgram[surfaceId], "vColor");
 			GLES20.glUniform4f(mColorHandle,myColor[0],myColor[1],myColor[2],myColor[3]);
         }
 

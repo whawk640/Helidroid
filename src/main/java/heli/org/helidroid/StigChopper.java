@@ -1,6 +1,7 @@
 package heli.org.helidroid;
 
 import android.opengl.*;
+import android.view.View;
 import android.widget.*;
 import java.nio.*;
 import java.util.*;
@@ -18,7 +19,8 @@ import javax.microedition.khronos.egl.EGLConfig;
  */
 public class StigChopper extends Base3D
 {
-    private static int chopperProgram = -1;
+    private static final int MAX_SURFACES = 4;
+    private int chopperProgram[] = new int[MAX_SURFACES];
 	
     // These buffers are currently designed for triangles
     public FloatBuffer triVertexBuffer;
@@ -344,7 +346,7 @@ public class StigChopper extends Base3D
 		0.0f, 0.0f,
 		0.5f, 1.0f
 	};
-	
+
 	private int mMVPMatrixHandle;
     private int mPositionHandle;
     private int mColorHandle;
@@ -393,7 +395,7 @@ public class StigChopper extends Base3D
 
     protected ArrayList<Point3D> targetWaypoints;
 
-	protected void updatePanel(ChopperInfo inf)
+	protected synchronized void updatePanel(ChopperInfo inf)
 	{
 		if (myPanel != null)
 		{
@@ -405,7 +407,7 @@ public class StigChopper extends Base3D
 	public void createPanel(LinearLayout par,float stretch)
 	{
 		myPanel = LayoutTools.addWidget(new ChopperPanel(),stretch,LayoutTools.getNextViewID(),par);
-	}
+    }
 	
 	public ChopperPanel getPanel()
 	{
@@ -416,6 +418,10 @@ public class StigChopper extends Base3D
     public StigChopper(int chopperID, World theWorld)
     {
 		super();
+        chopperProgram[0] = -1;
+        chopperProgram[1] = -1;
+        chopperProgram[2] = -1;
+        chopperProgram[3] = -1;
 		System.out.println("Creating StigChopper ID: " + chopperID);
         id = chopperID;
         world = theWorld;
@@ -426,7 +432,7 @@ public class StigChopper extends Base3D
         landed = true;
         homeBase = null;
         targetWaypoints = new ArrayList<>();
-		createBuffers();
+		//createBuffers();
 
 		System.out.println("StigChopper " + id + " created -- fuel capacity: " + fuelCapacity);
     }
@@ -467,7 +473,7 @@ public class StigChopper extends Base3D
         return fuelCapacity;
     }
 
-    public int itemCount()
+    public synchronized int itemCount()
     {
         return inventory;
     }
@@ -477,7 +483,7 @@ public class StigChopper extends Base3D
         return id;
     }
 
-    public boolean deliverItem()
+    public synchronized boolean deliverItem()
     {
         boolean success = false;
         if (inventory > 0)
@@ -494,21 +500,16 @@ public class StigChopper extends Base3D
         return result;
     }
 
-	public void onSurfaceCreated(GL10 gl, EGLConfig cfg)
+	public void onSurfaceCreated(GL10 gl, EGLConfig cfg, int surfaceId)
 	{
-		if (chopperProgram < 0)
-		{
-            System.out.println("Building chopper program...");
-			chopperProgram = buildProgram(StigChopper.vertexColor, StigChopper.textures);
-            System.out.println("*** DONE Building chopper program...");
-		}
-		//createBuffers();
+    	chopperProgram[surfaceId] = buildProgram(StigChopper.vertexColor, StigChopper.textures);
+		createBuffers();
 	}
 	
 	public void createBuffers()
 	{
 		triVertexBuffer = BufferUtils.getFB(triCoords);
-        //triColBuffer = getFB(cls);
+        //triColBuffer = BufferUtils.getFB(cls);
         triUvBuffer = BufferUtils.getFB(uvs);
         triDrawListBuffer = BufferUtils.getIB(triDrawOrder);
 		triOLDrawListBuffer = BufferUtils.getIB(triOutlineDrawOrder);
@@ -522,11 +523,11 @@ public class StigChopper extends Base3D
 	}
 	
 	// TODO: Re-enable textures when added here
-	public void drawTriangles(float[] mvpMatrix)
+	public void drawTriangles(float[] mvpMatrix, int surfaceId)
 	{
         // Add program to OpenGL ES environment
         //GLES20.glUseProgram(mTriProgram);
-        GLES20.glUseProgram(chopperProgram);
+        GLES20.glUseProgram(chopperProgram[surfaceId]);
         int error = GLES20.glGetError();
         if (error != GLES20.GL_NO_ERROR)
         {
@@ -534,14 +535,10 @@ public class StigChopper extends Base3D
         }
 
         // get handle to vertex shader's vPosition member
-        mPositionHandle = GLES20.glGetAttribLocation(chopperProgram, "vPosition");
-        if (mPositionHandle < 0)
-        {
-            System.out.println("StigChopper: Failed to get mPositionHandle");
-        }
+        mPositionHandle = GLES20.glGetAttribLocation(chopperProgram[surfaceId], "vPosition");
 
         // get handle to shape's transformation matrix
-        mMVPMatrixHandle = GLES20.glGetUniformLocation(chopperProgram, "uMVPMatrix");
+        mMVPMatrixHandle = GLES20.glGetUniformLocation(chopperProgram[surfaceId], "uMVPMatrix");
 
         // Pass the projection and view transformation to the shader
         GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
@@ -557,11 +554,7 @@ public class StigChopper extends Base3D
         // get handle to vertex shader's vColor member
         if (vertexColor)
         {
-            mColorHandle = GLES20.glGetAttribLocation(chopperProgram, "vColor");
-            if (mColorHandle < 0)
-            {
-                System.out.println("StigChopper: Failed to get vColor");
-            }
+            mColorHandle = GLES20.glGetAttribLocation(chopperProgram[surfaceId], "vColor");
             GLES20.glEnableVertexAttribArray(mColorHandle);
 
             GLES20.glVertexAttribPointer(mColorHandle, COLORS_PER_VERTEX,
@@ -569,23 +562,15 @@ public class StigChopper extends Base3D
         }
         else
         {
-            mColorHandle = GLES20.glGetUniformLocation(chopperProgram, "vColor");
+            mColorHandle = GLES20.glGetUniformLocation(chopperProgram[surfaceId], "vColor");
 			GLES20.glUniform4f(mColorHandle,color[0],color[1],color[2],color[3]);
         }
 
         if (StigChopper.textures)
         {
-            mTextureUniformHandle = GLES20.glGetUniformLocation(chopperProgram, "u_texture");
-            if (mTextureUniformHandle < 0)
-            {
-                System.out.println("StigChopper: Failed to get texture uniform");
-            }
+            mTextureUniformHandle = GLES20.glGetUniformLocation(chopperProgram[surfaceId], "u_texture");
 
-            mTextureCoordinateHandle  = GLES20.glGetAttribLocation(chopperProgram, "a_texCoordinate");
-            if (mTextureCoordinateHandle < 0)
-            {
-                System.out.println("StigChopper: Failed to get texture coordinates.");
-            }
+            mTextureCoordinateHandle  = GLES20.glGetAttribLocation(chopperProgram[surfaceId], "a_texCoordinate");
             GLES20.glEnableVertexAttribArray(mTextureCoordinateHandle);
 
             // Prepare the uv coordinate data.
@@ -624,9 +609,9 @@ public class StigChopper extends Base3D
         }
 	}
 
-	public void drawOutlines(float[] mvpMatrix)
+	public void drawOutlines(float[] mvpMatrix, int surfaceId)
 	{
-        GLES20.glUseProgram(chopperProgram);
+        GLES20.glUseProgram(chopperProgram[surfaceId]);
         int error = GLES20.glGetError();
         if (error != GLES20.GL_NO_ERROR)
         {
@@ -634,14 +619,14 @@ public class StigChopper extends Base3D
         }
 
         // get handle to vertex shader's vPosition member
-        mPositionHandle = GLES20.glGetAttribLocation(chopperProgram, "vPosition");
+        mPositionHandle = GLES20.glGetAttribLocation(chopperProgram[surfaceId], "vPosition");
         if (mPositionHandle < 0)
         {
             System.out.println("StigChopper: Failed to get mPositionHandle");
         }
 
         // get handle to shape's transformation matrix
-        mMVPMatrixHandle = GLES20.glGetUniformLocation(chopperProgram, "uMVPMatrix");
+        mMVPMatrixHandle = GLES20.glGetUniformLocation(chopperProgram[surfaceId], "uMVPMatrix");
 
         // Pass the projection and view transformation to the shader
         GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
@@ -657,7 +642,7 @@ public class StigChopper extends Base3D
         // get handle to vertex shader's vColor member
         if (vertexColor)
         {
-            mColorHandle = GLES20.glGetAttribLocation(chopperProgram, "vColor");
+            mColorHandle = GLES20.glGetAttribLocation(chopperProgram[surfaceId], "vColor");
             if (mColorHandle < 0)
             {
                 System.out.println("StigChopper: Failed to get vColor");
@@ -669,7 +654,7 @@ public class StigChopper extends Base3D
         }
         else
         {
-            mColorHandle = GLES20.glGetUniformLocation(chopperProgram, "vColor");
+            mColorHandle = GLES20.glGetUniformLocation(chopperProgram[surfaceId], "vColor");
 			GLES20.glUniform4f(mColorHandle,color[0]*0.8f,color[1]*0.8f,color[2]*0.8f,color[3]);
         }
 
@@ -690,10 +675,10 @@ public class StigChopper extends Base3D
         }
 	}
 
-	public void drawLines(float[] mvpMatrix)
+	public void drawLines(float[] mvpMatrix, int surfaceId)
 	{
         // Add program to OpenGL ES environment
-        GLES20.glUseProgram(chopperProgram);
+        GLES20.glUseProgram(chopperProgram[surfaceId]);
         int error = GLES20.glGetError();
         if (error != GLES20.GL_NO_ERROR)
         {
@@ -701,14 +686,14 @@ public class StigChopper extends Base3D
         }
 
         // get handle to vertex shader's vPosition member
-        mPositionHandle = GLES20.glGetAttribLocation(chopperProgram, "vPosition");
+        mPositionHandle = GLES20.glGetAttribLocation(chopperProgram[surfaceId], "vPosition");
         if (mPositionHandle < 0)
         {
             System.out.println("StigChopper -- lines: Failed to get mPositionHandle");
         }
 
         // get handle to shape's transformation matrix
-        mMVPMatrixHandle = GLES20.glGetUniformLocation(chopperProgram, "uMVPMatrix");
+        mMVPMatrixHandle = GLES20.glGetUniformLocation(chopperProgram[surfaceId], "uMVPMatrix");
 
         // Enable a handle to the cube vertices
         GLES20.glEnableVertexAttribArray(mPositionHandle);
@@ -721,7 +706,7 @@ public class StigChopper extends Base3D
         // get handle to vertex shader's vColor member
         if (vertexColor)
         {
-            mColorHandle = GLES20.glGetAttribLocation(chopperProgram, "vColor");
+            mColorHandle = GLES20.glGetAttribLocation(chopperProgram[surfaceId], "vColor");
             if (mColorHandle < 0)
             {
                 System.out.println("StigChopper: Failed to get vColor");
@@ -733,7 +718,7 @@ public class StigChopper extends Base3D
         }
         else
         {
-            mColorHandle = GLES20.glGetUniformLocation(chopperProgram, "vColor");
+            mColorHandle = GLES20.glGetUniformLocation(chopperProgram[surfaceId], "vColor");
 			GLES20.glUniform4f(mColorHandle,color[0] * 0.9f,color[1] * 0.9f,color[2] * 0.9f,color[3]);
         }
 
@@ -757,10 +742,10 @@ public class StigChopper extends Base3D
         }
 	}
 
-	public void drawMainRotor(float[] mvpMatrix)
+	public void drawMainRotor(float[] mvpMatrix, int surfaceId)
 	{
         // Add program to OpenGL ES environment
-        GLES20.glUseProgram(chopperProgram);
+        GLES20.glUseProgram(chopperProgram[surfaceId]);
         int error = GLES20.glGetError();
         if (error != GLES20.GL_NO_ERROR)
         {
@@ -768,14 +753,14 @@ public class StigChopper extends Base3D
         }
 
         // get handle to vertex shader's vPosition member
-        mPositionHandle = GLES20.glGetAttribLocation(chopperProgram, "vPosition");
+        mPositionHandle = GLES20.glGetAttribLocation(chopperProgram[surfaceId], "vPosition");
         if (mPositionHandle < 0)
         {
             System.out.println("StigChopper -- rotors: Failed to get mPositionHandle");
         }
 
         // get handle to shape's transformation matrix
-        mMVPMatrixHandle = GLES20.glGetUniformLocation(chopperProgram, "uMVPMatrix");
+        mMVPMatrixHandle = GLES20.glGetUniformLocation(chopperProgram[surfaceId], "uMVPMatrix");
 
         // Enable a handle to the cube vertices
         GLES20.glEnableVertexAttribArray(mPositionHandle);
@@ -788,7 +773,7 @@ public class StigChopper extends Base3D
         // get handle to vertex shader's vColor member
         if (vertexColor)
         {
-            mColorHandle = GLES20.glGetAttribLocation(chopperProgram, "vColor");
+            mColorHandle = GLES20.glGetAttribLocation(chopperProgram[surfaceId], "vColor");
             if (mColorHandle < 0)
             {
                 System.out.println("StigChopper: Failed to get vColor");
@@ -800,7 +785,7 @@ public class StigChopper extends Base3D
         }
         else
         {
-            mColorHandle = GLES20.glGetUniformLocation(chopperProgram, "vColor");
+            mColorHandle = GLES20.glGetUniformLocation(chopperProgram[surfaceId], "vColor");
 			GLES20.glUniform4f(mColorHandle,1.0f,1.0f,0.0f,0.7f);
         }
 
@@ -824,10 +809,10 @@ public class StigChopper extends Base3D
         }
 	}
 	
-	public void drawTailRotor(float[] mvpMatrix)
+	public void drawTailRotor(float[] mvpMatrix, int surfaceId)
 	{
         // Add program to OpenGL ES environment
-        GLES20.glUseProgram(chopperProgram);
+        GLES20.glUseProgram(chopperProgram[surfaceId]);
         int error = GLES20.glGetError();
         if (error != GLES20.GL_NO_ERROR)
         {
@@ -835,14 +820,14 @@ public class StigChopper extends Base3D
         }
 
         // get handle to vertex shader's vPosition member
-        mPositionHandle = GLES20.glGetAttribLocation(chopperProgram, "vPosition");
+        mPositionHandle = GLES20.glGetAttribLocation(chopperProgram[surfaceId], "vPosition");
         if (mPositionHandle < 0)
         {
             System.out.println("StigChopper -- rotors: Failed to get mPositionHandle");
         }
 
         // get handle to shape's transformation matrix
-        mMVPMatrixHandle = GLES20.glGetUniformLocation(chopperProgram, "uMVPMatrix");
+        mMVPMatrixHandle = GLES20.glGetUniformLocation(chopperProgram[surfaceId], "uMVPMatrix");
 
         // Enable a handle to the cube vertices
         GLES20.glEnableVertexAttribArray(mPositionHandle);
@@ -855,7 +840,7 @@ public class StigChopper extends Base3D
         // get handle to vertex shader's vColor member
         if (vertexColor)
         {
-            mColorHandle = GLES20.glGetAttribLocation(chopperProgram, "vColor");
+            mColorHandle = GLES20.glGetAttribLocation(chopperProgram[surfaceId], "vColor");
             if (mColorHandle < 0)
             {
                 System.out.println("StigChopper: Failed to get vColor");
@@ -867,7 +852,7 @@ public class StigChopper extends Base3D
         }
         else
         {
-            mColorHandle = GLES20.glGetUniformLocation(chopperProgram, "vColor");
+            mColorHandle = GLES20.glGetUniformLocation(chopperProgram[surfaceId], "vColor");
 			GLES20.glUniform4f(mColorHandle,1.0f,1.0f,0.0f,0.6f);
         }
 
@@ -891,7 +876,7 @@ public class StigChopper extends Base3D
         }
 	}
 
-    public void draw(float[] myMatrix)
+    public void draw(float[] myMatrix, int surfaceId)
 	{ // pass in the calculated transformation matrix
 		if (buffersCreated == false)
 		{
@@ -913,9 +898,9 @@ public class StigChopper extends Base3D
 		float[] mainRotorMatrix = myMatrix.clone();
 		float[] tailRotorMatrix = myMatrix.clone();
 		Matrix.multiplyMM(myMatrix,0,myMatrix,0,transMatrix,0);
-		drawTriangles(myMatrix);
-		drawOutlines(myMatrix);
-		drawLines(myMatrix);
+		drawTriangles(myMatrix, surfaceId);
+		drawOutlines(myMatrix, surfaceId);
+		drawLines(myMatrix, surfaceId);
 		float[] mainRotorTransMatrix = new float[16];
 		Matrix.setIdentityM(mainRotorTransMatrix,0);
 		// OK, first, move the main rotor with the chopper
@@ -927,7 +912,7 @@ public class StigChopper extends Base3D
 		Matrix.rotateM(mainRotorTransMatrix,0,(float)mainRotorDeg, 0.0f, 0.0f, -1.0f);
 		Matrix.translateM(mainRotorTransMatrix,0,0.0f, -1.0f,0.0f);
 		Matrix.multiplyMM(mainRotorMatrix,0,mainRotorMatrix,0,mainRotorTransMatrix,0);
-		drawMainRotor(mainRotorMatrix);
+		drawMainRotor(mainRotorMatrix, surfaceId);
 		// Move center to center of top rotor
 		float[] tailRotorTransMatrix = new float[16];
 		Matrix.setIdentityM(tailRotorTransMatrix,0);
@@ -940,7 +925,7 @@ public class StigChopper extends Base3D
 		Matrix.rotateM(tailRotorTransMatrix,0,(float)tailRotorDeg, 1.0f, 0.0f, 0.0f);
 		Matrix.translateM(tailRotorTransMatrix,0,0.0f, 2.0f,-1.5f);
 		Matrix.multiplyMM(tailRotorMatrix,0,tailRotorMatrix,0,tailRotorTransMatrix,0);
-		drawTailRotor(tailRotorMatrix);
+		drawTailRotor(tailRotorMatrix, surfaceId);
 	}
 	
 }

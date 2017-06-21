@@ -2,6 +2,7 @@ package heli.org.helidroid;
 
 import android.graphics.drawable.*;
 import android.icu.text.*;
+import android.view.View;
 import android.widget.*;
 
 public class ChopperPanel extends LinearLayout
@@ -19,6 +20,11 @@ public class ChopperPanel extends LinearLayout
 	LinearLayout row4Lay = null;
 	TextView invLabel;
 	TextView invDisplay;
+
+	public void addWidget(View v)
+	{
+		LayoutTools.addWidget(v,3.0f, LayoutTools.getNextViewID(),mainLay);
+	}
 
 	public void setInventory(int itemCount)
 	{

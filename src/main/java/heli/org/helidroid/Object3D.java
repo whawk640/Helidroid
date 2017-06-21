@@ -130,7 +130,8 @@ public class Object3D extends Base3D {
 		return position.m_z + size.m_z/2.0;
 	}
 	
-    static public void initImage(final Context context, GL10 gl) {
+    static public void initImage(final Context context, GL10 gl, int surfaceId)
+    {
         mTextureDataHandle = new int[NUM_TEXTURES];
         gl.glGenTextures(NUM_TEXTURES, mTextureDataHandle, 0);
         if (mTextureDataHandle[0] != 0) {
@@ -228,7 +229,7 @@ public class Object3D extends Base3D {
 		 System.out.println("Texture is 0...");
 		 }
 		 }
-		 onSurfaceCreated();
+		 onSurfaceCreated(surfaceId);
     }
 
     boolean testTextureOverride()
@@ -416,14 +417,15 @@ public class Object3D extends Base3D {
         return position;
     }
 
-    public Point3D getSize() {
+    public Point3D getSize()
+    {
         return size;
     }
 
-    static public void draw(float[] mvpMatrix, int vtxBuf, int colBuf, int txtBuf, int triBuf, int triCount, int lineBuf, int lineCount)
+    static public void draw(int surfaceId, float[] mvpMatrix, int vtxBuf, int colBuf, int txtBuf, int triBuf, int triCount, int lineBuf, int lineCount)
 	{ // pass in the calculated transformation matrix
         // Add program to OpenGL ES environment
-        GLES20.glUseProgram(mProgram);
+        GLES20.glUseProgram(mProgram[surfaceId]);
         int error = GLES20.glGetError();
         if (error != GLES20.GL_NO_ERROR)
         {
@@ -431,14 +433,14 @@ public class Object3D extends Base3D {
         }
 
         // get handle to vertex shader's vPosition member
-        mPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
+        mPositionHandle = GLES20.glGetAttribLocation(mProgram[surfaceId], "vPosition");
         if (mPositionHandle < 0)
         {
             System.out.println("Object3d: Failed to get mPositionHandle");
         }
 		
         // get handle to shape's transformation matrix
-        mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
+        mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram[surfaceId], "uMVPMatrix");
 
         // Enable a handle to the cube vertices
         GLES20.glEnableVertexAttribArray(mPositionHandle);
@@ -453,7 +455,7 @@ public class Object3D extends Base3D {
         // get handle to vertex shader's vColor member
 		if (useVertexColor)
 		{
-			mColorHandle = GLES20.glGetAttribLocation(mProgram, "vColor");
+			mColorHandle = GLES20.glGetAttribLocation(mProgram[surfaceId], "vColor");
 			if (mColorHandle < 0)
 			{
 				System.out.println("Object3D: Failed to get vColor");
@@ -467,23 +469,23 @@ public class Object3D extends Base3D {
 		}
 		else
 		{
-			mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor");
+			mColorHandle = GLES20.glGetUniformLocation(mProgram[surfaceId], "vColor");
 			// We do NOT have a static color variable for now
 			GLES20.glUniform4f(mColorHandle,0.1f,0.9f,0.1f,1.0f);
 		}
 		
 		if (useTextures && (useWireframeOnly == false))
 		{
-            mFrameHandle = GLES20.glGetUniformLocation(mProgram, "fNumber");
+            mFrameHandle = GLES20.glGetUniformLocation(mProgram[surfaceId], "fNumber");
             GLES20.glUniform1f(mFrameHandle,0.1f * (float)curFrame);
             
-        	mTextureUniformHandle = GLES20.glGetUniformLocation(mProgram, "u_texture");
+        	mTextureUniformHandle = GLES20.glGetUniformLocation(mProgram[surfaceId], "u_texture");
         	if (mTextureUniformHandle < 0)
         	{
             	System.out.println("Object3d: Failed to get texture uniform");
         	}
 
-        	mTextureCoordinateHandle  = GLES20.glGetAttribLocation(mProgram, "a_texCoordinate");
+        	mTextureCoordinateHandle  = GLES20.glGetAttribLocation(mProgram[surfaceId], "a_texCoordinate");
         	if (mTextureCoordinateHandle < 0)
         	{
             	System.out.println("Object3d: Failed to get texture coordinates.");
@@ -556,9 +558,9 @@ public class Object3D extends Base3D {
 			curFrame = (++curFrame) % NUM_FRAMES;
 		}
 	}
-    public void drawSingle(int textDataHandle, float[] mvpMatrix) { // pass in the calculated transformation matrix
+    public void drawSingle(int surfaceId, int textDataHandle, float[] mvpMatrix) { // pass in the calculated transformation matrix
         // Add program to OpenGL ES environment
-        GLES20.glUseProgram(mProgram);
+        GLES20.glUseProgram(mProgram[surfaceId]);
         boolean useText = testTextureOverride();
         int error = GLES20.glGetError();
         if (error != GLES20.GL_NO_ERROR)
@@ -567,14 +569,14 @@ public class Object3D extends Base3D {
         }
 
         // get handle to vertex shader's vPosition member
-        mPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
+        mPositionHandle = GLES20.glGetAttribLocation(mProgram[surfaceId], "vPosition");
         if (mPositionHandle < 0)
         {
             System.out.println("Failed to get mPositionHandle");
         }
 
         // get handle to shape's transformation matrix
-        mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
+        mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram[surfaceId], "uMVPMatrix");
 
         // Enable a handle to the cube vertices
         GLES20.glEnableVertexAttribArray(mPositionHandle);
@@ -587,7 +589,7 @@ public class Object3D extends Base3D {
         // get handle to vertex shader's vColor member
         if (useVertexColor)
         {
-            mColorHandle = GLES20.glGetAttribLocation(mProgram, "vColor");
+            mColorHandle = GLES20.glGetAttribLocation(mProgram[surfaceId], "vColor");
             if (mColorHandle < 0)
             {
                 System.out.println("Failed to get vColor");
@@ -599,19 +601,19 @@ public class Object3D extends Base3D {
         }
         else
         {
-            mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor");
+            mColorHandle = GLES20.glGetUniformLocation(mProgram[surfaceId], "vColor");
 			GLES20.glUniform4f(mColorHandle,color[0],color[1],color[2],color[3]);
         }
 
         if (useText)
         {
-            mTextureUniformHandle = GLES20.glGetUniformLocation(mProgram, "u_texture");
+            mTextureUniformHandle = GLES20.glGetUniformLocation(mProgram[surfaceId], "u_texture");
             if (mTextureUniformHandle < 0)
             {
                 System.out.println("Failed to get texture uniform");
             }
 
-            mTextureCoordinateHandle  = GLES20.glGetAttribLocation(mProgram, "a_texCoordinate");
+            mTextureCoordinateHandle  = GLES20.glGetAttribLocation(mProgram[surfaceId], "a_texCoordinate");
             if (mTextureCoordinateHandle < 0)
             {
                 System.out.println("Failed to get texture coordinates.");

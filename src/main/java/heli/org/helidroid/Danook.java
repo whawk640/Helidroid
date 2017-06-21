@@ -1,5 +1,6 @@
 package heli.org.helidroid;
 
+import android.view.View;
 import android.widget.*;
 import java.util.*;
 
@@ -10,6 +11,7 @@ public class Danook extends StigChopper
 
     public static final int PANEL_RATE = 10;
     public int panelUpdater;
+    private RadarGLSurfaceView myRadar = null;
 
     private DanookController myThread;
 
@@ -49,6 +51,10 @@ public class Danook extends StigChopper
 	public void createPanel(LinearLayout par, float stretch)
 	{
 		myPanel = LayoutTools.addWidget(new DanookPanel(), stretch, LayoutTools.getNextViewID(),par);
+        System.out.println("Adding Radar Surface, chopper ID: " + id);
+        myRadar = new RadarGLSurfaceView(MyApp.getContext(),world, id);
+        world.addSurface(myRadar);
+        myPanel.addWidget((View)myRadar);
 	}
 	
     public void updatePanel(ChopperInfo inf)

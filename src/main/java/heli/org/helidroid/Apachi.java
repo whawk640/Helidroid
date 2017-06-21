@@ -53,10 +53,10 @@ public class Apachi extends StigChopper
   {
     return m_curSpeed;
   }
-	public void draw(float[] myMatrix)
+	public void draw(float[] myMatrix, int surfaceId)
 	{ 
    // pass in the calculated transformation matrix	
-		super.draw(myMatrix);
+		super.draw(myMatrix, surfaceId);
 	}
 	
     /** This method renders a chopper.  We'll get the position from the world.

@@ -90,7 +90,9 @@ public class World
 	private int TRIANGLE_BUFFER = 3;
 	private int LINE_BUFFER = 4;
 	private int BUFFER_COUNT = 5;
-	private int[] glBuffers = new int[BUFFER_COUNT];
+    private int CONTEXT_COUNT = 3;
+    private Context[] glContexts = new Context[CONTEXT_COUNT];
+	private int[] glBuffers = null;
 	int triIndexCount = 0;
 	int lineIndexCount = 0;
 	
@@ -128,7 +130,7 @@ public class World
 
 	//private HeliGLSurfaceView glSurface = null;
 
-	private ArrayList<HeliGLSurfaceView> glSurfaces = null;
+	private ArrayList<GLSurfaceView> glSurfaces = null;
 	
     private double maxTime = 20000.0;
 
@@ -178,7 +180,50 @@ public class World
         }
     }
 
-    public void createObjects(Context context, GL10 gl, EGLConfig cfg)
+    public synchronized void setupObjects(Context context, GL10 gl, EGLConfig cfg, int surfaceId)
+    {
+        if (worldState == null)
+        {
+            createObjects(gl, cfg, surfaceId);
+        }
+
+        Object3D.initImage(context,gl, surfaceId);
+        if (glBuffers == null)
+        {
+            glBuffers = new int[BUFFER_COUNT * CONTEXT_COUNT];
+            GLES20.glGenBuffers(BUFFER_COUNT * CONTEXT_COUNT, glBuffers, 0);
+        }
+        int bufferOffset = BUFFER_COUNT * surfaceId;
+        System.out.println("Setting up context " + surfaceId + " At buffer offset " + bufferOffset);
+        FloatBuffer vtxBuffer = BufferUtils.getFB(vxs);
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,glBuffers[VERTEX_BUFFER + bufferOffset]);
+        GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER,vtxBuffer.capacity() * 4, vtxBuffer,GLES20.GL_STATIC_DRAW);
+
+        FloatBuffer colBuffer = BufferUtils.getFB(cls);
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,glBuffers[COLOR_BUFFER + bufferOffset]);
+        GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER,colBuffer.capacity() * 4,colBuffer,GLES20.GL_STATIC_DRAW);
+
+        FloatBuffer uvBuffer = BufferUtils.getFB(texs);
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,glBuffers[TEXTURE_BUFFER + bufferOffset]);
+        GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER,uvBuffer.capacity() * 4,uvBuffer,GLES20.GL_STATIC_DRAW);
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,0);
+
+        IntBuffer dlb = BufferUtils.getIB(dos);
+        triIndexCount = dlb.capacity();
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,glBuffers[TRIANGLE_BUFFER + bufferOffset]);
+        GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER,triIndexCount * 4,dlb,GLES20.GL_STATIC_DRAW);
+
+        IntBuffer ldlb = BufferUtils.getIB(lineDos);
+        lineIndexCount = ldlb.capacity();
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,glBuffers[LINE_BUFFER + bufferOffset]);
+        GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER,lineIndexCount * 4,ldlb,GLES20.GL_STATIC_DRAW);
+        GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER,0);
+
+        // Ensure choppers can be drawn from each context
+        createChoppers(gl, cfg, surfaceId);
+    }
+
+    public void createObjects(GL10 gl, EGLConfig cfg, int surfaceID)
 	{
         if (worldState == null)
         {
@@ -189,7 +234,6 @@ public class World
 			targets = new ArrayList<BullsEye>();
 		}
         int idx = 0;
-		Object3D.initImage(context,gl);
         // TODO: Prevent double creation
         // Generate the world... TODO: Move to city blocks
         for (int row = ROW_START; row < BLOCK_ROWS; ++row)
@@ -263,64 +307,10 @@ public class World
                 }
             }
         }
-		GLES20.glGenBuffers(BUFFER_COUNT,glBuffers,0);
-
-		FloatBuffer vtxBuffer = BufferUtils.getFB(vxs);
-		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,glBuffers[VERTEX_BUFFER]);
-		GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER,vtxBuffer.capacity() * 4, vtxBuffer,GLES20.GL_STATIC_DRAW);
-
-		FloatBuffer colBuffer = BufferUtils.getFB(cls);
-		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,glBuffers[COLOR_BUFFER]);
-		GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER,colBuffer.capacity() * 4,colBuffer,GLES20.GL_STATIC_DRAW);
-
-		FloatBuffer uvBuffer = BufferUtils.getFB(texs);
-		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,glBuffers[TEXTURE_BUFFER]);
-		GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER,uvBuffer.capacity() * 4,uvBuffer,GLES20.GL_STATIC_DRAW);
-		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,0);
-		
-		IntBuffer dlb = BufferUtils.getIB(dos);
-		triIndexCount = dlb.capacity();
-		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,glBuffers[TRIANGLE_BUFFER]);
-		GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER,triIndexCount * 4,dlb,GLES20.GL_STATIC_DRAW);
-
-		IntBuffer ldlb = BufferUtils.getIB(lineDos);
-		lineIndexCount = ldlb.capacity();
-		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,glBuffers[LINE_BUFFER]);
-		GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER,lineIndexCount * 4,ldlb,GLES20.GL_STATIC_DRAW);
-		GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER,0);
-		
-		createChoppers(gl,cfg);
+        System.out.println("Objects created...");
     }
 
-	/** Returns the distance to the nearest object along the specified heading.
-	  * or 99999 if no object is impeding the radar.
-	  */
-	public int radar(Point3D location, double heading)
-	{
-		int nearestDistance = 99999;
-		double headingRadians = Math.toRadians(heading);
-		Point3D testPoint = location.copy();
-		ArrayList relevantObjects = findObjectsTallerThan(location.m_z);
-		double deltaX = RADAR_STEP * Math.sin(headingRadians);
-		double deltaY = RADAR_STEP * Math.cos(headingRadians);
-		for (double distance = 5.0; distance < nearestDistance; distance += 5.0)
-		{
-			testPoint.m_x += deltaX;
-			testPoint.m_y += deltaY;
-			for (Object3D testObj : relevantObjects)
-			{
-				if (testObj.collidesWith(testPoint))
-				{
-					Point3D delta = Point3D.diff(location, testPoint);
-					nearestDistance = (int)delta.xyLength();
-					break;
-				}
-			}
-		}
-		return nearestDistance;
-	}
-
-	/** This method iterates over all objects and finds thoe that are taller
+	/** This method iterates over all objects and finds those that are taller
 	  * than the passed in height.
 	  */
 	public ArrayList<Object3D> findObjectsTallerThan(double height)
@@ -352,13 +342,14 @@ public class World
 	public void requestRender()
 	{
 		boolean firstSurface = true;
-		for (HeliGLSurfaceView glSurface : glSurfaces)
+		for (GLSurfaceView glSurface : glSurfaces)
 		{
 			if (glSurface != null)
 			{
 				if (firstSurface)
 				{
-					glSurface.setChopper(visibleChopper);
+                    HeliGLSurfaceView thisSurface = (HeliGLSurfaceView) glSurface;
+                    thisSurface.setChopper(visibleChopper);
 					firstSurface = false;
 				}
 				glSurface.requestRender();
@@ -368,27 +359,13 @@ public class World
 	
     public void toggleChaseCam()
     {
-        if (chaseCam == true)
-        {
-            chaseCam = false;
-        }
-        else
-        {
-            chaseCam = true;
-        }
+        chaseCam = chaseCam != true;
 		requestRender();
     }
 
     public void toggleWireFrame()
     {
-        if (wireFrame == true)
-        {
-            wireFrame = false;
-        }
-        else
-        {
-            wireFrame = true;
-        }
+        wireFrame = wireFrame != true;
 		requestRender();
     }
 
@@ -470,7 +447,7 @@ public class World
 		return camDistance;
 	}
 
-	public void createChoppers(GL10 gl, EGLConfig cfg)
+	public void createChoppers(GL10 gl, EGLConfig cfg, int surfaceID)
 	{
 		Iterator it = myChoppers.entrySet().iterator();
         while (it.hasNext())
@@ -480,7 +457,7 @@ public class World
             if (locData != null)
             {
                 StigChopper theChopper = locData.getChopper();
-				theChopper.onSurfaceCreated(gl, cfg);
+				theChopper.onSurfaceCreated(gl, cfg, surfaceID);
 			}
 		}			
         allPackageLocs = new ArrayList<Point3D>();
@@ -576,11 +553,14 @@ public class World
     {
         int retVal = 1;
         ChopperAggregator ca = myChoppers.get(id);
-        ChopperInfo info = ca.getInfo();
-        // TODO: Implement crashed
-        if (info.onGround() == true)
+        if (ca != null)
         {
-            retVal = 0;
+            ChopperInfo info = ca.getInfo();
+            // TODO: Implement crashed
+            if (info.onGround() == true)
+            {
+                retVal = 0;
+            }
         }
         return retVal;
     }
@@ -612,6 +592,7 @@ public class World
                 // NOTE: I believe the hashCode function is used to determine
                 // if the container has the object.  That only includes X,Y,Z
                 // which is what I think we want.
+                System.out.println("Checking for a close package out of " + allPackageLocs.size() + " packages...");
                 for (Point3D object : allPackageLocs)
                 {
                     if (object.distanceXY(myPos) < 5.0)
@@ -626,6 +607,14 @@ public class World
                     dbg(TAG,"Couldn't find package to deliver at  (" + myPos.info() + ")", WORLD_DBG);
                 }
             }
+            else
+            {
+                System.out.println("Can't deliver package unless on the ground...");
+            }
+        }
+        else
+        {
+            System.out.println("Can't deliver package with null chopper...");
         }
         return success;
     }
@@ -734,7 +723,7 @@ public class World
 		worldCenter = new Point3D(500.0,500.0,0.0);
 		myChoppers = new HashMap<Integer, ChopperAggregator>();
 
-		glSurfaces = new ArrayList<HeliGLSurfaceView>();
+		glSurfaces = new ArrayList<GLSurfaceView>();
 		
         //inserting choppers
         Apachi apChop = new Apachi(requestNextChopperID(),this);
@@ -772,7 +761,7 @@ public class World
 		worldPaused = false;
 	}
 	
-	public void addSurface(HeliGLSurfaceView surf)
+	public void addSurface(GLSurfaceView surf)
 	{
 		glSurfaces.add(surf);
 	}
@@ -889,7 +878,7 @@ public class World
 		 }
          curTimeStamp += TICK_TIME;
 		 ++tickCount;
-		 if ((tickCount & 0x80) == 0x80)
+		 if ((tickCount & 0x1ff) == 0x1ff)
 		 {
 			 long deltaTime_ns = System.nanoTime() - startTime;
 			 double deltaTime_s = deltaTime_ns / 1000000000.0;
@@ -901,30 +890,27 @@ public class World
 		 }
     }
 
-    public void draw(float[] mvpMatrix)
+    public void draw(float[] mvpMatrix, Context context, int surfaceId)
     {
 		++drawCounter;
         // First, draw the static world
 		Object3D.useWireframeOnly = wireFrame;
-        Object3D.draw(mvpMatrix,glBuffers[VERTEX_BUFFER], glBuffers[COLOR_BUFFER], glBuffers[TEXTURE_BUFFER], glBuffers[TRIANGLE_BUFFER], triIndexCount,glBuffers[LINE_BUFFER],lineIndexCount);
-		Iterator it = myChoppers.entrySet().iterator();
+        float[] locMatrix = mvpMatrix.clone();
+        int bo = 5*surfaceId; // BufferOffset
+        Object3D.draw(surfaceId, locMatrix, glBuffers[bo + VERTEX_BUFFER], glBuffers[bo + COLOR_BUFFER], glBuffers[bo + TEXTURE_BUFFER], glBuffers[bo + TRIANGLE_BUFFER], triIndexCount, glBuffers[bo + LINE_BUFFER], lineIndexCount);
+        Iterator it = myChoppers.entrySet().iterator();
         while (it.hasNext())
         {
-			float[] myMatrix = mvpMatrix.clone();
+            float[] myMatrix = mvpMatrix.clone();
             Map.Entry<Integer, ChopperAggregator> pairs = (Map.Entry)it.next();
             int id = pairs.getKey();
             ChopperAggregator locData = pairs.getValue();
             if (locData != null)
             {
                 StigChopper theChopper = locData.getChopper();
-				theChopper.draw(myMatrix);
-			}
-		}
-		/*
-		for (BullsEye target : targets)
-		{
-			target.draw(mvpMatrix);
-		} */
+                theChopper.draw(myMatrix, surfaceId);
+            }
+        }
     }
 
     synchronized public Point3D gps(int chopperID)

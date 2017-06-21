@@ -534,14 +534,17 @@ public class DanookController extends Thread
         boolean onGround = flightState == 0;
         if (onGround)
         {
+            System.out.println("On Ground...");
             if (currentDestination != null)
             {
                 double actDistance = currentDestination.distanceXY(actualPosition);
+                System.out.println("Trying to deliver package -- distance: " + String.format("%2.1f",actDistance));
                 if ( actDistance < World.MAX_PACKAGE_DISTANCE)
                 {
                     boolean delivered = myWorld.deliverPackage(myChopper.getId());
                     if (delivered)
                     {
+                        System.out.println("Successfully delivered package!");
                         boolean pointDeleted = myChopper.deleteWaypoint(currentDestination);
                         currentDestination = null;
                         // it shouldn't be possible, flag controller so they know

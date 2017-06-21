@@ -139,11 +139,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 		
 		mainGLView = LayoutTools.addWidget(new HeliGLSurfaceView(this, mWorld), 4.0f,LayoutTools.getNextViewID(),glLayout);
 		panelLayout = LayoutTools.addLL(1.0f,LayoutTools.getNextViewID(),LinearLayout.VERTICAL,glLayout,this);
-		
+        mainGLView.setCameraMode(HeliGLSurfaceView.MODE_CHASE);
+        mainGLView.setChopper(0);
+        System.out.println("Adding Main World View...");
+        mWorld.addSurface(mainGLView);
 		mWorld.setPanelLayout(panelLayout);
-		mainGLView.setCameraMode(HeliGLSurfaceView.MODE_CHASE);
-		mainGLView.setChopper(0);
-		mWorld.addSurface(mainGLView);
 		timer = new Timer();
     }
 
@@ -191,7 +191,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_settings)
+        {
             return true;
         }
 

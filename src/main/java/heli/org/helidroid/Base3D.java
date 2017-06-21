@@ -10,7 +10,8 @@ import java.nio.IntBuffer;
 
 public class Base3D
 {
-    static protected int mProgram = -1;
+	static final int MAX_SURFACES = 4;
+    static protected int mProgram[] = null;
     static protected final int COORDS_PER_VERTEX = 3;
     static protected final int COLORS_PER_VERTEX = 4;
     static protected final int vertexStride = COORDS_PER_VERTEX * 4; // 4 bytes per coordinate
@@ -35,9 +36,17 @@ public class Base3D
 		// Intentionally empty
 	}
 
-	static public void onSurfaceCreated()
+	static public void onSurfaceCreated(int surfaceId)
 	{
-		if (mProgram < 0)
+		if (mProgram == null)
+		{
+			mProgram = new int[MAX_SURFACES];
+			mProgram[0] = -1;
+			mProgram[1] = -1;
+			mProgram[2] = -1;
+			mProgram[3] = -1;
+		}
+		if (mProgram[surfaceId] < 0)
 		{
 			boolean useVColor = useVertexColor;
 			boolean useText = useTextures;
@@ -49,18 +58,18 @@ public class Base3D
 					fragmentCode);
 			if (vertexShader > 0 && fragmentShader > 0) {
 				// create empty OpenGL ES Program
-				mProgram = GLES20.glCreateProgram();
+				mProgram[surfaceId] = GLES20.glCreateProgram();
 
 				// add the vertex shader to program
-				GLES20.glAttachShader(mProgram, vertexShader);
+				GLES20.glAttachShader(mProgram[surfaceId], vertexShader);
 
 				// add the fragment shader to program
-				GLES20.glAttachShader(mProgram, fragmentShader);
+				GLES20.glAttachShader(mProgram[surfaceId], fragmentShader);
 
 				// creates OpenGL ES program executables
-				GLES20.glLinkProgram(mProgram);
+				GLES20.glLinkProgram(mProgram[surfaceId]);
 				System.out.println("Base3D Shaders created, vtx: " + vertexShader + ", fragment: " +
-						fragmentShader + ", program ID: " + mProgram);
+						fragmentShader + ", program ID: " + mProgram[surfaceId]);
 			}
 			else
 			{
@@ -95,7 +104,8 @@ public class Base3D
 			GLES20.glLinkProgram(programID);
 			int[] linkStatus = new int[1];
 			GLES20.glGetProgramiv(programID, GLES20.GL_LINK_STATUS, linkStatus, 0);
-			if (linkStatus[0] != GLES20.GL_TRUE) {
+			if (linkStatus[0] != GLES20.GL_TRUE)
+			{
 				GLES20.glDeleteProgram(programID);
 				throw new RuntimeException("Could not link program: "
 						+ GLES20.glGetProgramInfoLog(programID));
