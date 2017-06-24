@@ -50,13 +50,30 @@ public class Base3D
 		{
 			boolean useVColor = useVertexColor;
 			boolean useText = useTextures;
-			String vertexCode = buildVertexCode(useVColor, useText);
+			String vertexCode = "";
+			if (surfaceId == 0)
+			{
+				vertexCode = buildVertexCode(useVColor, useText);
+			}
+			else
+			{
+				vertexCode = RadarGLRenderer.buildVertexCode();
+			}
 			int vertexShader = HeliGLRenderer.loadShader(GLES20.GL_VERTEX_SHADER,
 					vertexCode);
-			String fragmentCode = buildFragmentCode(useVColor, useText);
+			String fragmentCode = "";
+			if (surfaceId == 0)
+			{
+				fragmentCode = buildFragmentCode(useVColor, useText);
+			}
+			else
+			{
+				fragmentCode = RadarGLRenderer.buildFragmentCode();
+			}
 			int fragmentShader = HeliGLRenderer.loadShader(GLES20.GL_FRAGMENT_SHADER,
 					fragmentCode);
-			if (vertexShader > 0 && fragmentShader > 0) {
+			if (vertexShader > 0 && fragmentShader > 0)
+			{
 				// create empty OpenGL ES Program
 				mProgram[surfaceId] = GLES20.glCreateProgram();
 

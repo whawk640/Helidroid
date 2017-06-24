@@ -216,7 +216,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 		// You'll accelerate time by using a shorter delay here
         // We wait 4 seconds for world to be created etc.
         //timer.schedule(timerTask, 1500, 16);
-        timer.schedule(timerTask, 4000, 4);
+        timer.schedule(timerTask, 4000, 8);
     }
 
     @Override

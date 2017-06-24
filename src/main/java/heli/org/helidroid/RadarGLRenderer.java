@@ -1,12 +1,11 @@
 package heli.org.helidroid;
 
-import android.content.Context;
-import android.opengl.GLES20;
-import android.opengl.GLSurfaceView;
-import android.opengl.Matrix;
+import android.content.*;
+import android.opengl.*;
+import javax.microedition.khronos.egl.*;
+import javax.microedition.khronos.opengles.*;
 
 import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.opengles.GL10;
 
 /**
  * Created by Dan LaFuze on 10/16/2015.
@@ -33,6 +32,35 @@ public class RadarGLRenderer implements GLSurfaceView.Renderer
     private volatile float mAngle;
     private Context mContext;
 
+	static protected String buildVertexCode()
+	{
+		String vertexString = 
+			"uniform mat4 uMVPMatrix;" +
+			"attribute vec4 vPosition;" +
+			//"varying float fogFactor;" +
+			"void main() {" +
+			"  gl_Position = uMVPMatrix * vPosition;" +
+			//"  vVertex = vec3(gl_ModelViewMatrix * gl_Vertex);" +
+			//"  gl_FogFragCoord = length(vVertex);" +
+			//"  fogFactor = gl_Fog.density * gl_FogFragCoord;" +
+			//"  fogFactor = clamp(fogFactor,0.0,1.0);" +
+			"}";
+		return vertexString;
+	}
+
+	static protected String buildFragmentCode()
+	{
+		String fragmentString = "precision mediump float;" +
+			"lowp vec4 vColor = vec4(1.0);" +
+			//"varying float fogFactor;" +
+			"void main() {" +
+			"  vec4 finalColor = vColor * 1.0;" +
+			//"  gl_FragColor = mix(gl_Fog.color, finalColor, fogFactor);" +
+			"  gl_FragColor = finalColor;" +
+			"}";
+		return fragmentString;
+	}		
+	
 	public void setChopper(int which)
 	{
 		chopper = which;
@@ -96,6 +124,9 @@ public class RadarGLRenderer implements GLSurfaceView.Renderer
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         GLES20.glEnable(GLES20.GL_CULL_FACE);
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);
+		gl.glEnable(gl.GL_FOG);
+		float[] fogColor = {0.0f, 0.0f, 0.0f, 1.0f};
+		gl.glFogfv(gl.GL_FOG_COLOR,fogColor,0);
         mCamera = new Camera();
         // TODO: adjust eye position as soon as we know chopper location
         mCamera.setSource(100.0, 100.0, 150.0);
